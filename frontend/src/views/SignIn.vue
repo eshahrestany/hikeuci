@@ -7,9 +7,9 @@
     <div class="absolute inset-0 bg-black/50 pointer-events-none" aria-hidden="true"></div>
 
     <div class="relative z-10 w-full max-w-md bg-black/30 backdrop-blur p-8 rounded-lg shadow-lg border border-stone/30">
-      <h1 class="text-3xl font-bold font-montserrat text-uci-gold mb-6 text-center">Member Portal Sign-In</h1>
+      <h1 class="text-3xl font-bold font-montserrat text-uci-gold mb-2 text-center">Officer Sign-In</h1>
+      <h1 class="text-md font-montserrat text-white mb-3 text-center">For hiking club officers only.</h1>
 
-      <!-- Google button placeholder -->
       <div id="g_id_signin" class="flex justify-center"></div>
 
       <p v-if="error" class="mt-4 text-red-400 text-center">{{ error }}</p>
@@ -47,21 +47,28 @@ function handleCredentialResponse(response) {
     error.value = 'Invalid Google response. Please try again.'
     return
   }
-
-  if (!payload.email.endsWith('@uci.edu')) {
-    error.value = 'Please sign in with your uci.edu account.'
-    return
-  }
-
-  // Store minimal user info. A production app should verify the token server-side.
-  setUser({
-    email: payload.email,
-    name: payload.name,
-    picture: payload.picture,
-    idToken: response.credential,
+  // Send token to backend for verification + admin check
+  fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken: response.credential })
   })
-
-  router.replace('/portal')
+    .then(async res => {
+      const body = await res.json()
+      if (!res.ok) {
+        throw new Error(body.error || "Auth failed")
+      }
+      // backend says “you’re an admin”
+      setUser({
+        email: body.email,
+        provider: body.provider,
+        id: body.id,
+      })
+      router.replace('/portal')
+    })
+    .catch(err => {
+      error.value = err.message
+    })
 }
 
 onMounted(() => {
@@ -88,5 +95,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/***** No additional styles needed: relying on Tailwind *****/
+
 </style> 

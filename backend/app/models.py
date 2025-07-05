@@ -116,5 +116,3 @@ class AdminUser(db.Model):
     email              = db.Column(db.String(120), unique=True, nullable=False)
     created_on         = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    def __repr__(self):
-        return f"<AdminUser {self.email}>"

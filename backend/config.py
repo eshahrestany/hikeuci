@@ -7,7 +7,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    user = os.getenv("POSTGRES_USER")
+    pw = os.getenv("POSTGRES_PASSWORD")
+    dbn = os.getenv("POSTGRES_DB")
+    host = os.getenv("POSTGRES_HOST")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{user}:{pw}@{host}:{port}/{dbn}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
