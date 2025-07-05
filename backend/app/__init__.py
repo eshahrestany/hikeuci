@@ -11,6 +11,9 @@ def create_app(config_object="config.Config"):
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # bring in model classes
+    from . import models
+
     # blueprints / routes
     register_routes(app)
 
