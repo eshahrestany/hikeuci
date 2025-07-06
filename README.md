@@ -46,7 +46,7 @@ run them side-by-side during development.
 ### 0. Prerequisites
 
 * **Python ≥3.9**
-* **Node.js ≥18** (comes with `npm` ≥9)
+* **Node.js ≥22**
 * A SQL database. For quick local testing you can use SQLite; for real usage
   we recommend PostgreSQL.
 
