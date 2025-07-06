@@ -1,5 +1,4 @@
 .venv
 .idea
 /backend/.env
-/frontend/package-lock.json
 /frontend/node_modules/
