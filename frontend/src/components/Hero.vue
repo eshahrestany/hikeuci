@@ -30,7 +30,7 @@
       <div class="mt-6 flex items-center gap-4">
         <!-- Instagram -->
         <a
-          href="https://instagram.com/ucihiking"
+          href="https://instagram.com/hikingclubatucirvine"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
@@ -49,7 +49,7 @@
 
         <!-- Discord -->
         <a
-          href="https://discord.gg/ucihiking"
+          href="https://discord.gg/jWcN8dWQzC"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Discord"
@@ -68,7 +68,7 @@
 
         <!-- Linktree -->
         <a
-          href="https://linktr.ee/ucihiking"
+          href="https://linktr.ee/hikingclubatuci"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Linktree"

@@ -86,7 +86,7 @@
             </a>
             <!-- Linktree -->
             <a
-              href="https://linktr.ee/ucihiking"
+              href="https://linktr.ee/hikingclubatuci"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Linktree"
