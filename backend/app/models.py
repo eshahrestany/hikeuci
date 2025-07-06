@@ -11,13 +11,12 @@ class Member(db.Model):
     joined_on  = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
-    # Relationships
-    signups        = db.relationship('Signup',       back_populates='member',       lazy=True)
-    waivers        = db.relationship('Waiver',       back_populates='member',       lazy=True)
+    signups        = db.relationship('Signup',        back_populates='member',       lazy=True)
+    waivers        = db.relationship('Waiver',        back_populates='member',       lazy=True)
     hikers_history = db.relationship('HikersHistory', back_populates='member',       lazy=True)
-    hikes_led      = db.relationship('HikesHistory',  back_populates='leader',       lazy=True)
-    vehicles       = db.relationship('Vehicle',      back_populates='member',       lazy=True)
-    logs           = db.relationship('Log',          back_populates='member',       lazy=True)
+    hikes_led      = db.relationship('Hike',         back_populates='leader',       lazy=True)
+    vehicles       = db.relationship('Vehicle',       back_populates='member',       lazy=True)
+    logs           = db.relationship('Log',           back_populates='member',       lazy=True)
 
 
 class Trail(db.Model):
@@ -32,10 +31,9 @@ class Trail(db.Model):
     trailhead_amaps_endpoint = db.Column(db.String(300), nullable=True)
     notes                    = db.Column(db.String(300), nullable=True)
 
-    # Relationships
     signups        = db.relationship('Signup',       back_populates='trail',       lazy=True)
     hikers_history = db.relationship('HikersHistory', back_populates='trail',       lazy=True)
-    hikes_history  = db.relationship('HikesHistory',  back_populates='trail',       lazy=True)
+    hikes  = db.relationship('Hike',  back_populates='trail',       lazy=True)
 
 
 class Signup(db.Model):
@@ -71,15 +69,16 @@ class HikersHistory(db.Model):
     trail  = db.relationship('Trail',  back_populates='hikers_history')
 
 
-class HikesHistory(db.Model):
-    __tablename__ = 'hikes_history'
+class Hike(db.Model):
+    __tablename__ = 'hikes'
     id         = db.Column(db.Integer, primary_key=True)
     trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id', ondelete='CASCADE'),  nullable=False)
     hike_date  = db.Column(db.DateTime, nullable=False)
     leader_id  = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='SET NULL'), nullable=True)
+    is_upcoming= db.Column(db.Boolean, default=False, nullable=False)
     notes      = db.Column(db.Text, nullable=True)
 
-    trail  = db.relationship('Trail',  back_populates='hikes_history')
+    trail  = db.relationship('Trail',  back_populates='hikes')
     leader = db.relationship('Member', back_populates='hikes_led')
 
 
