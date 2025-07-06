@@ -11,16 +11,18 @@
     --color-midnight: #002244;
 }
 
+:root {
+  --uci-blue: 37 87 153;   /* #255799 */
+  --uci-gold: 254 204 7;   /* #FECC07 */
+  --forest:   63 156 53;   /* #3F9C35 */
+  --sky:      106 162 184; /* #6AA2B8 */
+  --earth:    93 71 58;    /* #5D473A */
+  --stone:    198 190 181; /* #C6BEB5 */
+  --midnight: 0 34 68;     /* #002244 */
+}
+
 /* Montserrat font utility */
 .font-montserrat { font-family: 'Montserrat', sans-serif; }
-
-/* Utility shortcuts leveraging the palette */
-.bg-midnight { background-color: var(--color-midnight); }
-.text-stone { color: var(--color-stone); }
-.text-uci-gold { color: var(--color-uci-gold); }
-.text-uci-blue { color: var(--color-uci-blue); }
-.hover\:text-uci-gold:hover { color: var(--color-uci-gold); }
-.hover\:bg-uci-blue\/20:hover { background-color: rgba(37, 87, 153, 0.2); }
 
 /* Simple fade & slide for mobile nav */
 .fade-slide-enter-active,
