@@ -18,7 +18,7 @@
           aria-live="polite"
         >
           <div
-            v-for="(officer, index) in officers"
+            v-for="(officer, index) in displayedOfficers"
             :key="index"
             class="flex-shrink-0 flex justify-center px-4"
             :style="containerStyle"
@@ -52,25 +52,28 @@
 import { ref, computed, nextTick, watch, defineExpose } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
+/* -------------------------------------------------------------
+ * Types
+ * -----------------------------------------------------------*/
 interface Officer {
   name: string;
   title: string;
-  photo: string;
+  photo: string; // Resolved URL to an image asset
 }
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Props
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Aleksander Weihermuller', title: 'Co-President', photo: '/src/assets/petr.png' },
-      { name: 'Anna Kapp',              title: 'Co-President', photo: '/src/assets/petr.png' },
-      { name: 'Eric Miao',              title: 'Treasurer',    photo: '/src/assets/petr.png' },
-      { name: 'Zoe Glenn',              title: 'General Officer', photo: '/src/assets/petr.png' },
-      { name: 'Jake Gerber',            title: 'General Officer', photo: '/src/assets/petr.png' },
-      { name: 'Evan Shahrestany',       title: 'General Officer', photo: '/src/assets/petr.png' },
+      { name: 'Aleksander Weihermuller', title: 'Co-President',   photo: '../assets/petr.png' },
+      { name: 'Anna Kapp',              title: 'Co-President',   photo: '../assets/petr.png' },
+      { name: 'Eric Miao',              title: 'Treasurer',      photo: '../assets/petr.png' },
+      { name: 'Zoe Glenn',              title: 'General Officer', photo: '../assets/petr.png' },
+      { name: 'Jake Gerber',            title: 'General Officer', photo: '../assets/petr.png' },
+      { name: 'Evan Shahrestany',       title: 'General Officer', photo: '../assets/petr.png' },
     ],
   },
   intervalMs: {
@@ -79,9 +82,36 @@ const props = defineProps({
   },
 });
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
+ * Import **only image files** from assets so CSS / audio / etc. are ignored.
+ * -----------------------------------------------------------*/
+const importedImages = import.meta.glob(
+  '../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg}',
+  { eager: true, import: 'default' },
+) as Record<string, string>; // key = relative path, value = resolved URL
+
+/** Normalise the user‑supplied path so it matches the keys produced by
+ *  import.meta.glob. The keys always start with "../assets/".
+ */
+function toGlobKey(path: string) {
+  // Remove any leading "./" or "../" then ensure prefix "../assets/"
+  const trimmed = path.replace(/^\.\/?/, '').replace(/^\.\/?/, '');
+  return trimmed.startsWith('assets/') ? `../${trimmed}` : `../assets/${trimmed}`;
+}
+
+/** Map the original officers list ➜ list whose `photo` is a valid URL.
+ *  If an entry isn’t found in `importedImages`, we fall back to the raw string.
+ */
+const displayedOfficers = computed<Officer[]>(() =>
+  props.officers.map((o) => {
+    const key = toGlobKey(o.photo);
+    return { ...o, photo: importedImages[key] ?? o.photo };
+  }),
+);
+
+/* -------------------------------------------------------------
  * Helper – split full name into first & remainder (last/middle)
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 function splitName(full: string) {
   const parts = full.trim().split(/\s+/);
   const first = parts.shift() ?? '';
@@ -89,9 +119,9 @@ function splitName(full: string) {
   return { first, last };
 }
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Responsive columns
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 const cardsPerView = ref(1);
 function getCardsPerView(width: number) {
   if (width >= 1280) return 4; // xl
@@ -100,9 +130,9 @@ function getCardsPerView(width: number) {
   return 1;                     // phones
 }
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Refs & observers
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 const wrapperRef = ref<HTMLElement | null>(null);
 const sectionRef = ref<HTMLElement | null>(null);
 const containerWidth = ref(0);
@@ -115,15 +145,15 @@ useResizeObserver(wrapperRef, (entries) => {
   cardsPerView.value = getCardsPerView(window.innerWidth);
 });
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Carousel translate logic – shift by exactly one visible card each tick
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 const currentIndex = ref(0);
 const translate = computed(() => `translateX(-${currentIndex.value * (100 / cardsPerView.value)}%)`);
 
 // Interval with pause/resume
 const { pause, resume } = useIntervalFn(() => {
-  const maxIndex = Math.max(props.officers.length - cardsPerView.value, 0);
+  const maxIndex = Math.max(displayedOfficers.value.length - cardsPerView.value, 0);
   currentIndex.value = currentIndex.value >= maxIndex ? 0 : currentIndex.value + 1;
 }, props.intervalMs, { immediate: false });
 
@@ -132,9 +162,9 @@ useIntersectionObserver(sectionRef, ([{ isIntersecting }]) => {
   isIntersecting ? resume() : pause();
 });
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Dynamic sizing – measure widest natural card once
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 const maxCardNaturalWidth = ref(0);
 function measureNaturalWidths() {
   nextTick(() => {
@@ -142,7 +172,7 @@ function measureNaturalWidths() {
     const cardEls = wrapperRef.value.querySelectorAll<HTMLElement>('.leadership-card');
     if (!cardEls.length) return;
     let widest = 0;
-    cardEls.forEach(el => {
+    cardEls.forEach((el) => {
       const original = el.style.width;
       el.style.width = 'auto';
       widest = Math.max(widest, el.offsetWidth);
@@ -152,7 +182,7 @@ function measureNaturalWidths() {
   });
 }
 
-// Re‑measure on officers change
+// Re-measure on officers change
 watch(() => props.officers, measureNaturalWidths, { deep: true, immediate: true });
 
 /* Width calculations */
@@ -167,9 +197,9 @@ const containerStyle = computed(() => ({
 }));
 const cardStyle = computed(() => (cardWidth.value ? { width: `${cardWidth.value}px` } : {}));
 
-/* ------------------------------------------------------------------
+/* -------------------------------------------------------------
  * Expose state for potential external controls / debugging
- * ---------------------------------------------------------------- */
+ * -----------------------------------------------------------*/
 defineExpose({ currentIndex });
 </script>
 

@@ -46,10 +46,5 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  background: {
-    type: String,
-    default: '/src/assets/hiking_bg.jpg',
-  },
-})
+import background from "../assets/hiking_bg.jpg";
 </script>
