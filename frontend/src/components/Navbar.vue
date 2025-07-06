@@ -12,7 +12,7 @@
         <!-- Mobile menu toggle -->
         <button
           @click="open = !open"
-          :aria-expanded="open.toString()"
+          :aria-expanded="open"
           aria-label="Toggle navigation"
           aria-controls="mobile-nav"
           class="md:hidden focus:outline-none focus:ring-2 focus:ring-uci-gold rounded-lg p-2"
@@ -97,14 +97,16 @@ function isActive(item: NavItem) {
 
 function navLinkClasses(item: NavItem) {
   const base = 'font-medium transition-colors duration-200'
-  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]'
+  // Active: gold text with underline to indicate current page
+  const active = 'text-uci-gold underline underline-offset-4'
   const inactive = 'hover:text-uci-gold'
   return [base, isActive(item) ? active : inactive].join(' ')
 }
 
 function mobileNavLinkClasses(item: NavItem) {
   const base = 'block w-full py-2 px-4 rounded-lg transition-colors duration-200'
-  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]'
+  // Active: gold text with subtle background highlight
+  const active = 'text-uci-gold bg-uci-blue/10'
   const inactive = 'hover:bg-uci-blue/20 hover:text-uci-gold'
   return [base, isActive(item) ? active : inactive].join(' ')
 }
