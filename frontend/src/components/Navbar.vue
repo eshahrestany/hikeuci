@@ -1,17 +1,20 @@
 <template>
-  <nav :class="{
-    'bg-transparent text-stone shadow-md font-montserrat fixed inset-x-0 top-0 z-30': overlayNavbar === true,
-    'bg-midnight text-stone shadow-md font-montserrat': overlayNavbar === false
-  }">
+  <nav :class="['text-stone shadow-md font-montserrat', overlayNavbar
+      ? 'bg-black/40 backdrop-blur-md backdrop-saturate-150 fixed inset-x-0 top-0 z-30'
+      : 'bg-midnight']">
     <div class="max-w-7xl mx-auto px-4">
       <div class="flex justify-between h-16 items-center">
         <!-- Site / brand name -->
-        <a href="/" class="text-uci-gold font-semibold text-xl tracking-wide hover:text-uci-blue transition-colors">Hiking Club @ UCI</a>
+        <router-link to="/" class="text-uci-gold font-semibold text-xl tracking-wide hover:text-uci-blue transition-colors">
+          Hiking Club @ UCI
+        </router-link>
 
         <!-- Mobile menu toggle -->
         <button
           @click="open = !open"
+          :aria-expanded="open.toString()"
           aria-label="Toggle navigation"
+          aria-controls="mobile-nav"
           class="md:hidden focus:outline-none focus:ring-2 focus:ring-uci-gold rounded-lg p-2"
         >
           <svg v-if="!open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -28,12 +31,13 @@
         <!-- Desktop nav -->
         <ul class="hidden md:flex space-x-8">
           <li v-for="item in items" :key="item.name">
-            <a
-              :href="item.href"
+            <router-link
+              :to="item.href"
               :class="navLinkClasses(item)"
+              @click="open = false"
             >
               {{ item.name }}
-            </a>
+            </router-link>
           </li>
         </ul>
       </div>
@@ -42,15 +46,17 @@
       <transition name="fade-slide">
         <ul
           v-if="open"
+          id="mobile-nav"
           class="md:hidden mt-2 space-y-2 pb-4 border-t border-stone/40"
         >
           <li v-for="item in items" :key="item.name">
-            <a
-              :href="item.href"
+            <router-link
+              :to="item.href"
               :class="mobileNavLinkClasses(item)"
+              @click="open = false"
             >
               {{ item.name }}
-            </a>
+            </router-link>
           </li>
         </ul>
       </transition>
@@ -59,48 +65,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   overlayNavbar: {
     type: Boolean,
-    required: false,
     default: false,
-  }
+  },
 })
 
-// Navigation items; easier to modify centrally
 const items = [
-  { name: 'Home',            href: '/' },
-  { name: 'About Us',        href: '/about' },
-  { name: 'Useful Links',    href: '/links' },
-  { name: 'Login',           href: '/login' },
-];
+  { name: 'Home',       href: '/' },
+  { name: 'About Us',   href: '/about' },
+  { name: 'Leadership', href: '/leadership' },
+  { name: 'Member Portal',      href: '/login' },
+]
 
-// Mobile menu state
-const open = ref(false);
+const open = ref(false)
+const route = useRoute()
 
-// Current route information
-const route = useRoute();
+type NavItem = { href: string }
 
-/**
- * Utility: classes for desktop links
- */
-function navLinkClasses(item: { href: string }) {
-  const base = 'font-medium transition-colors duration-200';
-  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]';
-  const inactive = 'hover:text-uci-gold';
-  return [base, route.path === item.href ? active : inactive].join(' ');
+function isActive(item: NavItem) {
+  if (item.href.includes('#')) {
+    const [, hash] = item.href.split('#')
+    return route.path === '/' && route.hash === `#${hash}`
+  }
+  return route.path === item.href
 }
 
-/**
- * Utility: classes for mobile links
- */
-function mobileNavLinkClasses(item: { href: string }) {
-  const base = 'block w-full py-2 px-4 rounded-lg transition-colors duration-200';
-  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]';
-  const inactive = 'hover:bg-uci-blue/20 hover:text-uci-gold';
-  return [base, route.path === item.href ? active : inactive].join(' ');
+function navLinkClasses(item: NavItem) {
+  const base = 'font-medium transition-colors duration-200'
+  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]'
+  const inactive = 'hover:text-uci-gold'
+  return [base, isActive(item) ? active : inactive].join(' ')
+}
+
+function mobileNavLinkClasses(item: NavItem) {
+  const base = 'block w-full py-2 px-4 rounded-lg transition-colors duration-200'
+  const active = 'text-white drop-shadow-[0_0_6px_#ffffff]'
+  const inactive = 'hover:bg-uci-blue/20 hover:text-uci-gold'
+  return [base, isActive(item) ? active : inactive].join(' ')
 }
 </script>
