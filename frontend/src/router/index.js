@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ExampleIndex from '../components/views/ExampleIndex.vue'
+import Index from '../views/Index.vue'
 
 const routes = [
     {
         path: '/',
         name: 'Home',
-        component: ExampleIndex
+        component: Index
     }
 ]
 const router = createRouter({
