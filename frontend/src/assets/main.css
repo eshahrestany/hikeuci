@@ -1,1 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+    --color-uci-blue: #255799;
+    --color-uci-gold: #fecc07;
+    --color-forest: #3f9c35;
+    --color-sky: #6aa2b8;
+    --color-earth: #5d473a;
+    --color-stone: #c6beb5;
+    --color-midnight: #002244;
+}
+
+/* Montserrat font utility */
+.font-montserrat { font-family: 'Montserrat', sans-serif; }
+
+/* Utility shortcuts leveraging the palette */
+.bg-midnight { background-color: var(--color-midnight); }
+.text-stone { color: var(--color-stone); }
+.text-uci-gold { color: var(--color-uci-gold); }
+.text-uci-blue { color: var(--color-uci-blue); }
+.hover\:text-uci-gold:hover { color: var(--color-uci-gold); }
+.hover\:bg-uci-blue\/20:hover { background-color: rgba(37, 87, 153, 0.2); }
+
+/* Simple fade & slide for mobile nav */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.2s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}

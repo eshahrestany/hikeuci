@@ -1,10 +1,6 @@
-// tailwind.config.js
-export default  {
-  purge: [],
-  darkMode: false, // or 'media' or 'class'
-  theme: {
-    extend: {},
-  },
-  variants: {},
+import { defineConfig } from 'tailwindcss'
+
+export default defineConfig({
+  content: ['./index.html', './src/**/*.{vue,js,ts}'],
   plugins: [],
-}
+})
