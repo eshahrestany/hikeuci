@@ -1,5 +1,8 @@
 <template>
-  <nav class="bg-midnight text-stone shadow-md font-montserrat">
+  <nav :class="{
+    'bg-transparent text-stone shadow-md font-montserrat fixed inset-x-0 top-0 z-30': overlayNavbar === true,
+    'bg-midnight text-stone shadow-md font-montserrat': overlayNavbar === false
+  }">
     <div class="max-w-7xl mx-auto px-4">
       <div class="flex justify-between h-16 items-center">
         <!-- Site / brand name -->
@@ -56,14 +59,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, defineProps } from 'vue';
 import { useRoute } from 'vue-router';
+
+const props = defineProps({
+  overlayNavbar: {
+    type: Boolean,
+    required: false,
+    default: false,
+  }
+})
 
 // Navigation items; easier to modify centrally
 const items = [
   { name: 'Home',            href: '/' },
   { name: 'About Us',        href: '/about' },
-  { name: 'Leadership Team', href: '/leadership' },
   { name: 'Useful Links',    href: '/links' },
   { name: 'Login',           href: '/login' },
 ];
