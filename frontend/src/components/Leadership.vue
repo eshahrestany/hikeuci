@@ -13,12 +13,13 @@
       <div ref="wrapperRef" class="relative w-full overflow-hidden pb-5">
         <!-- Slides -->
         <div
-          class="flex transition-transform duration-700 ease-in-out"
-          :style="{ transform: translate }"
+          ref="slidesRef"
+          class="flex"
+          :style="slidesStyle"
           aria-live="polite"
         >
           <div
-            v-for="(officer, index) in displayedOfficers"
+            v-for="(officer, index) in loopedOfficers"
             :key="index"
             class="flex-shrink-0 flex justify-center px-4"
             :style="containerStyle"
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, defineExpose } from 'vue';
+import { ref, computed, nextTick, watch, defineExpose, onMounted, onUnmounted } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
 /* -------------------------------------------------------------
@@ -100,7 +101,7 @@ function toGlobKey(path: string) {
 }
 
 /** Map the original officers list ➜ list whose `photo` is a valid URL.
- *  If an entry isn’t found in `importedImages`, we fall back to the raw string.
+ *  If an entry isn't found in `importedImages`, we fall back to the raw string.
  */
 const displayedOfficers = computed<Officer[]>(() =>
   props.officers.map((o) => {
@@ -108,6 +109,14 @@ const displayedOfficers = computed<Officer[]>(() =>
     return { ...o, photo: importedImages[key] ?? o.photo };
   }),
 );
+
+/* -------------------------------------------------------------
+ * Duplicate list to enable seamless looping
+ * -----------------------------------------------------------*/
+const loopedOfficers = computed<Officer[]>(() => [
+  ...displayedOfficers.value,
+  ...displayedOfficers.value,
+]);
 
 /* -------------------------------------------------------------
  * Helper – split full name into first & remainder (last/middle)
@@ -137,6 +146,35 @@ const wrapperRef = ref<HTMLElement | null>(null);
 const sectionRef = ref<HTMLElement | null>(null);
 const containerWidth = ref(0);
 
+// Capture initial dimensions right after mount so card sizing is available
+onMounted(() => {
+  if (wrapperRef.value) {
+    // Set width synchronously instead of waiting for ResizeObserver
+    containerWidth.value = wrapperRef.value.clientWidth;
+  }
+  cardsPerView.value = getCardsPerView(window.innerWidth);
+  // Measure once the DOM has stabilized
+  measureNaturalWidths();
+
+  // Handle seamless looping once the slide transition completes
+  slidesRef.value?.addEventListener('transitionend', () => {
+    const originalLength = displayedOfficers.value.length;
+    if (currentIndex.value >= originalLength) {
+      transitionEnabled.value = false; // temporarily disable animation
+      currentIndex.value = currentIndex.value - originalLength;
+      nextTick(() => {
+        // Force reflow so the browser registers the style change
+        void slidesRef.value?.offsetWidth;
+        transitionEnabled.value = true; // re-enable animation
+      });
+    }
+  });
+});
+
+onUnmounted(() => {
+  slidesRef.value?.removeEventListener('transitionend', () => {});
+});
+
 // ResizeObserver – updates container width & cards-per-view reactively
 useResizeObserver(wrapperRef, (entries) => {
   const entry = entries[0];
@@ -153,8 +191,8 @@ const translate = computed(() => `translateX(-${currentIndex.value * (100 / card
 
 // Interval with pause/resume
 const { pause, resume } = useIntervalFn(() => {
-  const maxIndex = Math.max(displayedOfficers.value.length - cardsPerView.value, 0);
-  currentIndex.value = currentIndex.value >= maxIndex ? 0 : currentIndex.value + 1;
+  // Advance by exactly one card each tick
+  currentIndex.value += 1;
 }, props.intervalMs, { immediate: false });
 
 // Pause the carousel when the section scrolls out of view
@@ -173,10 +211,16 @@ function measureNaturalWidths() {
     if (!cardEls.length) return;
     let widest = 0;
     cardEls.forEach((el) => {
-      const original = el.style.width;
+      // Temporarily clear any inline width so we read the element's natural size
+      const previous = el.style.width;
       el.style.width = 'auto';
       widest = Math.max(widest, el.offsetWidth);
-      el.style.width = original;
+      // Restore prior width if one existed; otherwise leave it to Vue's reactive binding
+      if (previous) {
+        el.style.width = previous;
+      } else {
+        el.style.removeProperty('width');
+      }
     });
     maxCardNaturalWidth.value = widest;
   });
@@ -196,6 +240,16 @@ const containerStyle = computed(() => ({
   flex: `0 0 ${100 / cardsPerView.value}%`,
 }));
 const cardStyle = computed(() => (cardWidth.value ? { width: `${cardWidth.value}px` } : {}));
+
+/* -------------------------------------------------------------
+ * Refs for infinite scroll behaviour
+ * -----------------------------------------------------------*/
+const slidesRef = ref<HTMLElement | null>(null);
+const transitionEnabled = ref(true);
+const slidesStyle = computed(() => ({
+  transform: translate.value,
+  transition: transitionEnabled.value ? 'transform 0.7s ease-in-out' : 'none',
+}));
 
 /* -------------------------------------------------------------
  * Expose state for potential external controls / debugging
