@@ -3,9 +3,8 @@
     <div class="max-w-7xl mx-auto px-6 py-12 grid gap-12 md:grid-cols-3">
       <!-- UCI Logo & address -->
       <div class="flex flex-col gap-4">
-        <!-- Replace with the correct path to your logo asset -->
         <img
-          src="../assets/uci_logo.png"
+          :src="uciLogo"
           alt="University of California, Irvine"
           loading="lazy"
         />
@@ -103,6 +102,7 @@
 </template>
 
 <script setup lang="ts">
+import uciLogo from '../assets/uci_logo.png';
 const props = defineProps({
   /**
    * Comma‑separated list or sentence of creators to display in the watermark.
