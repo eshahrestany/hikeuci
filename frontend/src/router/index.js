@@ -6,11 +6,32 @@ const routes = [
         path: '/',
         name: 'Home',
         component: Index
+    },
+    {
+        path: '/login',
+        name: 'SignIn',
+        component: () => import('../views/SignIn.vue'),
+    },
+    {
+        path: '/portal',
+        name: 'Portal',
+        component: () => import('../views/Portal.vue'),
+        meta: { requiresAuth: true },
     }
 ]
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+import { useAuth } from '../lib/auth.js'
+router.beforeEach((to, from, next) => {
+  const { state } = useAuth()
+  if (to.meta.requiresAuth && !state.user) {
+    next({ name: 'SignIn', query: { redirect: to.fullPath } })
+  } else {
+    next()
+  }
+})
 
 export default router

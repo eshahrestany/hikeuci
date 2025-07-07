@@ -77,9 +77,7 @@ const props = defineProps({
 
 const items = [
   { name: 'Home',       href: '/' },
-  { name: 'About Us',   href: '/about' },
-  { name: 'Leadership', href: '/leadership' },
-  { name: 'Member Portal',      href: '/login' },
+  { name: 'Member Portal',      href: '/portal' },
 ]
 
 const open = ref(false)
