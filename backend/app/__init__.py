@@ -1,10 +1,20 @@
-from flask import Flask
+import os
+from flask import Flask, send_from_directory
 from .extensions import db, migrate
 from .routes import register_routes
 
-
 def create_app(config_object="config.Config"):
-    app = Flask(__name__)
+    module_name, class_name = config_object.rsplit('.', 1)
+    mod     = __import__(module_name, fromlist=[class_name])
+    cfg_cls = getattr(mod, class_name)
+
+    app = Flask(
+        __name__,
+        static_folder=cfg_cls.STATIC_FOLDER,
+        static_url_path=cfg_cls.STATIC_URL_PATH,
+        template_folder=cfg_cls.TEMPLATE_FOLDER
+    )
+
     app.config.from_object(config_object)
 
     # extensions
@@ -16,6 +26,14 @@ def create_app(config_object="config.Config"):
 
     # blueprints / routes
     register_routes(app)
+
+    # catch-all for client-side routing
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_vue(path):
+        # let Flask's built-in static route (at /assets/…) handle assets
+        # everything else falls back to index.html
+        return send_from_directory(app.template_folder, 'index.html')
 
     @app.shell_context_processor
     def _shell():
