@@ -1,5 +1,7 @@
 import os
 import requests
+import jwt
+from datetime import datetime, timedelta
 from flask import Blueprint, current_app, request, jsonify
 from app import db
 from app.models import AdminUser
@@ -33,10 +35,16 @@ def google_login():
     if not admin:
         return jsonify({"error": "Not an admin user"}), 403
 
-    # 4) At this point, you could issue your own session or JWT.
-    #    For simplicity we'll just return basic admin info:
-    return jsonify({
-        "id": admin.id,
+    now = datetime.utcnow()
+    exp = now + timedelta(hours=int(os.getenv("JWT_EXP_HOURS", 4)))
+    payload = {
+        "sub": str(admin.id),
         "email": admin.email,
-        "provider": admin.provider
-    })
+        "iat": now,
+        "exp": exp
+    }
+    token = jwt.encode(payload,
+                       os.getenv("JWT_SECRET_KEY"),
+                       algorithm=os.getenv("JWT_ALGORITHM", "HS256"))
+
+    return jsonify(token=token), 200

@@ -1,13 +1,16 @@
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Simple auth store using the Composition API. This keeps the signed-in user
-// (email, name, picture, idToken) reactive across the application.
+const API_URL = import.meta.env.VITE_API_URL || ''
 
+// Simple auth store using the Composition API.
 const state = reactive({
   user: JSON.parse(localStorage.getItem('auth_user')) || null,
 })
 
 export function useAuth() {
+  const router = useRouter()
+
   function setUser(user) {
     state.user = user
     if (user) {
@@ -18,11 +21,41 @@ export function useAuth() {
   }
 
   function signOut() {
-    // Invalidate the session locally. If needed, revoke token server-side.
     setUser(null)
+    router.replace('/login')   // send them back to login
   }
 
-  return { state, setUser, signOut }
-}
+  // Helper: returns { Authorization: "Bearer …" } or {}
+  function getAuthHeaders() {
+    return state.user?.token
+      ? { Authorization: `Bearer ${state.user.token}` }
+      : {}
+  }
 
-export default { useAuth } 
+  /**
+   * Fetch wrapper that:
+   *  - prefixes API_URL
+   *  - sets Content-Type: application/json
+   *  - injects Authorization header if logged in
+   *  - auto signs out on 401
+   */
+  async function fetchWithAuth(path, opts = {}) {
+    const url = `${API_URL}${path}`
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+      ...opts.headers,
+    }
+    const res = await fetch(url, {
+      ...opts,
+      headers,
+    })
+    if (res.status === 401) {
+      signOut()
+      throw new Error('Unauthorized')
+    }
+    return res
+  }
+
+  return { state, setUser, signOut, fetchWithAuth }
+}

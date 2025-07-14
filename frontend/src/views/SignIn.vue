@@ -19,79 +19,62 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuth } from '../lib/auth.js'
-import NavBar from "../components/Navbar.vue"
-import Footer from "../components/Footer.vue"
+  import { onMounted, ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuth } from '../lib/auth.js'
+  import NavBar from "../components/Navbar.vue"
+  import Footer from "../components/Footer.vue"
+  import background from "../assets/hiking_bg.jpg"
 
-// Background photo reused from Hero component
-import background from "../assets/hiking_bg.jpg"
+  const router = useRouter()
+  const { state, setUser } = useAuth()
+  const error = ref(null)
 
-const router = useRouter()
-const { setUser } = useAuth()
-const error = ref(null)
-
-function decodeJwt(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload
-  } catch (e) {
-    return null
-  }
-}
-
-function handleCredentialResponse(response) {
-  const payload = decodeJwt(response.credential)
-  if (!payload || !payload.email) {
-    error.value = 'Invalid Google response. Please try again.'
-    return
-  }
-  // Send token to backend for verification + admin check
-  fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/google`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken: response.credential })
-  })
-    .then(async res => {
+  async function handleCredentialResponse(response) {
+    try {
+      // 1) Send the Google ID token to your backend
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: response.credential })
+      })
       const body = await res.json()
-      if (!res.ok) {
-        throw new Error(body.error || "Auth failed")
-      }
-      // backend says “you’re an admin”
-      setUser({
-        email: body.email,
-        provider: body.provider,
-        id: body.id,
-      })
-      router.replace('/portal')
-    })
-    .catch(err => {
-      error.value = err.message
-    })
-}
 
-onMounted(() => {
-  // Google script should already be loaded via index.html. Wait until it exists.
-  const interval = setInterval(() => {
-    // eslint-disable-next-line no-undef
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      clearInterval(interval)
-      // eslint-disable-next-line no-undef
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        hd: 'uci.edu',
-        prompt: 'select_account',
-        callback: handleCredentialResponse,
-      })
-      // eslint-disable-next-line no-undef
-      window.google.accounts.id.renderButton(
-        document.getElementById('g_id_signin'),
-        { theme: 'outline', size: 'large', width: 280 }
-      )
+      if (!res.ok) {
+        // backend will send { error: "..." }
+        throw new Error(body.error || 'Authentication failed')
+      }
+
+      // 2) Backend sent back your own JWT
+      //    it will look like { token: "eyJ..." }
+      setUser({ token: body.token })
+
+      console.log('✅ Logged in, user state is now:', state.user)
+      router.replace('/portal')
     }
-  }, 200)
-})
+    catch (err) {
+      console.error(err)
+      error.value = err.message
+    }
+  }
+
+  onMounted(() => {
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(interval)
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          hd: 'uci.edu',
+          prompt: 'select_account',
+          callback: handleCredentialResponse,
+        })
+        window.google.accounts.id.renderButton(
+          document.getElementById('g_id_signin'),
+          { theme: 'outline', size: 'large', width: 280 }
+        )
+      }
+    }, 200)
+  })
 </script>
 
 <style scoped>

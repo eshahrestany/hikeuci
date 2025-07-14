@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
 from app.models import Hike
 
+from backend.app.decorators import admin_required
+
 example_bp = Blueprint("example", __name__)
 
 
@@ -9,6 +11,7 @@ def example():
     return jsonify({"message": "Hello World"})
 
 @example_bp.route('/upcoming', methods=['GET'])
+@admin_required
 def upcoming_hike():
     hike = Hike.query.filter_by(is_upcoming=True).first()
 

@@ -1,4 +1,3 @@
-import os
 from flask import Flask, send_from_directory
 from .extensions import db, migrate
 from .routes import register_routes

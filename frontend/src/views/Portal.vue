@@ -15,6 +15,13 @@
         >
           Sign Out
         </button>
+
+        <button
+          @click="testExampleRoute"
+          class="inline-flex items-center px-4 py-2 bg-uci-blue hover:bg-uci-blue/80 text-white rounded-lg transition-colors"
+        >
+          Test example API route
+        </button>
       </div>
     </div>
   </section>
@@ -28,11 +35,21 @@ import NavBar from "../components/Navbar.vue"
 import Footer from "../components/Footer.vue"
 
 const router = useRouter()
-const { state: authState, signOut } = useAuth()
+const { state: authState, signOut, fetchWithAuth } = useAuth()
 
 function signOutAndReturn() {
   signOut()
   router.replace('/login')
+}
+
+async function testExampleRoute() {
+  try {
+    const res = await fetchWithAuth('/api/example/upcoming')
+    const info = await res.json()
+    console.log(info)
+  } catch (e) {
+    console.error(e.message)
+  }
 }
 </script>
 

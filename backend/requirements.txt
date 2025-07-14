@@ -1,6 +1,7 @@
 Flask~=3.1.1
-Flask-Migrate~=4.0.5
+Flask-Migrate~=4.1.0
 Flask-SQLAlchemy~=3.1.1
-python-dotenv~=1.0.1
+python-dotenv~=1.1.1
+pyjwt~=2.10.1
+requests~=2.32.4
 psycopg2-binary~=2.9.10
-google-auth~=2.29.0

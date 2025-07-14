@@ -15,6 +15,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = f"postgresql://{user}:{pw}@{host}:{port}/{dbn}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
+    JWT_EXP_HOURS = os.getenv("JWT_EXP_HOURS")
+
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     FRONTEND_DIST = os.path.join(BASE_DIR, '..', 'frontend', 'dist')
     STATIC_FOLDER = os.path.join(FRONTEND_DIST, 'assets')
