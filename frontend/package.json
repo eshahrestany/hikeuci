@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:dev": "vite build --mode development --watch",
     "serve": "vite preview"
   },
   "dependencies": {

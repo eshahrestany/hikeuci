@@ -1,4 +1,7 @@
 .venv
 .idea
 /backend/.env
+/backend/migrations/versions
 /frontend/node_modules/
+/frontend/.env*
+/frontend/dist

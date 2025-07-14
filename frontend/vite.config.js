@@ -7,6 +7,13 @@ export default defineConfig({
     vue(),
     tailwindcss()
   ],
+  build: {
+    outDir: 'dist',
+    watch: {
+      include: 'src/**',
+      exclude: 'node_modules/**'
+    }
+  },
   server: {
     proxy: {
       "/api": "http://localhost:5000"
