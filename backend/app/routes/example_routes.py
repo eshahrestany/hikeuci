@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
-from app.models import Hike
-from app.decorators import admin_required
+from ..models import Hike
+from ..decorators import admin_required
 
 example_bp = Blueprint("example", __name__)
 

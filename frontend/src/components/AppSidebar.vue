@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import SearchForm from '@/components/SearchForm.vue'
-import VersionSwitcher from '@/components/VersionSwitcher.vue'
-
 import {
   Sidebar,
   SidebarContent,

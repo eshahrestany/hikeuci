@@ -3,14 +3,13 @@ import requests
 import jwt
 from datetime import datetime, timedelta
 from flask import Blueprint, current_app, request, jsonify
-from app import db
-from app.models import AdminUser
+from ..models import AdminUser
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
+auth = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
-@auth_bp.route("/google", methods=["POST"])
+@auth.route("/google", methods=["POST"])
 def google_login():
     data = request.get_json()
     id_token = data.get("idToken")
@@ -35,6 +34,7 @@ def google_login():
     if not admin:
         return jsonify({"error": "Not an admin user"}), 403
 
+    # 4) Prepare JWT to send to client
     now = datetime.utcnow()
     exp = now + timedelta(hours=int(os.getenv("JWT_EXP_HOURS")))
     payload = {

@@ -1,7 +1,7 @@
 import jwt
 from functools import wraps
 from flask import request, jsonify, current_app, g
-from app.models import AdminUser
+from .models import AdminUser
 
 def admin_required(f):
     @wraps(f)

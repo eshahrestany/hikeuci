@@ -75,7 +75,7 @@ class Hike(db.Model):
     trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id', ondelete='CASCADE'),  nullable=False)
     hike_date  = db.Column(db.DateTime, nullable=False)
     leader_id  = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='SET NULL'), nullable=True)
-    status    = db.Column(db.Integer, default=0, nullable=True)
+    status    = db.Column(db.String, default=None, nullable=True)
     notes      = db.Column(db.Text, nullable=True)
 
     trail  = db.relationship('Trail',  back_populates='hikes')
