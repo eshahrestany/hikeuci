@@ -54,5 +54,5 @@ async function testExampleRoute() {
 </script>
 
 <style scoped>
-/***** Relying on Tailwind for styling *****/
+
 </style> 

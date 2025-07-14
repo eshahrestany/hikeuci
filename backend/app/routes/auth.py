@@ -36,7 +36,7 @@ def google_login():
         return jsonify({"error": "Not an admin user"}), 403
 
     now = datetime.utcnow()
-    exp = now + timedelta(hours=int(os.getenv("JWT_EXP_HOURS", 4)))
+    exp = now + timedelta(hours=int(os.getenv("JWT_EXP_HOURS")))
     payload = {
         "sub": str(admin.id),
         "email": admin.email,

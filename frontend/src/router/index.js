@@ -13,9 +13,9 @@ const routes = [
         component: () => import('../views/SignIn.vue'),
     },
     {
-        path: '/portal',
-        name: 'Portal',
-        component: () => import('../views/Portal.vue'),
+        path: '/admin',
+        name: 'Dashboard',
+        component: () => import('../views/Dashboard.vue'),
         meta: { requiresAuth: true },
     }
 ]

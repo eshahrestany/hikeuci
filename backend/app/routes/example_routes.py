@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify
 from app.models import Hike
-
-from backend.app.decorators import admin_required
+from app.decorators import admin_required
 
 example_bp = Blueprint("example", __name__)
 
@@ -13,7 +12,7 @@ def example():
 @example_bp.route('/upcoming', methods=['GET'])
 @admin_required
 def upcoming_hike():
-    hike = Hike.query.filter_by(is_upcoming=True).first()
+    hike = Hike.query.filter_by(status=2).first()
 
     if not hike:
         return jsonify({"message": "No upcoming hikes found"})

@@ -7,6 +7,10 @@
     "strict": true,          // remove if you don’t want TS strict mode
     "jsx": "preserve",
     "types": ["vite/client"] // lets TS understand import.meta.env etc.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"]
 }
