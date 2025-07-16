@@ -11,7 +11,7 @@ def create_app(config_object="config.Config"):
         __name__,
         static_folder=cfg_cls.STATIC_FOLDER,
         static_url_path=cfg_cls.STATIC_URL_PATH,
-        template_folder=cfg_cls.TEMPLATE_FOLDER
+        template_folder=cfg_cls.TEMPLATE_FOLDER,
     )
 
     app.config.from_object(config_object)

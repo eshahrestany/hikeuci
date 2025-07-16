@@ -1,12 +1,17 @@
 {
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "node",
-    "isolatedModules": true,
-    "strict": true,          // remove if you don’t want TS strict mode
-    "jsx": "preserve",
-    "types": ["vite/client"] // lets TS understand import.meta.env etc.
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"]
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

@@ -50,7 +50,7 @@
       setUser({ token: body.token })
 
       console.log('✅ Logged in, user state is now:', state.user)
-      router.replace('/portal')
+      router.replace('/admin')
     }
     catch (err) {
       console.error(err)
