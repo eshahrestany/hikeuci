@@ -64,7 +64,6 @@
         clearInterval(interval)
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          hd: 'uci.edu',
           prompt: 'select_account',
           callback: handleCredentialResponse,
         })

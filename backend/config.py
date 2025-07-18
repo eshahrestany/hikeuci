@@ -24,3 +24,6 @@ class Config:
     STATIC_FOLDER = os.path.join(FRONTEND_DIST, 'assets')
     TEMPLATE_FOLDER = FRONTEND_DIST
     STATIC_URL_PATH = '/assets'
+
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+    ALLOWED_UPLOAD_EXTENSIONS = {'png'}

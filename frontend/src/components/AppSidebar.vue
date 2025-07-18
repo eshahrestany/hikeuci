@@ -12,6 +12,7 @@ import {
   type SidebarProps,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import ThemeToggle from "@/components/ThemeToggle.vue";
 
 const props = defineProps<SidebarProps>()
 
@@ -45,6 +46,7 @@ const data = {
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
+      <div class="w-fit"><ThemeToggle/></div>
     </SidebarHeader>
     <SidebarContent>
       <SidebarGroup v-for="item in data.navMain">
