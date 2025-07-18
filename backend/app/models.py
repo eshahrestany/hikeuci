@@ -84,7 +84,6 @@ class Vote(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=True)
-    trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id'),  nullable=False)
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'))
 
 

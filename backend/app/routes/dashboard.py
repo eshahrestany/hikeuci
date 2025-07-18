@@ -1,12 +1,14 @@
 from flask import Blueprint, jsonify, current_app, Response
-from ..models import ActiveHike, Trail
+
+from .. import db
+from ..models import ActiveHike, Trail, Vote, Member
 from ..decorators import admin_required
 from typing import List, Optional
 
 
-api: Blueprint = Blueprint("api", __name__)
+dashboard: Blueprint = Blueprint("dashboard", __name__)
 
-@api.route('/upcoming', methods=['GET'])
+@dashboard.route('/upcoming', methods=['GET'])
 @admin_required
 def get_upcoming_hike() -> Response:
     # find out the current phase
@@ -18,17 +20,27 @@ def get_upcoming_hike() -> Response:
 
     # voting phase: two or more hikes are slated for voting
     if active_hike.status == "voting":
-        # return the list of trails being voted on
+        # return the list of trails being voted with detailed info about the vote
         candidate_hikes: List[ActiveHike] = ActiveHike.query.all()
         return_data = {"status": "voting", "candidates": []}
         for hike in candidate_hikes:
             trail: Trail = Trail.query.get(hike.trail_id)
 
+            rows = (
+                db.session.query(Member.first_name, Member.last_name)
+                .join(Vote, Member.id == Vote.member_id)
+                .filter(Vote.active_hike_id == hike.id)
+                .all()
+            )
+
+            voter_names = [fname + " " + lname for (fname,lname) in rows]
+
             return_data["candidates"].append({
-                "candidate_id": hike.id,
-                "candidate_votes": hike.num_votes,
                 "trail_id": trail.id,
-                "trail_name": trail.name
+                "trail_name": trail.name,
+                "candidate_id": hike.id,
+                "candidate_num_votes": hike.num_votes,
+                "candidate_voters": voter_names
             })
 
         return jsonify(return_data)
