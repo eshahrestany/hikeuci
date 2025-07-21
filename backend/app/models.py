@@ -28,24 +28,27 @@ class Trail(db.Model):
 class Signup(db.Model):
     __tablename__ = 'signups'
     id          = db.Column(db.Integer, primary_key=True)
-    member_id   = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='CASCADE'), nullable=False)
-    trail_id    = db.Column(db.Integer, db.ForeignKey('trails.id', ondelete='CASCADE'),  nullable=False)
+    member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
     signup_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_driver = db.Column(db.Boolean, nullable=False)
+    is_checked_in = db.Column(db.Boolean, nullable=False, default=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)
 
 
 class Waiver(db.Model):
     __tablename__ = 'waivers'
-    id          = db.Column(db.Integer, primary_key=True)
-    member_id   = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='CASCADE'), nullable=False)
-    signed_on   = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    waiver_text = db.Column(db.Text, nullable=True)
+    id             = db.Column(db.Integer, primary_key=True)
+    member_id      = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
+    signed_on      = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
 class HikersHistory(db.Model):
     __tablename__ = 'hikers_history'
     id         = db.Column(db.Integer, primary_key=True)
-    member_id  = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='CASCADE'), nullable=False)
-    trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id', ondelete='CASCADE'),  nullable=False)
+    member_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id'),  nullable=False)
     date_hiked = db.Column(db.DateTime, nullable=False)
     notes      = db.Column(db.Text, nullable=True)
 
@@ -63,7 +66,7 @@ class Hike(db.Model):
 class Vehicle(db.Model):
     __tablename__ = 'vehicles'
     id              = db.Column(db.Integer, primary_key=True)
-    member_id       = db.Column(db.Integer, db.ForeignKey('members.id', ondelete='CASCADE'), nullable=False)
+    member_id       = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     year            = db.Column(db.Integer, nullable=False)
     make            = db.Column(db.String(50), nullable=False)
     model           = db.Column(db.String(50), nullable=False)
@@ -94,8 +97,4 @@ class ActiveHike(db.Model):
     status = db.Column(db.String(50), nullable=False)
     planned_date = db.Column(db.DateTime, nullable=False)
     trail_id = db.Column(db.Integer, db.ForeignKey('trails.id'), nullable=False)
-    num_votes = db.Column(db.Integer, nullable=True, default=0)
-    num_signups = db.Column(db.Integer, nullable=True, default=0)
-    num_waivers_sent = db.Column(db.Integer, nullable=True, default=0)
-    num_waivers_filled = db.Column(db.Integer, nullable=True, default=0)
 

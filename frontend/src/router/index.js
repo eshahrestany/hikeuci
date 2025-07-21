@@ -18,11 +18,6 @@ const routes = [
         component: () => import('../views/Dashboard.vue'),
         meta: { requiresAuth: true },
     },
-    {
-        path: '/signup',
-        name: 'SignUpForm',
-        component: () => import('../views/signupform.vue'),
-    }
 ]
 const router = createRouter({
   history: createWebHistory(),
