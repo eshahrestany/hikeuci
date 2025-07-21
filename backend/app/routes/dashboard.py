@@ -103,6 +103,7 @@ def get_upcoming_hike() -> Response:
             .query(
                 Member,
                 Signup.is_driver,
+                Signup.is_checked_in,
                 Waiver.id.label("waiver_id")
             )
             .join(
@@ -120,13 +121,14 @@ def get_upcoming_hike() -> Response:
         )
 
         users = []
-        for member, is_driver, waiver_id in rows:
+        for member, is_driver, is_checked_in, waiver_id in rows:
             users.append({
                 "member_id": member.id,
                 "first_name": member.first_name,
                 "last_name": member.last_name,
                 "is_driver": is_driver,
-                "has_waiver": waiver_id is not None
+                "has_waiver": waiver_id is not None,
+                "is_checked_in": is_checked_in
             })
 
         return_data["users"] = users

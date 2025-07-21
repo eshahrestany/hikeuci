@@ -110,52 +110,20 @@
                     <p>Total Signups: {{ response.num_signups }}</p>
                     <p>Passengers: {{ response.num_passengers }}</p>
                     <p>Drivers: {{ response.num_drivers }}</p>
-                    <p>
-                      Passenger Capacity:
-                      {{ response.passenger_capacity }}
-                    </p>
+                    <p>Passenger Capacity: {{ response.passenger_capacity }}</p>
                   </div>
                   <div class="space-y-2">
-                    <Button
-                      variant="link"
-                      @click="showSignup.passengers = !showSignup.passengers"
-                    >
-                      {{
-                        showSignup.passengers
-                          ? 'Hide Passengers'
-                          : 'See Passengers'
-                      }}
+                    <Button variant="link" @click="showSignup.passengers = !showSignup.passengers">
+                      {{ showSignup.passengers ? 'Hide Passengers' : 'See Passengers' }}
                     </Button>
-                    <ul
-                      v-if="showSignup.passengers"
-                      class="list-disc list-inside text-sm ml-4"
-                    >
-                      <li
-                        v-for="(name, idx) in response.passengers"
-                        :key="idx"
-                      >
-                        {{ name }}
-                      </li>
+                    <ul v-if="showSignup.passengers" class="list-disc list-inside text-sm ml-4">
+                      <li v-for="(name, idx) in response.passengers" :key="idx">{{ name }}</li>
                     </ul>
-
-                    <Button
-                      variant="link"
-                      @click="showSignup.drivers = !showSignup.drivers"
-                    >
-                      {{
-                        showSignup.drivers ? 'Hide Drivers' : 'See Drivers'
-                      }}
+                    <Button variant="link" @click="showSignup.drivers = !showSignup.drivers">
+                      {{ showSignup.drivers ? 'Hide Drivers' : 'See Drivers' }}
                     </Button>
-                    <ul
-                      v-if="showSignup.drivers"
-                      class="list-disc list-inside text-sm ml-4"
-                    >
-                      <li
-                        v-for="(name, idx) in response.drivers"
-                        :key="idx"
-                      >
-                        {{ name }}
-                      </li>
+                    <ul v-if="showSignup.drivers" class="list-disc list-inside text-sm ml-4">
+                      <li v-for="(name, idx) in response.drivers" :key="idx">{{ name }}</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -164,10 +132,25 @@
 
             <!-- Waiver Phase -->
             <div v-else-if="response.status === 'waiver'">
-              <p class="font-semibold text-xl mb-2">
-                Current Phase:
-                <Badge class="text-md">Waiver</Badge>
-              </p>
+              <div class="flex items-center justify-between mb-4">
+                <p class="font-semibold text-xl">Current Phase: <Badge class="text-md">Waiver</Badge></p>
+                <div class="space-x-2">
+                  <Button :disabled="!hasSelection" @click="checkInSelected">Check In</Button>
+                  <Button :disabled="!hasSelection" @click="modifySelected">Modify</Button>
+                  <Button variant="destructive" :disabled="!hasSelection" @click="removeSelected">Remove</Button>
+                </div>
+              </div>
+
+              <!-- Name Filter -->
+              <div class="flex items-center py-2">
+                <Input
+                  class="max-w-sm"
+                  placeholder="Filter names..."
+                  :model-value="table.getColumn('name')?.getFilterValue()"
+                  @update:model-value="(value) => table.getColumn('name')?.setFilterValue(value)"
+                />
+              </div>
+
               <Card>
                 <CardHeader>
                   <img
@@ -178,52 +161,39 @@
                   <CardTitle>{{ response.trail_name }}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Member</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Waiver?</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow
-                        v-for="user in response.users"
-                        :key="user.member_id"
-                      >
-                        <TableCell>
-                          {{ user.first_name + ' ' + user.last_name }}
-                        </TableCell>
-                        <TableCell>
-                          {{ user.is_driver ? 'Driver' : 'Passenger' }}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            :class="
-                              user.has_waiver
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            "
-                          >
-                            {{ user.has_waiver ? 'Yes' : 'No' }}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  <div class="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
+                          <TableHead v-for="h in hg.headers" :key="h.id">
+                            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <template v-if="table.getRowModel().rows.length">
+                          <template v-for="row in table.getRowModel().rows" :key="row.id">
+                            <TableRow :data-state="row.getIsSelected() && 'selected'">
+                              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+                                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                              </TableCell>
+                            </TableRow>
+                          </template>
+                        </template>
+                        <TableRow v-else>
+                          <TableCell colspan="5" class="h-24 text-center">No results.</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </div>
 
             <!-- Other Phases -->
             <div v-else>
-              <p class="font-semibold text-lg">
-                {{ capitalize(response.status) }} Phase
-              </p>
-              <p class="text-xs text-gray-500">
-                (UI for '{{ response.status }}' phase goes here)
-              </p>
+              <p class="font-semibold text-lg">{{ capitalize(response.status) }} Phase</p>
+              <p class="text-xs text-gray-500">(UI for '{{ response.status }}' phase goes here)</p>
             </div>
           </CardContent>
         </Card>
@@ -233,46 +203,48 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed, reactive, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../lib/auth.js'
 
 import AppSidebar from '@/components/AppSidebar.vue'
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
+import { useVueTable, getCoreRowModel, getFilteredRowModel } from '@tanstack/vue-table'
+import { FlexRender } from '@tanstack/vue-table'
 
-const { state: authState, signOut, fetchWithAuth } = useAuth()
+const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
 
 const loading = ref(true)
-const response = ref({
-  status: 'none',
-  candidates: [],
-  users: [],
-})
+const response = ref({ status: 'none', candidates: [], users: [], trail_id: null, trail_name: '' })
 const showVoters = reactive({})
 const showSignup = reactive({ passengers: false, drivers: false })
+
+// Selection
+const rowSelection = ref({})
+const hasSelection = computed(() => Object.values(rowSelection.value).some(v => v))
+function checkInSelected() { /* TODO */ }
+function modifySelected() { /* TODO */ }
+function removeSelected() { /* TODO */ }
+
+// Table
+const data = computed(() => response.value.users)
+const columns = [
+  { id: 'select', header: ({ table }) => h(Checkbox, { 'modelValue': table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'), 'onUpdate:modelValue': v => table.toggleAllPageRowsSelected(!!v), 'aria-label': 'Select all' }), cell: ({ row }) => h(Checkbox, { 'modelValue': row.getIsSelected(), 'onUpdate:modelValue': v => row.toggleSelected(!!v), 'aria-label': 'Select row' }), enableSorting: false, enableHiding: false },
+  { id: 'name', header: 'Name', accessorFn: row => `${row.first_name} ${row.last_name}`, cell: info => info.getValue(), filterFn: (row, colId, filter) => String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase()) },
+  { id: 'type', header: 'Type', cell: ({ row }) => row.original.is_driver ? 'Driver' : 'Passenger' },
+  { id: 'waiver', header: 'Waiver?', cell: ({ row }) => h(Badge, { variant: 'outline', class: row.original.has_waiver ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }, () => row.original.has_waiver ? 'Yes' : 'No') },
+  { id: 'checked_in', header: 'Checked In?', cell: ({ row }) => h(Badge, { variant: 'outline', class: row.original.is_checked_in ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }, () => row.original.is_checked_in ? 'Yes' : 'No'), enableSorting: false },
+]
+const table = useVueTable({ data, columns, state: { rowSelection: rowSelection.value }, onRowSelectionChange: v => rowSelection.value = v, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel() })
 
 const totalVotes = computed(
   () =>
@@ -297,11 +269,9 @@ async function loadUpcoming() {
   loading.value = true
   try {
     const res = await fetchWithAuth('/api/dashboard/upcoming')
-    if (!res.ok) throw new Error('Failed to fetch')
     response.value = await res.json()
-  } catch (e) {
-    console.error('Error loading upcoming hike:', e)
-    response.value = { status: 'none', candidates: [], users: [] }
+  } catch {
+    response.value = { status: 'none', candidates: [], users: [], trail_id: null, trail_name: '' }
   } finally {
     loading.value = false
   }
@@ -309,10 +279,7 @@ async function loadUpcoming() {
 
 onMounted(loadUpcoming)
 
-function signOutAndReturn() {
-  signOut()
-  router.replace('/login')
-}
+function signOutAndReturn() { signOut(); router.replace('/login') }
 </script>
 
 <style scoped>
