@@ -21,10 +21,10 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { useAuth } from '../lib/auth.js'
-  import NavBar from "../components/Navbar.vue"
-  import Footer from "../components/Footer.vue"
-  import background from "../assets/hiking_bg.jpg"
+  import { useAuth } from '../../lib/auth.js'
+  import NavBar from "../../components/public/Navbar.vue"
+  import Footer from "../../components/public/Footer.vue"
+  import background from "../../assets/hiking_bg.jpg"
 
   const router = useRouter()
   const { state, setUser } = useAuth()

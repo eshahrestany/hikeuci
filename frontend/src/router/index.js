@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Index from '../views/Index.vue'
+import Index from '../views/public/Index.vue'
 
 const routes = [
     {
@@ -10,12 +10,12 @@ const routes = [
     {
         path: '/login',
         name: 'SignIn',
-        component: () => import('../views/SignIn.vue'),
+        component: () => import('../views/public/SignIn.vue'),
     },
     {
         path: '/admin',
         name: 'Dashboard',
-        component: () => import('../views/Dashboard.vue'),
+        component: () => import('../views/admin/Dashboard.vue'),
         meta: { requiresAuth: true },
     },
 ]
