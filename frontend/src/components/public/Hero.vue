@@ -89,5 +89,5 @@
 </template>
 
 <script setup>
-import background from "../assets/hiking_bg.jpg";
+import background from "../../assets/hiking_bg.jpg";
 </script>

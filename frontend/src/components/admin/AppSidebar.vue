@@ -12,7 +12,7 @@ import {
   type SidebarProps,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import ThemeToggle from "@/components/ThemeToggle.vue";
+import ThemeToggle from "@/components/admin/ThemeToggle.vue";
 
 const props = defineProps<SidebarProps>()
 

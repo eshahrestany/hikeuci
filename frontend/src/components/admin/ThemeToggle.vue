@@ -1,8 +1,8 @@
 <script setup>
 import { Icon } from '@iconify/vue'
 import { useColorMode } from '@vueuse/core'
-import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button/index.js'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu/index.js'
 
 // Pass { disableTransition: false } to enable transitions
 const mode = useColorMode()
