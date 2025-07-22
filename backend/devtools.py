@@ -12,7 +12,7 @@ Usage:
 """
 import sys
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from app.extensions import db
 from app.models import (
@@ -49,7 +49,7 @@ def seed_voting():
 
     # Create 3 active hikes (voting phase)
     active_hikes = []
-    base = datetime.utcnow()
+    base = datetime.now(UTC)
     for i, trail in enumerate(trails):
         ah = ActiveHike(
             status='voting',
@@ -84,17 +84,6 @@ def seed_voting():
     db.session.add_all(votes)
     db.session.commit()
 
-    # Create waivers for half the members
-    waivers = [
-        Waiver(
-            member_id=m.id,
-            signed_on=datetime.utcnow() - timedelta(days=random.randint(0, 5))
-        )
-        for m in random.sample(members, total_members // 2)
-    ]
-    db.session.add_all(waivers)
-    db.session.commit()
-
     print("Seeded 'voting' scenario.")
 
 
@@ -108,7 +97,7 @@ def seed_signup():
     # Create one active hike (signup phase)
     ah = ActiveHike(
         status='signup',
-        planned_date=datetime.utcnow() + timedelta(days=7),
+        planned_date=datetime.now(UTC) + timedelta(days=7),
         trail_id=trail.id
     )
     db.session.add(ah)
@@ -162,13 +151,6 @@ def seed_signup():
     db.session.add_all(signups)
     db.session.commit()
 
-    # No votes in signup scenario
-
-    # Create waivers for all members
-    waivers = [Waiver(member_id=m.id) for m in members]
-    db.session.add_all(waivers)
-    db.session.commit()
-
     print("Seeded 'signup' scenario.")
 
 
@@ -182,13 +164,12 @@ def seed_waiver():
     # Create one active hike (waiver phase)
     ah = ActiveHike(
         status='waiver',
-        planned_date=datetime.utcnow() + timedelta(days=3),
+        planned_date=datetime.now(UTC) + timedelta(days=3),
         trail_id=trail.id
     )
     db.session.add(ah)
     db.session.commit()
 
-    # Create ~50 members
     members = []
     for i in range(50):
         m = Member(
@@ -241,7 +222,7 @@ def seed_waiver():
     waivers = [
         Waiver(
             member_id=m.id,
-            signed_on=datetime.utcnow() - timedelta(days=random.randint(0, 2)),
+            signed_on=datetime.now(UTC) - timedelta(days=random.randint(0, 2)),
             active_hike_id=ah.id
         )
         for m in random.sample(members, 25)

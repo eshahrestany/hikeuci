@@ -8,7 +8,7 @@ class Member(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     last_name  = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
-    joined_on  = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
 
@@ -18,7 +18,7 @@ class Trail(db.Model):
     name                     = db.Column(db.String(150), nullable=False)
     length_mi                = db.Column(db.Float, nullable=True)
     difficulty               = db.Column(db.Integer, nullable=True)
-    added_on                 = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    added_on                 = db.Column(db.DateTime, default=datetime.now, nullable=False)
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
     trailhead_amaps_endpoint = db.Column(db.String(300), nullable=True)
@@ -30,7 +30,7 @@ class Signup(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
-    signup_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_driver = db.Column(db.Boolean, nullable=False)
     is_checked_in = db.Column(db.Boolean, nullable=False, default=False)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)
@@ -41,7 +41,7 @@ class Waiver(db.Model):
     id             = db.Column(db.Integer, primary_key=True)
     member_id      = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
-    signed_on      = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    signed_on      = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
 
 class HikersHistory(db.Model):
@@ -80,7 +80,7 @@ class AdminUser(db.Model):
     provider           = db.Column(db.String(50), nullable=False, default='google')
     provider_user_id   = db.Column(db.String(255), unique=True, nullable=False)
     email              = db.Column(db.String(120), unique=True, nullable=False)
-    created_on         = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_on         = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
 class Vote(db.Model):
     __tablename__ = "votes"

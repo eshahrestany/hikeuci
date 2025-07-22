@@ -9,6 +9,7 @@
         <Card class="max-w-4xl mx-auto space-y-6">
           <CardHeader>
             <CardTitle class="text-2xl">Upcoming Hike</CardTitle>
+            <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
           </CardHeader>
           <CardContent>
             <!-- Loading Skeleton -->
@@ -23,31 +24,17 @@
 
             <!-- No Upcoming Hike -->
             <div v-else-if="response.status === 'none'">
-              <p class="text-center text-sm text-gray-500 mb-4">
-                No upcoming hikes found.
-              </p>
-              <Button variant="outline" class="block mx-auto">
-                Set Next Hike
-              </Button>
+              <p class="text-center text-sm text-gray-500 mb-4"> No upcoming hikes found. </p>
+              <Button variant="outline" class="block mx-auto"> Set Next Hike </Button>
             </div>
 
             <!-- Voting Phase -->
             <div v-else-if="response.status === 'voting'">
-              <p class="font-semibold text-xl mb-2">
-                Current Phase:
-                <Badge class="text-md">Voting</Badge>
-              </p>
+              <p class="font-semibold text-xl mb-2"> Current Phase: <Badge class="text-md">Voting</Badge></p>
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <Card
-                  v-for="candidate in response.candidates"
-                  :key="candidate.candidate_id"
-                >
+                <Card v-for="candidate in response.candidates" :key="candidate.candidate_id">
                   <CardHeader>
-                    <img
-                      class="h-24 w-full object-cover rounded-md mb-2"
-                      :src="`/api/images/uploads/${candidate.trail_id}.png`"
-                      :alt="candidate.trail_name"
-                    />
+                    <img class="h-24 w-full object-cover rounded-md mb-2" :src="`/api/images/uploads/${candidate.trail_id}.png`" :alt="candidate.trail_name"/>
                     <CardTitle>{{ candidate.trail_name }}</CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -56,18 +43,10 @@
                       {{ candidate.candidate_num_votes }}
                       ({{ votePercentage(candidate) }}%)
                     </p>
-                    <Progress
-                      :value="parseFloat(votePercentage(candidate))"
-                      class="mb-2"
-                    />
-                    <Button
-                      variant="link"
-                      class="mb-2"
-                      @click="
-                        showVoters[candidate.candidate_id] =
-                          !showVoters[candidate.candidate_id]
-                      "
-                    >
+                    <Progress :value="parseFloat(votePercentage(candidate))" class="mb-2"/>
+                    <Button variant="outline" class="mb-2 p-0 " @click="showVoters[candidate.candidate_id] = !showVoters[candidate.candidate_id]">
+                      <ChevronDown v-if="showVoters[candidate.candidate_id]"/>
+                      <ChevronRight v-else/>
                       {{
                         showVoters[candidate.candidate_id]
                           ? 'Hide Votes'
@@ -134,25 +113,9 @@
             <div v-else-if="response.status === 'waiver'">
               <div class="flex items-center justify-between mb-4">
                 <p class="font-semibold text-xl">Current Phase: <Badge class="text-md">Waiver</Badge></p>
-                <div class="space-x-2">
-                  <Button :disabled="!hasSelection" @click="checkInSelected">Check In</Button>
-                  <Button :disabled="!hasSelection" @click="modifySelected">Modify</Button>
-                  <Button variant="destructive" :disabled="!hasSelection" @click="removeSelected">Remove</Button>
-                </div>
               </div>
 
-              <!-- Name Filter -->
-              <div class="flex items-center py-2">
-                <Input
-                  class="max-w-sm"
-                  placeholder="Filter names..."
-                  :model-value="table.getColumn('name')?.getFilterValue()"
-                  @update:model-value="(value) => table.getColumn('name')?.setFilterValue(value)"
-                />
-              </div>
-
-              <Card>
-                <CardHeader>
+              <CardHeader>
                   <img
                     class="h-36 w-full object-cover rounded-md mb-2"
                     :src="`/api/images/uploads/${response.trail_id}.png`"
@@ -160,34 +123,47 @@
                   />
                   <CardTitle>{{ response.trail_name }}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div class="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-                          <TableHead v-for="h in hg.headers" :key="h.id">
-                            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
-                          </TableHead>
+
+              <!-- Name Filter -->
+              <div class="flex items-center justify-between py-2">
+                <Input
+                  class="max-w-sm"
+                  placeholder="Filter names..."
+                  :model-value="table.getColumn('name')?.getFilterValue()"
+                  @update:model-value="(value) => table.getColumn('name')?.setFilterValue(value)"
+                />
+
+                <div class="space-x-2">
+                  <Button :disabled="!hasSelection" @click="checkInSelected">Check In</Button>
+                  <Button :disabled="!hasSelection" @click="modifySelected">Modify</Button>
+                  <Button variant="destructive" :disabled="!hasSelection" @click="removeSelected">Remove</Button>
+                </div>
+              </div>
+              <div class="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
+                      <TableHead v-for="h in hg.headers" :key="h.id">
+                        <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <template v-if="table.getRowModel().rows.length">
+                      <template v-for="row in table.getRowModel().rows" :key="row.id">
+                        <TableRow :data-state="row.getIsSelected() && 'selected'">
+                          <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+                            <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <template v-if="table.getRowModel().rows.length">
-                          <template v-for="row in table.getRowModel().rows" :key="row.id">
-                            <TableRow :data-state="row.getIsSelected() && 'selected'">
-                              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-                                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-                              </TableCell>
-                            </TableRow>
-                          </template>
-                        </template>
-                        <TableRow v-else>
-                          <TableCell colspan="5" class="h-24 text-center">No results.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+                      </template>
+                    </template>
+                    <TableRow v-else>
+                      <TableCell colspan="5" class="h-24 text-center">No results.</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             <!-- Other Phases -->
@@ -219,6 +195,8 @@ import { Input } from '@/components/ui/input'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { useVueTable, getCoreRowModel, getFilteredRowModel } from '@tanstack/vue-table'
 import { FlexRender } from '@tanstack/vue-table'
+import { ChevronDown, ChevronRight } from "lucide-vue-next"
+
 
 const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
@@ -238,13 +216,17 @@ function removeSelected() { /* TODO */ }
 // Table
 const data = computed(() => response.value.users)
 const columns = [
-  { id: 'select', header: ({ table }) => h(Checkbox, { 'modelValue': table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'), 'onUpdate:modelValue': v => table.toggleAllPageRowsSelected(!!v), 'aria-label': 'Select all' }), cell: ({ row }) => h(Checkbox, { 'modelValue': row.getIsSelected(), 'onUpdate:modelValue': v => row.toggleSelected(!!v), 'aria-label': 'Select row' }), enableSorting: false, enableHiding: false },
   { id: 'name', header: 'Name', accessorFn: row => `${row.first_name} ${row.last_name}`, cell: info => info.getValue(), filterFn: (row, colId, filter) => String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase()) },
   { id: 'type', header: 'Type', cell: ({ row }) => row.original.is_driver ? 'Driver' : 'Passenger' },
   { id: 'waiver', header: 'Waiver?', cell: ({ row }) => h(Badge, { variant: 'outline', class: row.original.has_waiver ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }, () => row.original.has_waiver ? 'Yes' : 'No') },
   { id: 'checked_in', header: 'Checked In?', cell: ({ row }) => h(Badge, { variant: 'outline', class: row.original.is_checked_in ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }, () => row.original.is_checked_in ? 'Yes' : 'No'), enableSorting: false },
 ]
-const table = useVueTable({ data, columns, state: { rowSelection: rowSelection.value }, onRowSelectionChange: v => rowSelection.value = v, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel() })
+const table = useVueTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel()
+})
 
 const totalVotes = computed(
   () =>
