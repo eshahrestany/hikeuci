@@ -1,10 +1,11 @@
 from flask import Flask, send_from_directory
-from .extensions import db, migrate
+from .extensions import db, migrate, CORS
 from .routes import register_routes
+
 
 def create_app(config_object="config.Config"):
     module_name, class_name = config_object.rsplit('.', 1)
-    mod     = __import__(module_name, fromlist=[class_name])
+    mod = __import__(module_name, fromlist=[class_name])
     cfg_cls = getattr(mod, class_name)
 
     app = Flask(
@@ -19,20 +20,13 @@ def create_app(config_object="config.Config"):
     # extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    CORS(app, resources={r"/*": {"origins": cfg_cls.CORS_ORIGIN}})
 
     # bring in model classes
     from . import models
 
     # blueprints / routes
     register_routes(app)
-
-    # catch-all for client-side routing
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
-    def serve_vue(path):
-        # let Flask's built-in static route (at /assets/…) handle assets
-        # everything else falls back to index.html
-        return send_from_directory(app.template_folder, 'index.html')
 
     @app.shell_context_processor
     def _shell():

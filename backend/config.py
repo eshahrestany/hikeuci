@@ -19,6 +19,8 @@ class Config:
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
     JWT_EXP_HOURS = os.getenv("JWT_EXP_HOURS")
 
+    CORS_ORIGIN = os.getenv("CORS_ORIGIN")
+
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     FRONTEND_DIST = os.path.join(BASE_DIR, '..', 'frontend', 'dist')
     STATIC_FOLDER = os.path.join(FRONTEND_DIST, 'assets')

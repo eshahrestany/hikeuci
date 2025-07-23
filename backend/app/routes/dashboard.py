@@ -6,8 +6,8 @@ from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
 from ..decorators import admin_required
 from typing import List, Optional
 
-
 dashboard: Blueprint = Blueprint("dashboard", __name__)
+
 
 @dashboard.route('/upcoming', methods=['GET'])
 @admin_required
