@@ -17,7 +17,7 @@ class Trail(db.Model):
     id                       = db.Column(db.Integer, primary_key=True)
     name                     = db.Column(db.String(150), nullable=False)
     length_mi                = db.Column(db.Float, nullable=True)
-    difficulty               = db.Column(db.Integer, nullable=True)
+    difficulty               = db.Column(db.Integer, nullable=True) # 0 = easy, 1 = moderate, 2 = difficult, 3 = very difficult
     added_on                 = db.Column(db.DateTime, default=datetime.now, nullable=False)
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
@@ -31,7 +31,7 @@ class Signup(db.Model):
     member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
     signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
-    is_driver = db.Column(db.Boolean, nullable=False)
+    transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self-transport'
     is_checked_in = db.Column(db.Boolean, nullable=False, default=False)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)
 

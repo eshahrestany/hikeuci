@@ -62,7 +62,7 @@ def get_active_hike() -> Response:
             .join(Signup, Member.id == Signup.member_id)
             .filter_by(
                 active_hike_id=active_hike.id,
-                is_driver=False
+                transport_type="passenger"
             )
             .all()
         )
@@ -71,7 +71,7 @@ def get_active_hike() -> Response:
             .join(Signup, Member.id == Signup.member_id)
             .filter_by(
                 active_hike_id=active_hike.id,
-                is_driver=True
+                transport_type="driver"
             )
             .all()
         )
@@ -84,7 +84,7 @@ def get_active_hike() -> Response:
 
         passenger_capacity = 0
         for signup in Signup.query.all():
-            if signup.is_driver:
+            if signup.transport_type == "driver":
                 num_passengers = Vehicle.query.get(signup.vehicle_id).passenger_seats
                 passenger_capacity += num_passengers
 
@@ -102,7 +102,7 @@ def get_active_hike() -> Response:
             db.session
             .query(
                 Member,
-                Signup.is_driver,
+                Signup.transport_type == "driver",
                 Signup.is_checked_in,
                 Waiver.id.label("waiver_id")
             )
