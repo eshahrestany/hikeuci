@@ -1,8 +1,10 @@
 <script setup>
+import { Toaster } from "vue-sonner";
 </script>
 
 <template>
-  <main>
+  <div id="app">
+    <Toaster />
     <router-view />
-  </main>
+  </div>
 </template>
