@@ -4,11 +4,7 @@
     class="relative flex items-center justify-center text-center text-white min-h-screen bg-midnight overflow-hidden"
   >
     <!-- Background image -->
-    <div
-      class="absolute inset-0 bg-cover bg-center"
-      :style="{ backgroundImage: `url(${background})` }"
-      aria-hidden="true"
-    />
+    <div class="absolute inset-0 bg-cover bg-center" :style="{ backgroundImage: `url(${background})` }" aria-hidden="true"></div>
 
     <!-- Overlay for readability -->
     <div class="absolute inset-0 bg-black/50 pointer-events-none" aria-hidden="true"></div>
@@ -89,5 +85,5 @@
 </template>
 
 <script setup>
-import background from "../../assets/hiking_bg.jpg";
+import background from "@/assets/hiking_bg.jpg";
 </script>

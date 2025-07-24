@@ -56,8 +56,8 @@
   </section>
 </template>
 
-<script setup lang="ts">
-import defaultImage from '../../assets/hiking_bg.jpg';
+<script setup>
+import defaultImage from '@/assets/hiking_bg.jpg';
 
 const props = defineProps({
   image: {
