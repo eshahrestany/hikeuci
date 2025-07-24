@@ -33,7 +33,7 @@
   async function handleCredentialResponse(response) {
     try {
       // 1) Send the Google ID token to your backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken: response.credential })
