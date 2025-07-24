@@ -23,13 +23,6 @@
         :model-value="table.getColumn('name')?.getFilterValue()"
         @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
       />
-      <div class="space-x-2">
-        <Button :disabled="!hasSelection" @click="checkInSelected">Check In</Button>
-        <Button :disabled="!hasSelection" @click="modifySelected">Modify</Button>
-        <Button variant="destructive" :disabled="!hasSelection" @click="removeSelected">
-          Remove
-        </Button>
-      </div>
     </div>
 
     <!-- Table of Users -->
@@ -49,15 +42,20 @@
         <TableBody>
           <template v-if="table.getRowModel().rows.length">
             <template v-for="row in table.getRowModel().rows" :key="row.id">
-              <TableRow :data-state="row.getIsSelected() && 'selected'">
+              <TableRow>
                 <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-                  <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                  <FlexRender
+                    :render="cell.column.columnDef.cell"
+                    :props="cell.getContext()"
+                  />
                 </TableCell>
               </TableRow>
             </template>
           </template>
           <TableRow v-else>
-            <TableCell colspan="5" class="h-24 text-center">No results.</TableCell>
+            <TableCell colspan="5" class="h-24 text-center">
+              No results.
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -66,26 +64,52 @@
 </template>
 
 <script setup>
-import { ref, computed, h } from 'vue'
+import { ref, computed, h, onMounted } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { useVueTable, getCoreRowModel, getFilteredRowModel } from '@tanstack/vue-table'
 import { FlexRender } from '@tanstack/vue-table'
+import {Check, Edit, Trash} from "lucide-vue-next";
+import { useAuth } from "@/lib/auth.js"
+import { toast } from "vue-sonner";
+
 
 const props = defineProps({
   waiverData: { type: Object, required: true }
 })
 
-// selection
-const rowSelection = ref({})
-const hasSelection = computed(() =>
-  Object.values(rowSelection.value).some(v => v)
-)
-function checkInSelected() { /* TODO */ }
-function modifySelected()    { /* TODO */ }
-function removeSelected()    { /* TODO */ }
+const { postWithAuth } = useAuth()
+
+// Row-level actions
+async function checkInRow(user) {
+  try {
+    const res = await postWithAuth('/active-hike/check-in', {
+      user_id: user.member_id,
+    })
+    if (!res.ok) {
+      // pull error message from body if available
+      const errText = await res.text()
+      throw new Error(errText || 'Unknown error')
+    }
+    // only update UI after success
+    user.is_checked_in = true
+
+    if (res.status === 200) toast.success(`${user.first_name} ${user.last_name} has been checked in.`)
+    if (res.status === 208) toast.info(`${user.first_name} ${user.last_name} was already checked in.`)
+  } catch (err) {
+    toast.error("Check-in Failed")
+  }
+}
+
+function modifyRow(user) {
+  // TODO: implement modify logic for `user`
+}
+
+function removeRow(user) {
+  // TODO: implement remove logic for `user`
+}
 
 // table setup
 const data = computed(() => props.waiverData.users)
@@ -133,6 +157,43 @@ const columns = [
         () => (row.original.is_checked_in ? 'Yes' : 'No')
       ),
     enableSorting: false
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) =>
+      h('div', { class: 'flex space-x-2' }, [
+        h(
+          Button,
+          {
+            size: 'icon',
+            class: 'cursor-pointer',
+            onClick: () => checkInRow(row.original),
+            disabled: !row.original.has_waiver || row.original.is_checked_in
+          },
+          () => h(Check, { class: 'h-4 w-4' })
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'icon',
+            class: 'cursor-pointer',
+            onClick: () => modifyRow(row.original)
+          },
+          () => h(Edit, { class: 'h-4 w-4' })
+        ),
+        h(
+          Button,
+          {
+            variant: 'destructive',
+            size: 'icon',
+            class: 'cursor-pointer',
+            onClick: () => removeRow(row.original)
+          },
+          () => h(Trash, { class: 'h-4 w-4' })
+        )
+      ])
   }
 ]
 const table = useVueTable({
@@ -140,7 +201,5 @@ const table = useVueTable({
   columns,
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
-  state: { rowSelection: rowSelection.value },
-  onRowSelectionChange: v => (rowSelection.value = v)
 })
 </script>

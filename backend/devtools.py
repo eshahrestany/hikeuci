@@ -138,14 +138,14 @@ def seed_signup():
             signups.append(Signup(
                 member_id=m.id,
                 active_hike_id=ah.id,
-                is_driver=True,
+                transport_type="driver",
                 vehicle_id=vid
             ))
         else:
             signups.append(Signup(
                 member_id=m.id,
                 active_hike_id=ah.id,
-                is_driver=False,
+                transport_type="passenger",
                 vehicle_id=None
             ))
     db.session.add_all(signups)
@@ -203,14 +203,14 @@ def seed_waiver():
             signups.append(Signup(
                 member_id=m.id,
                 active_hike_id=ah.id,
-                is_driver=True,
+                transport_type="driver",
                 vehicle_id=vid
             ))
         else:
             signups.append(Signup(
                 member_id=m.id,
                 active_hike_id=ah.id,
-                is_driver=False,
+                transport_type="passenger",
                 vehicle_id=None
             ))
     db.session.add_all(signups)

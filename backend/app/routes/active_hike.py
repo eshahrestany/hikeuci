@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app, Response
+from flask import Blueprint, jsonify, current_app, Response, request
 from sqlalchemy.orm import joinedload
 
 from .. import db
@@ -6,12 +6,12 @@ from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
 from ..decorators import admin_required
 from typing import List, Optional
 
-dashboard: Blueprint = Blueprint("dashboard", __name__)
 
+active_hike: Blueprint = Blueprint("active-hike", __name__)
 
-@dashboard.route('/upcoming', methods=['GET'])
+@active_hike.route('/upcoming', methods=['GET'])
 @admin_required
-def get_upcoming_hike() -> Response:
+def get_active_hike() -> Response:
     # find out the current phase
 
     # null phase: no scheduled hike
@@ -62,7 +62,7 @@ def get_upcoming_hike() -> Response:
             .join(Signup, Member.id == Signup.member_id)
             .filter_by(
                 active_hike_id=active_hike.id,
-                is_driver=False
+                transport_type="passenger"
             )
             .all()
         )
@@ -71,7 +71,7 @@ def get_upcoming_hike() -> Response:
             .join(Signup, Member.id == Signup.member_id)
             .filter_by(
                 active_hike_id=active_hike.id,
-                is_driver=True
+                transport_type="driver"
             )
             .all()
         )
@@ -84,7 +84,7 @@ def get_upcoming_hike() -> Response:
 
         passenger_capacity = 0
         for signup in Signup.query.all():
-            if signup.is_driver:
+            if signup.transport_type == "driver":
                 num_passengers = Vehicle.query.get(signup.vehicle_id).passenger_seats
                 passenger_capacity += num_passengers
 
@@ -102,7 +102,7 @@ def get_upcoming_hike() -> Response:
             db.session
             .query(
                 Member,
-                Signup.is_driver,
+                Signup.transport_type == "driver",
                 Signup.is_checked_in,
                 Waiver.id.label("waiver_id")
             )
@@ -138,3 +138,54 @@ def get_upcoming_hike() -> Response:
 
     else:
         return jsonify({"status": None})
+
+
+@active_hike.route('/check-in', methods=['POST'])
+@admin_required
+def check_in():
+    data = request.get_json() or {}
+    hike_id = data.get('hike_id')
+    user_id = data.get('user_id')
+
+    # 1) Basic payload validation
+    if user_id is None:
+        return jsonify(error="Missing 'user_id'"), 400
+
+    # 2) Fetch the active hike and verify phase
+    active = ActiveHike.query.first()
+    if not active:
+        return jsonify(error="No current active hike"), 400
+    if active.status.lower() != 'waiver':
+        return jsonify(error="Hike is not in waiver phase"), 400
+
+
+    # 3) Verify member exists
+    member = Member.query.get(user_id)
+    if not member:
+        return jsonify(error="Member id not found"), 400
+
+    # 4) Verify waiver exists for this member/hike
+    waiver = Waiver.query.filter_by(
+        member_id=user_id,
+        active_hike_id=active.id
+    ).first()
+    if not waiver:
+        return jsonify(error="Waiver not on file for this member"), 400
+
+    # 5) Fetch the signup record (so we can flip is_checked_in)
+    signup = Signup.query.filter_by(
+        active_hike_id=active.id,
+        member_id=user_id
+    ).first()
+    if not signup:
+        return jsonify(error="Member is not signed up for this hike"), 400
+
+    # 6) If already checked in, just return success
+    if signup.is_checked_in:
+        return jsonify(already_checked_in=True), 208
+
+    # 7) Mark checked in and commit
+    signup.is_checked_in = True
+    db.session.commit()
+
+    return jsonify(success=True), 200

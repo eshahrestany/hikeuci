@@ -57,5 +57,28 @@ export function useAuth() {
     return res
   }
 
-  return { state, setUser, signOut, fetchWithAuth }
+  async function postWithAuth(path, data = {}, opts = {}) {
+    const url = `${API_URL}${path}`;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+      ...opts.headers,
+    };
+
+    const res = await fetch(url, {
+      ...opts,               // allow overriding mode, credentials, etc.
+      method: 'POST',        // force POST
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (res.status === 401) {
+      signOut();
+      throw new Error('Unauthorized');
+    }
+
+    return res;
+  }
+
+  return { state, setUser, signOut, fetchWithAuth, postWithAuth }
 }
