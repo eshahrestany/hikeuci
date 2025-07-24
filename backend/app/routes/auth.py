@@ -10,6 +10,7 @@ auth: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 GOOGLE_TOKENINFO_URL: str = "https://oauth2.googleapis.com/tokeninfo"
 
+
 @auth.route("/google", methods=["POST"])
 def google_login() -> tuple[Response, int]:
     data: Optional[Dict[str, Any]] = request.get_json()
