@@ -75,12 +75,23 @@ def get_active_hike() -> Response:
             )
             .all()
         )
+        self_transport_members = (
+            db.session.query(Member)
+            .join(Signup, Member.id == Signup.member_id)
+            .filter_by(
+                active_hike_id=active_hike.id,
+                transport_type="self"
+            )
+            .all()
+        )
 
-        return_data["num_signups"] = len(passenger_members) + len(driver_members)
+        return_data["num_signups"] = len(passenger_members) + len(driver_members) + len(self_transport_members)
         return_data["passengers"] = [m.first_name + " " + m.last_name for m in passenger_members]
         return_data["num_passengers"] = len(passenger_members)
         return_data["drivers"] = [m.first_name + " " + m.last_name for m in driver_members]
         return_data["num_drivers"] = len(driver_members)
+        return_data["self_transports"] = [m.first_name + " " + m.last_name for m in self_transport_members]
+        return_data["num_self_transports"] = len(self_transport_members)
 
         passenger_capacity = 0
         for signup in Signup.query.all():
@@ -102,7 +113,7 @@ def get_active_hike() -> Response:
             db.session
             .query(
                 Member,
-                Signup.transport_type == "driver",
+                Signup.transport_type,
                 Signup.is_checked_in,
                 Waiver.id.label("waiver_id")
             )
@@ -121,12 +132,12 @@ def get_active_hike() -> Response:
         )
 
         users = []
-        for member, is_driver, is_checked_in, waiver_id in rows:
+        for member, transport_type, is_checked_in, waiver_id in rows:
             users.append({
                 "member_id": member.id,
                 "first_name": member.first_name,
                 "last_name": member.last_name,
-                "is_driver": is_driver,
+                "transport_type": transport_type,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in
             })

@@ -31,7 +31,7 @@ class Signup(db.Model):
     member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
     signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
-    transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self-transport'
+    transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self'
     is_checked_in = db.Column(db.Boolean, nullable=False, default=False)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)
 

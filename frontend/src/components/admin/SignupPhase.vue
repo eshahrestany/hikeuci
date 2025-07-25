@@ -18,6 +18,7 @@
           <p>Total Signups: {{ signupData.num_signups }}</p>
           <p>Passengers: {{ signupData.num_passengers }}</p>
           <p>Drivers: {{ signupData.num_drivers }}</p>
+          <p>Self-transports: {{ signupData.num_self_transports }}</p>
           <p>Passenger Capacity: {{ signupData.passenger_capacity }}</p>
         </div>
         <div class="space-y-2">
@@ -34,6 +35,14 @@
           </Button>
           <ul v-if="show.drivers" class="list-disc list-inside text-sm ml-4">
             <li v-for="(name, idx) in signupData.drivers" :key="idx">
+              {{ name }}
+            </li>
+          </ul>
+          <Button variant="link" @click="show.self = !show.self">
+            {{ show.self ? 'Hide Self-Transports' : 'See Self-Transports' }}
+          </Button>
+          <ul v-if="show.self" class="list-disc list-inside text-sm ml-4">
+            <li v-for="(name, idx) in signupData.self_transports" :key="idx">
               {{ name }}
             </li>
           </ul>
