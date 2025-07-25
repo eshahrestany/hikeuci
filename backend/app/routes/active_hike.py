@@ -6,8 +6,8 @@ from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
 from ..decorators import admin_required
 from typing import List, Optional
 
-
 active_hike: Blueprint = Blueprint("active-hike", __name__)
+
 
 @active_hike.route('/upcoming', methods=['GET'])
 @admin_required
@@ -48,8 +48,6 @@ def get_active_hike() -> Response:
             })
 
         return jsonify(return_data)
-
-
 
     # signup phase: a trail is planned and members are currently signing up
     elif phase == "signup":
@@ -168,7 +166,6 @@ def check_in():
         return jsonify(error="No current active hike"), 400
     if active.status.lower() != 'waiver':
         return jsonify(error="Hike is not in waiver phase"), 400
-
 
     # 3) Verify member exists
     member = Member.query.get(user_id)
