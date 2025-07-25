@@ -6,13 +6,21 @@
       </p>
     </div>
 
-    <CardHeader>
-      <img
-        class="h-36 w-full object-cover rounded-md mb-2"
-        :src="`/api/images/uploads/${waiverData.trail_id}.png`"
-        :alt="waiverData.trail_name"
-      />
-      <CardTitle>{{ waiverData.trail_name }}</CardTitle>
+    <CardHeader class="flex items-start">
+      <div class="basis-1/2">
+        <img
+          class="w-1/2 object-cover rounded-md"
+          :src="`/api/images/uploads/${waiverData.trail_id}.png`"
+          :alt="waiverData.trail_name"
+        />
+      </div>
+      <div class="flex-1">
+        <CardTitle class="mb-4">{{ waiverData.trail_name }}</CardTitle>
+        <SignupStats
+          :users="waiverData.users"
+          :passenger-capacity="waiverData.passenger_capacity"
+        />
+      </div>
     </CardHeader>
 
     <!-- Name Filter + Actions -->
@@ -61,6 +69,14 @@
       </Table>
     </div>
   </div>
+
+  <EditUserSignup
+      v-if="editUser"
+      :user="editUser"
+      :hike-id="waiverData.hike_id"
+      @close="editUser = null"
+      @saved="() => editUser = null"
+  />
 </template>
 
 <script setup>
@@ -74,15 +90,17 @@ import { FlexRender } from '@tanstack/vue-table'
 import {Check, Edit, Trash} from "lucide-vue-next";
 import { useAuth } from "@/lib/auth.js"
 import { toast } from "vue-sonner";
+import EditUserSignup from "@/components/admin/EditUserSignup.vue";
+import SignupStats from "@/components/admin/SignupStats.vue";
+import {CardHeader, CardTitle} from "@/components/ui/card/index.js";
 
+const { postWithAuth } = useAuth()
 
 const props = defineProps({
   waiverData: { type: Object, required: true }
 })
 
-const { postWithAuth } = useAuth()
-
-function capitalize(str) {return str.charAt(0).toUpperCase() + str.slice(1); }
+const editUser = ref(null)
 
 // Row-level actions
 async function checkInRow(user) {
@@ -106,7 +124,7 @@ async function checkInRow(user) {
 }
 
 function modifyRow(user) {
-  // TODO: implement modify logic for `user`
+  editUser.value = user
 }
 
 function removeRow(user) {
@@ -127,7 +145,9 @@ const columns = [
   {
     id: 'type',
     header: 'Type',
-    cell: ({ row }) => (capitalize(row.original.transport_type))
+    cell: ({ row }) => (row.original.transport_type === "passenger" ?
+        'Passenger' : row.original.transport_type === "driver" ?
+            'Driver' : 'Self-Transport'),
   },
   {
     id: 'waiver',

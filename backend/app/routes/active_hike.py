@@ -49,85 +49,18 @@ def get_active_hike() -> Response:
 
         return jsonify(return_data)
 
-
-
-    # signup phase: a trail is planned and members are currently signing up
-    elif phase == "signup":
-        trail: Trail = Trail.query.get(active_hike.trail_id)
-        return_data["trail_id"] = trail.id
-        return_data["trail_name"] = trail.name
-
-        passenger_members = (
-            db.session.query(Member)
-            .join(Signup, Member.id == Signup.member_id)
-            .filter_by(
-                active_hike_id=active_hike.id,
-                transport_type="passenger"
-            )
-            .all()
-        )
-        driver_members = (
-            db.session.query(Member)
-            .join(Signup, Member.id == Signup.member_id)
-            .filter_by(
-                active_hike_id=active_hike.id,
-                transport_type="driver"
-            )
-            .all()
-        )
-        self_transport_members = (
-            db.session.query(Member)
-            .join(Signup, Member.id == Signup.member_id)
-            .filter_by(
-                active_hike_id=active_hike.id,
-                transport_type="self"
-            )
-            .all()
-        )
-
-        return_data["num_signups"] = len(passenger_members) + len(driver_members) + len(self_transport_members)
-        return_data["passengers"] = [m.first_name + " " + m.last_name for m in passenger_members]
-        return_data["num_passengers"] = len(passenger_members)
-        return_data["drivers"] = [m.first_name + " " + m.last_name for m in driver_members]
-        return_data["num_drivers"] = len(driver_members)
-        return_data["self_transports"] = [m.first_name + " " + m.last_name for m in self_transport_members]
-        return_data["num_self_transports"] = len(self_transport_members)
-
-        passenger_capacity = 0
-        for signup in Signup.query.all():
-            if signup.transport_type == "driver":
-                num_passengers = Vehicle.query.get(signup.vehicle_id).passenger_seats
-                passenger_capacity += num_passengers
-
-        return_data["passenger_capacity"] = passenger_capacity
-
-        return jsonify(return_data)
-
+    # signup phase: one hike has been selected and is open for signups
     # waiver phase: hikers for this trail have been selected and waivers have been sent
-    elif phase == "waiver":
+    elif phase in ["signup", "waiver"]: # both phases require nearly identical data
         trail: Trail = Trail.query.get(active_hike.trail_id)
         return_data["trail_id"] = trail.id
         return_data["trail_name"] = trail.name
 
         rows = (
-            db.session
-            .query(
-                Member,
-                Signup.transport_type,
-                Signup.is_checked_in,
-                Waiver.id.label("waiver_id")
-            )
-            .join(
-                Signup,
-                Member.id == Signup.member_id
-            )
-            .outerjoin(
-                Waiver,
-                Member.id == Waiver.member_id
-            )
-            .filter(
-                Signup.active_hike_id == active_hike.id
-            )
+            db.session.query(Member, Signup.transport_type, Signup.is_checked_in, Waiver.id.label("waiver_id"))
+            .join(Signup, Member.id == Signup.member_id)
+            .outerjoin(Waiver, Member.id == Waiver.member_id)
+            .filter(Signup.active_hike_id == active_hike.id)
             .all()
         )
 
@@ -142,7 +75,19 @@ def get_active_hike() -> Response:
                 "is_checked_in": is_checked_in
             })
 
+        # compute capacity from drivers’ vehicles
+        passenger_capacity = 0
+        driver_signups = Signup.query.filter_by(
+            active_hike_id=active_hike.id,
+            transport_type="driver"
+        ).all()
+        for signup in driver_signups:
+            vehicle = Vehicle.query.get(signup.vehicle_id)
+            if vehicle:
+                passenger_capacity += vehicle.passenger_seats
+
         return_data["users"] = users
+        return_data["passenger_capacity"] = passenger_capacity
 
         return jsonify(return_data)
 
@@ -199,4 +144,43 @@ def check_in():
     signup.is_checked_in = True
     db.session.commit()
 
+    return jsonify(success=True), 200
+
+
+@active_hike.route('/modify-user', methods=['POST'])
+@admin_required
+def modify_user():
+    data = request.get_json() or {}
+    user_id        = data.get('user_id')
+    first_name     = data.get('first_name')
+    last_name      = data.get('last_name')
+    transport_type = data.get('transport_type')
+
+    # 1) Validate payload
+    if None in (user_id, first_name, last_name, transport_type):
+        return jsonify(error="Missing fields"), 400
+
+    # 2) ActiveHike must exist and be in waiver phase
+    active = ActiveHike.query.first()
+    if not active or active.status.lower() != "waiver":
+        return jsonify(error="Not in waiver phase"), 400
+
+    # 3) Signup must exist
+    signup = Signup.query.filter_by(
+        member_id=user_id
+    ).first()
+    if not signup:
+        return jsonify(error="Signup not found"), 404
+
+    # 4) Member exists?
+    member = Member.query.get(user_id)
+    if not member:
+        return jsonify(error="Member not found"), 404
+
+    # 5) Apply updates
+    member.first_name    = first_name
+    member.last_name     = last_name
+    signup.transport_type = transport_type
+
+    db.session.commit()
     return jsonify(success=True), 200
