@@ -82,6 +82,8 @@ const props = defineProps({
 
 const { postWithAuth } = useAuth()
 
+function capitalize(str) {return str.charAt(0).toUpperCase() + str.slice(1); }
+
 // Row-level actions
 async function checkInRow(user) {
   try {
@@ -125,7 +127,7 @@ const columns = [
   {
     id: 'type',
     header: 'Type',
-    cell: ({ row }) => (row.original.is_driver ? 'Driver' : 'Passenger')
+    cell: ({ row }) => (capitalize(row.original.transport_type))
   },
   {
     id: 'waiver',

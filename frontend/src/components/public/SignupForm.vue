@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Button } from '@/components/ui/button'
 import backgroundImage from '@/assets/hiking_bg.jpg'
+import {NumberField, NumberFieldContent, NumberFieldInput, NumberFieldIncrement, NumberFieldDecrement} from "@/components/ui/number-field/index.js";
 
 const props = defineProps({
   title: {
@@ -129,7 +130,7 @@ const parsedDescription = computed(() => {
                 <div class="flex items-center gap-2">
                   <RadioGroupItem id="drive-self" value="arrange-own" />
                   <Label for="drive-self" class="font-normal"
-                    >I will arrange my own transportation to the event.</Label
+                    >I will arrange my own transportation to the trailhead.</Label
                   >
                 </div>
               </RadioGroup>
@@ -142,8 +143,14 @@ const parsedDescription = computed(() => {
                     <Input id="vehicle" type="text" placeholder="e.g., 2022 Toyota Camry" />
                 </div>
                 <div class="space-y-2">
+                  <NumberField id="passengers" :default-value="1" :min="1">
                     <Label for="passengers" class="font-semibold text-midnight">How many people are you able to bring to the hike, not including yourself?</Label>
-                    <Input id="passengers" type="number" min="1" />
+                      <NumberFieldContent class="max-w-1/4">
+                        <NumberFieldDecrement />
+                        <NumberFieldInput />
+                        <NumberFieldIncrement />
+                      </NumberFieldContent>
+                  </NumberField>
                 </div>
                 <div class="space-y-3 text-sm text-stone-700 p-4 bg-stone-100 rounded-lg">
                     <p class="font-semibold text-midnight">As a member who is willing and able to carpool other members for this hike, you attest that:</p>
