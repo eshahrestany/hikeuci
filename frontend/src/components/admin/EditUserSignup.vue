@@ -27,18 +27,78 @@
             </SelectContent>
           </Select>
         </div>
+        <div v-if="form.transport_type === 'driver'" class="col-span-2 space-y-4">
+          <div v-if="vehicles.length">
+            <Label for="vehicleSelect">Choose Vehicle</Label>
+            <Select v-model="form.vehicle_id">
+              <SelectTrigger id="vehicleSelect">
+                <SelectValue placeholder="Select Vehicle…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="v in vehicles"
+                  :key="v.id"
+                  :value="v.id"
+                >
+                  {{ v.description }} ({{ v.passenger_seats }} seats)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div v-else class="space-y-2">
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleYear">Year</Label>
+              <Input
+                id="vehicleYear"
+                v-model="newVehicle.year"
+                placeholder="2021"
+              />
+            </div>
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleMake">Make</Label>
+              <Input
+                id="vehicleMake"
+                v-model="newVehicle.make"
+                placeholder="Toyota"
+              />
+            </div>
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleModel">Model</Label>
+              <Input
+                id="vehicleModel"
+                v-model="newVehicle.model"
+                placeholder="Corolla"
+              />
+            </div>
+            <NumberField
+              id="passengers"
+              v-model="newVehicle.passenger_seats"
+              :min="1"
+              :default-value="1"
+            >
+              <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
+              <NumberFieldContent class="max-w-1/4">
+                <NumberFieldDecrement />
+                <NumberFieldInput />
+                <NumberFieldIncrement />
+              </NumberFieldContent>
+            </NumberField>
+            <Button @click="addVehicle">Add Vehicle</Button>
+          </div>
+        </div>
       </div>
 
       <DialogFooter>
         <Button variant="outline" @click="open = false">Cancel</Button>
-        <Button @click="onSave">Save</Button>
+        <Button :disabled="saveDisabled" @click="onSave">Save</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import {ref, reactive, watch, onMounted, computed} from 'vue'
 import {
   Dialog,
   DialogContent,
@@ -56,6 +116,13 @@ import {
   SelectContent,
   SelectItem
 } from '@/components/ui/select'
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldInput,
+  NumberFieldIncrement
+} from '@/components/ui/number-field'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 
@@ -67,33 +134,89 @@ const emit = defineEmits(['saved','close'])
 const open = ref(true)
 watch(open, v => { if (!v) emit('close') })
 
-// initialize form from props.user.transport_type
+const saveDisabled = computed(() =>
+  form.transport_type === 'driver' && !form.vehicle_id
+)
+
 const form = reactive({
   first_name:     props.user.first_name,
   last_name:      props.user.last_name,
-  transport_type: props.user.transport_type
+  transport_type: props.user.transport_type,
+  vehicle_id:     props.user.transport_type === 'driver'
+                    ? props.user.vehicle_id
+                    : null
 })
 
-const { postWithAuth } = useAuth()
+const vehicles = ref([])
+const newVehicle = reactive({
+  year:            '',
+  make:            '',
+  model:           '',
+  passenger_seats: 1
+})
+
+const { postWithAuth, fetchWithAuth } = useAuth()
+
+async function loadVehicles() {
+  try {
+    const res = await fetchWithAuth(`/vehicles?member_id=${props.user.member_id}`)
+    if (!res.ok) throw new Error()
+    vehicles.value = await res.json()
+  } catch {
+    vehicles.value = []
+  }
+}
+
+onMounted(() => {
+  if (form.transport_type === 'driver') loadVehicles()
+})
+watch(() => form.transport_type, v => {
+  if (v === 'driver') loadVehicles()
+})
+
+// create a new vehicle, then re-load
+async function addVehicle() {
+  try {
+    const res = await postWithAuth('/vehicles', {
+      member_id: props.user.member_id,
+      make: newVehicle.make,
+      model: newVehicle.model,
+      year: newVehicle.year,
+      passenger_seats: newVehicle.passenger_seats
+    })
+    if (!res.ok) throw new Error()
+    const created = await res.json()
+    vehicles.value.push(created)
+    form.vehicle_id = created.id
+    toast.success('Vehicle added')
+  } catch {
+    toast.error('Could not add vehicle')
+  }
+}
 
 async function onSave() {
   try {
-    const res = await postWithAuth('/active-hike/modify-user', {
+    const payload = {
       hike_id:        props.hikeId,
       user_id:        props.user.member_id,
       first_name:     form.first_name,
       last_name:      form.last_name,
       transport_type: form.transport_type
-    })
+    }
+    if (form.transport_type === 'driver') {
+      payload.vehicle_id = form.vehicle_id
+    }
+
+    const res = await postWithAuth('/active-hike/modify-user', payload)
     if (!res.ok) {
       const err = await res.text()
       throw new Error(err || 'Unknown error')
     }
 
-    // apply changes locally
     props.user.first_name     = form.first_name
     props.user.last_name      = form.last_name
     props.user.transport_type = form.transport_type
+    props.user.vehicle_id     = form.vehicle_id
 
     toast.success('Signup updated')
     emit('saved', props.user)

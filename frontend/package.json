@@ -10,6 +10,8 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/themes": "^3.0.5",
     "@tailwindcss/typography": "^0.5.13",
     "@tailwindcss/vite": "^4.0.0",

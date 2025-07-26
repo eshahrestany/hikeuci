@@ -197,7 +197,7 @@ def seed_waiver():
     db.session.commit()
 
     signups = []
-    for m in members:
+    for m in random.sample(members, 40):
         if m in drivers:
             vid = next(v.id for v in vehicles if v.member_id == m.id)
             signups.append(Signup(
