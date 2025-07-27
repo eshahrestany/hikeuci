@@ -6,13 +6,21 @@
       </p>
     </div>
 
-    <CardHeader>
-      <img
-        class="h-36 w-full object-cover rounded-md mb-2"
-        :src="`/api/images/uploads/${waiverData.trail_id}.png`"
-        :alt="waiverData.trail_name"
-      />
-      <CardTitle>{{ waiverData.trail_name }}</CardTitle>
+    <CardHeader class="flex items-start">
+      <div class="basis-1/2">
+        <img
+          class="w-1/2 object-cover rounded-md"
+          :src="`/api/images/uploads/${waiverData.trail_id}.png`"
+          :alt="waiverData.trail_name"
+        />
+      </div>
+      <div class="flex-1">
+        <CardTitle class="mb-4">{{ waiverData.trail_name }}</CardTitle>
+        <SignupStats
+          :users="waiverData.users"
+          :passenger-capacity="waiverData.passenger_capacity"
+        />
+      </div>
     </CardHeader>
 
     <!-- Name Filter + Actions -->
@@ -23,6 +31,9 @@
         :model-value="table.getColumn('name')?.getFilterValue()"
         @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
       />
+      <Button class="ml-auto" @click="showAddSignup = true">
+        <PlusCircle class="h-4 w-4" />Add Late Signup
+      </Button>
     </div>
 
     <!-- Table of Users -->
@@ -61,28 +72,82 @@
       </Table>
     </div>
   </div>
+
+  <EditUserSignup
+      v-if="editUser"
+      :user="editUser"
+      :hike-id="waiverData.hike_id"
+      @close="editUser = null"
+      @saved="() => editUser = null"
+  />
+
+  <AddLateSignup
+    v-if="showAddSignup"
+    :hike-id="waiverData.hike_id"
+    @close="showAddSignup = false"
+    @added="handleAdded"
+  />
+
+  <Dialog v-model:open="confirmOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Remove Hiker?</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to remove
+          {{ confirmUser?.first_name }} {{ confirmUser?.last_name }}
+          from this hike?
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="outline" @click="confirmOpen = false">
+          Cancel
+        </Button>
+        <Button variant="destructive" @click="confirmedRemove">
+          Remove
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup>
-import { ref, computed, h, onMounted } from 'vue'
+import {ref, computed, h, onMounted, watch, shallowRef} from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { useVueTable, getCoreRowModel, getFilteredRowModel } from '@tanstack/vue-table'
 import { FlexRender } from '@tanstack/vue-table'
-import {Check, Edit, Trash} from "lucide-vue-next";
+import {Check, ChevronsUpDown, Edit, MailPlus, Search, Trash} from "lucide-vue-next";
 import { useAuth } from "@/lib/auth.js"
 import { toast } from "vue-sonner";
-
-
-const props = defineProps({
-  waiverData: { type: Object, required: true }
-})
+import EditUserSignup from "@/components/admin/EditUserSignup.vue";
+import SignupStats from "@/components/admin/SignupStats.vue";
+import {CardHeader, CardTitle} from "@/components/ui/card/index.js";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { PlusCircle } from 'lucide-vue-next'
+import AddLateSignup from '@/components/admin/AddLateSignup.vue'
 
 const { postWithAuth } = useAuth()
 
-function capitalize(str) {return str.charAt(0).toUpperCase() + str.slice(1); }
+const props = defineProps({waiverData: { type: Object, required: true }})
+const editUser = ref(null)
+const confirmOpen = ref(false)
+const confirmUser = ref(null)
+const showAddSignup = ref(false)
+function handleAdded(newUser) {
+  data.value.push(newUser)        // refresh table
+  data.value = [...data.value]
+  showAddSignup.value = false
+}
 
 // Row-level actions
 async function checkInRow(user) {
@@ -91,30 +156,69 @@ async function checkInRow(user) {
       user_id: user.member_id,
     })
     if (!res.ok) {
-      // pull error message from body if available
       const errText = await res.text()
       throw new Error(errText || 'Unknown error')
     }
-    // only update UI after success
     user.is_checked_in = true
-
     if (res.status === 200) toast.success(`${user.first_name} ${user.last_name} has been checked in.`)
     if (res.status === 208) toast.info(`${user.first_name} ${user.last_name} was already checked in.`)
-  } catch (err) {
+  } catch {
     toast.error("Check-in Failed")
   }
 }
 
 function modifyRow(user) {
-  // TODO: implement modify logic for `user`
+  editUser.value = user
+}
+
+function resendEmail(user) {
+  postWithAuth('/mail/resend-waiver', {
+    hike_id: props.waiverData.hike_id,
+    user_id: user.member_id
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to resend email')
+      toast.success(`Email sent to ${user.first_name} ${user.last_name}`)
+    })
+    .catch(() => {
+      toast.error('Failed to resend email')
+    })
 }
 
 function removeRow(user) {
-  // TODO: implement remove logic for `user`
+  confirmUser.value = user
+  confirmOpen.value = true
 }
 
+async function confirmedRemove() {
+  const user = confirmUser.value
+  try {
+    const res = await postWithAuth('/active-hike/remove-user', {
+      hike_id: props.waiverData.hike_id,
+      user_id: user.member_id
+    })
+
+    if (!res.ok) throw new Error(await res.text() || 'Error')
+    const idx = data.value.findIndex(u => u.member_id === user.member_id)
+    if (idx !== -1) {
+      data.value.splice(idx, 1)
+      data.value = [...data.value]
+    }
+
+    toast.success(`${user.first_name} ${user.last_name} removed`)
+    removeRow(user)
+  } catch {
+    toast.error('Remove failed')
+  } finally {
+    confirmOpen.value = false
+    confirmUser.value = null
+  }
+}
+
+
 // table setup
-const data = computed(() => props.waiverData.users)
+const data = shallowRef([...props.waiverData.users])
+
 const columns = [
   {
     id: 'name',
@@ -127,7 +231,12 @@ const columns = [
   {
     id: 'type',
     header: 'Type',
-    cell: ({ row }) => (capitalize(row.original.transport_type))
+    cell: ({ row }) =>
+      row.original.transport_type === "passenger"
+        ? 'Passenger'
+        : row.original.transport_type === "driver"
+          ? 'Driver'
+          : 'Self-Transport',
   },
   {
     id: 'waiver',
@@ -165,38 +274,109 @@ const columns = [
     header: 'Actions',
     cell: ({ row }) =>
       h('div', { class: 'flex space-x-2' }, [
+        // Check-In
         h(
-          Button,
+          Tooltip,
+          null,
           {
-            size: 'icon',
-            class: 'cursor-pointer',
-            onClick: () => checkInRow(row.original),
-            disabled: !row.original.has_waiver || row.original.is_checked_in
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                () =>
+                  h(
+                    Button,
+                    {
+                      size: 'icon',
+                      onClick: () => checkInRow(row.original),
+                      disabled:
+                        !row.original.has_waiver || row.original.is_checked_in,
+                    },
+                    () => h(Check, { class: 'h-4 w-4' }),
+                  ),
+              ),
+              h(TooltipContent, null, () => 'Check In Hiker'),
+            ],
           },
-          () => h(Check, { class: 'h-4 w-4' })
         ),
+
+        // Modify
         h(
-          Button,
+          Tooltip,
+          null,
           {
-            variant: 'outline',
-            size: 'icon',
-            class: 'cursor-pointer',
-            onClick: () => modifyRow(row.original)
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                () =>
+                  h(
+                    Button,
+                    {
+                      variant: 'outline',
+                      size: 'icon',
+                      onClick: () => modifyRow(row.original),
+                    },
+                    () => h(Edit, { class: 'h-4 w-4' }),
+                  ),
+              ),
+              h(TooltipContent, null, () => 'Modify Hiker'),
+            ],
           },
-          () => h(Edit, { class: 'h-4 w-4' })
         ),
+
+        // Resend Waiver
         h(
-          Button,
+          Tooltip,
+          null,
           {
-            variant: 'destructive',
-            size: 'icon',
-            class: 'cursor-pointer',
-            onClick: () => removeRow(row.original)
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                () =>
+                  h(
+                    Button,
+                    {
+                      variant: 'outline',
+                      size: 'icon',
+                      onClick: () => resendEmail(row.original),
+                    },
+                    () => h(MailPlus, { class: 'h-4 w-4' }),
+                  ),
+              ),
+              h(TooltipContent, null, () => 'Resend Waiver'),
+            ],
           },
-          () => h(Trash, { class: 'h-4 w-4' })
-        )
-      ])
+        ),
+
+        // Remove
+        h(
+          Tooltip,
+          null,
+          {
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                () =>
+                  h(
+                    Button,
+                    {
+                      variant: 'destructive',
+                      size: 'icon',
+                      onClick: () => removeRow(row.original),
+                    },
+                    () => h(Trash, { class: 'h-4 w-4' }),
+                  ),
+              ),
+              h(TooltipContent, null, () => 'Remove Hiker'),
+            ],
+          },
+        ),
+      ]),
   }
+
 ]
 const table = useVueTable({
   data,
