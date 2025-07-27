@@ -175,10 +175,28 @@ def modify_user():
     if not member:
         return jsonify(error="Member not found"), 404
 
-    # 5) Apply updates
+    # 5) Vehicle id must be valid if transport_type is 'driver'
+    if transport_type == 'driver':
+        vehicle_id = data.get('vehicle_id')
+        if vehicle_id is None:
+            return jsonify(error="vehicle_id required for driver"), 400
+
+        vehicle = Vehicle.query.get(vehicle_id)
+        if not vehicle:
+            return jsonify(error="Vehicle not found"), 404
+
+        # Ensure the vehicle is associated with the member
+        if vehicle.member_id != user_id:
+            return jsonify(error="Vehicle does not belong to this member"), 403
+
+        # 6) Apply updates
+        signup.vehicle_id = vehicle_id
+
     member.first_name    = first_name
     member.last_name     = last_name
     signup.transport_type = transport_type
+
+
 
     db.session.commit()
     return jsonify(success=True), 200
