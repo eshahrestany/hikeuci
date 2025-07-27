@@ -37,7 +37,7 @@ def create_vehicle():
 
     # validate
     if None in (member_id, year, make, model, passenger_seats):
-        return jsonify(error="Missing 'member_id', 'description', or 'passenger_seats'"), 400
+        return jsonify(error="Missing 'member_id', 'description', 'year', 'make', or 'model'"), 400
 
     # create and save
     v = Vehicle(

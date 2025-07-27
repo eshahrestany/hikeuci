@@ -71,10 +71,11 @@ async function loadVehicles() {
 
 async function addVehicle() {
   try {
-    const desc = `${newVehicle.year} ${newVehicle.make} ${newVehicle.model}`
     const res  = await postWithAuth('/vehicles', {
       member_id: selected.value.member_id,
-      description: desc,
+      year: newVehicle.year,
+      make: newVehicle.make,
+      model: newVehicle.model,
       passenger_seats: newVehicle.passenger_seats,
     })
     const created = await res.json()
@@ -189,7 +190,7 @@ async function onSave() {
             <Label>Model</Label><Input v-model="newVehicle.model" />
           </div>
 
-          <NumberField v-model:value="newVehicle.passenger_seats" :min="1" :default-value="1">
+          <NumberField v-model="newVehicle.passenger_seats" :min="1" :default-value="1">
             <Label class="font-semibold">Passenger Capacity</Label>
             <NumberFieldContent class="max-w-1/4">
               <NumberFieldDecrement /><NumberFieldInput /><NumberFieldIncrement />
