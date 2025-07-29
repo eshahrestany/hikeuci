@@ -1,7 +1,9 @@
-import jwt
 from functools import wraps
-from typing import Callable, Any, TypeVar, Optional, Tuple, Dict, Union
+from typing import Callable, Any, TypeVar, Optional, Dict, Union
+
+import jwt
 from flask import request, jsonify, current_app, g, Response
+
 from .models import AdminUser
 
 F = TypeVar("F", bound=Callable[..., Any])

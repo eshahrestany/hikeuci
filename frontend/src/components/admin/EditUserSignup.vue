@@ -7,12 +7,8 @@
 
       <div class="grid gap-4 py-4">
         <div class="grid grid-cols-2 items-center gap-4">
-          <Label for="firstName">First Name</Label>
-          <Input id="firstName" v-model="form.first_name" />
-        </div>
-        <div class="grid grid-cols-2 items-center gap-4">
-          <Label for="lastName">Last Name</Label>
-          <Input id="lastName" v-model="form.last_name" />
+          <Label for="name">Name</Label>
+          <Input id="name" v-model="form.name" />
         </div>
         <div class="grid grid-cols-2 items-center gap-4">
           <Label for="transportType">Transport Type</Label>
@@ -139,8 +135,7 @@ const saveDisabled = computed(() =>
 )
 
 const form = reactive({
-  first_name:     props.user.first_name,
-  last_name:      props.user.last_name,
+  name:           props.user.name,
   transport_type: props.user.transport_type,
   vehicle_id:     props.user.transport_type === 'driver'
                     ? props.user.vehicle_id
@@ -199,8 +194,7 @@ async function onSave() {
     const payload = {
       hike_id:        props.hikeId,
       user_id:        props.user.member_id,
-      first_name:     form.first_name,
-      last_name:      form.last_name,
+      name:      form.name,
       transport_type: form.transport_type
     }
     if (form.transport_type === 'driver') {
@@ -213,8 +207,7 @@ async function onSave() {
       throw new Error(err || 'Unknown error')
     }
 
-    props.user.first_name     = form.first_name
-    props.user.last_name      = form.last_name
+    props.user.name      = form.name
     props.user.transport_type = form.transport_type
     props.user.vehicle_id     = form.vehicle_id
 

@@ -10,7 +10,6 @@ Usage:
   python seed_db.py signup
   python seed_db.py waiver
 """
-import sys
 import random
 from datetime import datetime, timedelta, UTC
 
@@ -65,8 +64,7 @@ def seed_voting():
     total_members = 50 * len(active_hikes)
     for i in range(total_members):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
+            name=f"Member{i}",
             email=f"user{i}@example.com"
         )
         members.append(m)
@@ -107,9 +105,8 @@ def seed_signup():
     members = []
     for i in range(50):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
-            email=f"signup{i}@example.com"
+            name=f"Member{i}",
+            email=f"member{i}@example.com"
         )
         members.append(m)
     db.session.add_all(members)
@@ -173,8 +170,7 @@ def seed_waiver():
     members = []
     for i in range(50):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
+            name=f"Member{i}",
             email=f"waiver{i}@example.com"
         )
         members.append(m)

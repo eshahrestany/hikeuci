@@ -5,8 +5,7 @@ from .extensions import db
 class Member(db.Model):
     __tablename__ = 'members'
     id         = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(100), nullable=False)
-    last_name  = db.Column(db.String(100), nullable=False)
+    name  = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
@@ -32,9 +31,10 @@ class Signup(db.Model):
     active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
     signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
     transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self'
-    is_checked_in = db.Column(db.Boolean, nullable=False, default=False)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True)
-
+    is_checked_in = db.Column(db.Boolean, nullable=False, default=False) # Indicates if the member has been checked in for the hike
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True) # Nullable for those who are not drivers
+    status = db.Column(db.String(50), nullable=False, default='pending') # 'pending', 'confirmed', 'waitlisted'
+    waitlist_pos = db.Column(db.Integer, nullable=True) # Nullable for those who are not on the waitlist
 
 class Waiver(db.Model):
     __tablename__ = 'waivers'
