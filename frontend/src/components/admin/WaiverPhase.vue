@@ -94,7 +94,7 @@
         <DialogTitle>Remove Hiker?</DialogTitle>
         <DialogDescription>
           Are you sure you want to remove
-          {{ confirmUser?.first_name }} {{ confirmUser?.last_name }}
+          {{ confirmUser?.name }}
           from this hike?
         </DialogDescription>
       </DialogHeader>
@@ -160,8 +160,8 @@ async function checkInRow(user) {
       throw new Error(errText || 'Unknown error')
     }
     user.is_checked_in = true
-    if (res.status === 200) toast.success(`${user.first_name} ${user.last_name} has been checked in.`)
-    if (res.status === 208) toast.info(`${user.first_name} ${user.last_name} was already checked in.`)
+    if (res.status === 200) toast.success(`${user.name} has been checked in.`)
+    if (res.status === 208) toast.info(`${user.name} was already checked in.`)
   } catch {
     toast.error("Check-in Failed")
   }
@@ -178,7 +178,7 @@ function resendEmail(user) {
   })
     .then(res => {
       if (!res.ok) throw new Error('Failed to resend email')
-      toast.success(`Email sent to ${user.first_name} ${user.last_name}`)
+      toast.success(`Email sent to ${user.name}`)
     })
     .catch(() => {
       toast.error('Failed to resend email')
@@ -205,7 +205,7 @@ async function confirmedRemove() {
       data.value = [...data.value]
     }
 
-    toast.success(`${user.first_name} ${user.last_name} removed`)
+    toast.success(`${user.name} removed`)
     removeRow(user)
   } catch {
     toast.error('Remove failed')
@@ -223,7 +223,7 @@ const columns = [
   {
     id: 'name',
     header: 'Name',
-    accessorFn: row => `${row.first_name} ${row.last_name}`,
+    accessorFn: row => `${row.name}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
       String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
@@ -300,6 +300,32 @@ const columns = [
           },
         ),
 
+        // Resend Waiver
+        h(
+          Tooltip,
+          null,
+          {
+            default: () => [
+              h(
+                TooltipTrigger,
+                { asChild: true },
+                () =>
+                  h(
+                    Button,
+                    {
+                      variant: 'outline',
+                      size: 'icon',
+                      disabled: row.original.has_waiver,
+                      onClick: () => resendEmail(row.original),
+                    },
+                    () => h(MailPlus, { class: 'h-4 w-4' }),
+                  ),
+              ),
+              h(TooltipContent, null, () => 'Resend Waiver'),
+            ],
+          },
+        ),
+
         // Modify
         h(
           Tooltip,
@@ -325,30 +351,6 @@ const columns = [
           },
         ),
 
-        // Resend Waiver
-        h(
-          Tooltip,
-          null,
-          {
-            default: () => [
-              h(
-                TooltipTrigger,
-                { asChild: true },
-                () =>
-                  h(
-                    Button,
-                    {
-                      variant: 'outline',
-                      size: 'icon',
-                      onClick: () => resendEmail(row.original),
-                    },
-                    () => h(MailPlus, { class: 'h-4 w-4' }),
-                  ),
-              ),
-              h(TooltipContent, null, () => 'Resend Waiver'),
-            ],
-          },
-        ),
 
         // Remove
         h(

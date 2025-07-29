@@ -1,10 +1,8 @@
-from flask import Blueprint, jsonify, current_app, Response, request
-
+from typing import List
+from flask import Blueprint, jsonify, Response, request
 from .. import db
-from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
 from ..decorators import admin_required
-from typing import List, Optional
-
+from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
 
 active_hike: Blueprint = Blueprint("active-hike", __name__)
 
@@ -30,7 +28,7 @@ def get_active_hike() -> Response:
             trail: Trail = Trail.query.get(hike.trail_id)
 
             rows = (
-                db.session.query(Member.first_name, Member.last_name)
+                db.session.query(Member.name)
                 .join(Vote, Member.id == Vote.member_id)
                 .filter(Vote.active_hike_id == hike.id)
                 .all()
@@ -67,8 +65,7 @@ def get_active_hike() -> Response:
         for member, transport_type, is_checked_in, waiver_id in rows:
             users.append({
                 "member_id": member.id,
-                "first_name": member.first_name,
-                "last_name": member.last_name,
+                "name": member.name,
                 "transport_type": transport_type,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in
@@ -150,12 +147,11 @@ def check_in():
 def modify_user():
     data = request.get_json() or {}
     user_id        = data.get('user_id')
-    first_name     = data.get('first_name')
-    last_name      = data.get('last_name')
+    name           = data.get('name')
     transport_type = data.get('transport_type')
 
     # 1) Validate payload
-    if None in (user_id, first_name, last_name, transport_type):
+    if None in (user_id, name, transport_type):
         return jsonify(error="Missing fields"), 400
 
     # 2) ActiveHike must exist and be in waiver phase
@@ -192,8 +188,7 @@ def modify_user():
         # 6) Apply updates
         signup.vehicle_id = vehicle_id
 
-    member.first_name    = first_name
-    member.last_name     = last_name
+    member.name = name
     signup.transport_type = transport_type
 
 
@@ -268,8 +263,7 @@ def add_user():
     m = Member.query.get(member_id)
     user_obj = {
         "member_id": m.id,
-        "first_name": m.first_name,
-        "last_name":  m.last_name,
+        "name":  m.name,
         "transport_type": transport_type,
         "has_waiver": False,
         "is_checked_in": False,
