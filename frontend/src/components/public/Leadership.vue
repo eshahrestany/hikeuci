@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, defineExpose, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
 /* -------------------------------------------------------------

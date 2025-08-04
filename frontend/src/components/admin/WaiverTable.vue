@@ -19,6 +19,7 @@ import {ref, shallowRef, h} from "vue";
 import {toast} from "vue-sonner";
 import {Badge} from "@/components/ui/badge/index.js";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
+import {useAuth} from "@/lib/auth.js";
 
 const props = defineProps({waiverData: { type: Object, required: true }})
 
@@ -26,6 +27,9 @@ const editUser = ref(null)
 const confirmOpen = ref(false)
 const confirmUser = ref(null)
 const showAddSignup = ref(false)
+
+const { postWithAuth } = useAuth()
+
 function handleAdded(newUser) {
   data.value.push(newUser)        // refresh table
   data.value = [...data.value]

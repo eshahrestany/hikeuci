@@ -8,15 +8,15 @@ active_hike: Blueprint = Blueprint("active-hike", __name__)
 
 @active_hike.route('/upcoming', methods=['GET'])
 @admin_required
-def get_active_hike() -> Response:
+def get_active_hike_info() -> Response:
     # find out the current phase
 
     # null phase: no scheduled hike
-    active_hike: ActiveHike or None = ActiveHike.query.first()
-    if active_hike is None:
+    hike: ActiveHike or None = ActiveHike.query.first()
+    if hike is None:
         return jsonify({"status": None})
 
-    phase = active_hike.status
+    phase = hike.status
     return_data = {"status": phase}
 
     # voting phase: two or more hikes are slated for voting
@@ -49,7 +49,7 @@ def get_active_hike() -> Response:
     # signup phase: one hike has been selected and is open for signups
     # waiver phase: hikers for this trail have been selected and waivers have been sent
     elif phase in ["signup", "waiver"]: # both phases require nearly identical data
-        trail: Trail = Trail.query.get(active_hike.trail_id)
+        trail: Trail = Trail.query.get(hike.trail_id)
         return_data["trail_id"] = trail.id
         return_data["trail_name"] = trail.name
 
@@ -57,34 +57,36 @@ def get_active_hike() -> Response:
             db.session.query(Member, Signup.transport_type, Signup.is_checked_in, Waiver.id.label("waiver_id"))
             .join(Signup, Member.id == Signup.member_id)
             .outerjoin(Waiver, Member.id == Waiver.member_id)
-            .filter(Signup.active_hike_id == active_hike.id)
+            .filter(Signup.active_hike_id == hike.id)
             .all()
         )
 
         users = []
         for member, transport_type, is_checked_in, waiver_id in rows:
-            users.append({
+            user_obj = {
                 "member_id": member.id,
                 "name": member.name,
                 "transport_type": transport_type,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in
-            })
+            }
+            if user_obj["transport_type"] == "driver":
+                vehicle = Vehicle.query.get(Signup.query.filter_by(
+                    active_hike_id=hike.id,
+                    member_id=member.id
+                ).first().vehicle_id)
+                user_obj["vehicle_id"] = vehicle.id
+                user_obj["vehicle_capacity"] = vehicle.passenger_seats
+            users.append(user_obj)
 
         # compute capacity from drivers’ vehicles
-        passenger_capacity = 0
-        driver_signups = Signup.query.filter_by(
-            active_hike_id=active_hike.id,
-            transport_type="driver"
-        ).all()
-        for signup in driver_signups:
-            vehicle = Vehicle.query.get(signup.vehicle_id)
-            if vehicle:
-                passenger_capacity += vehicle.passenger_seats
+        total_capacity = 0
+        for user in users:
+            if user["transport_type"] == "driver":
+                total_capacity += user["vehicle_capacity"]
 
         return_data["users"] = users
-        return_data["passenger_capacity"] = passenger_capacity
-
+        return_data["passenger_capacity"] = total_capacity
         return jsonify(return_data)
 
 

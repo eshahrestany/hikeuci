@@ -22,40 +22,37 @@
         />
       </div>
     </CardHeader>
-
-    <WaiverTable :waiver-data="props.waiverData"/>
+    <Tabs default-value="selected">
+      <TabsList class="grid w-fit grid-cols-2">
+        <TabsTrigger value="selected">
+          Selected Hikers
+        </TabsTrigger>
+        <TabsTrigger value="waitlisted">
+          Waitlisted Hikers
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="selected">
+        <WaiverTable :waiver-data="props.waiverData"/>
+      </TabsContent>
+      <TabsContent value="waitlisted">
+        <WaitlistTable :waiver-data="props.waiverData"/>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
 
 <script setup>
-import {ref, computed, h, onMounted, watch, shallowRef} from 'vue'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
-import { useVueTable, getCoreRowModel, getFilteredRowModel } from '@tanstack/vue-table'
-import { FlexRender } from '@tanstack/vue-table'
-import {Check, ChevronsUpDown, Edit, MailPlus, Search, Trash} from "lucide-vue-next";
-import { useAuth } from "@/lib/auth.js"
-import { toast } from "vue-sonner";
-import EditUserSignup from "@/components/admin/EditUserSignup.vue";
-import SignupStats from "@/components/admin/SignupStats.vue";
 import {CardHeader, CardTitle} from "@/components/ui/card/index.js";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { PlusCircle } from 'lucide-vue-next'
-import AddLateSignup from '@/components/admin/AddLateSignup.vue'
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import SignupStats from "@/components/admin/SignupStats.vue";
 import WaiverTable from "@/components/admin/WaiverTable.vue";
-
-const { postWithAuth } = useAuth()
+import WaitlistTable from "@/components/admin/WaitlistTable.vue";
 
 const props = defineProps({waiverData: { type: Object, required: true }})
-
 </script>
