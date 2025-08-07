@@ -35,7 +35,7 @@
         <WaiverTable :waiver-data="props.waiverData"/>
       </TabsContent>
       <TabsContent value="waitlisted">
-        <WaitlistTable :waiver-data="props.waiverData"/>
+        <WaitlistTable/>
       </TabsContent>
     </Tabs>
   </div>

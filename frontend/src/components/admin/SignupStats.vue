@@ -14,6 +14,7 @@
         : '[&_[data-slot=progress-indicator]]:bg-primary'"/>
       <span class="text-sm font-medium">{{ percentCapacity }}%</span>
     </div>
+    <p v-if="overCapacity">Waitlisted Passengers: {{ waitlistedPassengers }}</p>
   </div>
 </template>
 
@@ -52,4 +53,10 @@ if (props.passengerCapacity === 0) {
     barWidth.value = Math.round(percentCapacity)
   }
 }
+
+const waitlistedPassengers = computed(() => {
+  return numPassengers.value - props.passengerCapacity > 0
+    ? numPassengers.value - props.passengerCapacity
+    : 0
+})
 </script>

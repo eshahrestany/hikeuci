@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog/index.js";
-import EditUserSignup from "@/components/admin/EditUserSignup.vue";
+import ModifyUserModal from "@/components/admin/ModifyUserModal.vue";
 import {ref, shallowRef, h} from "vue";
 import {toast} from "vue-sonner";
 import {Badge} from "@/components/ui/badge/index.js";
@@ -31,8 +31,8 @@ const showAddSignup = ref(false)
 const { postWithAuth } = useAuth()
 
 function handleAdded(newUser) {
-  data.value.push(newUser)        // refresh table
-  data.value = [...data.value]
+  data.value.push(newUser)
+  data.value = [...data.value] // refresh table
   showAddSignup.value = false
 }
 
@@ -60,7 +60,6 @@ function modifyRow(user) {
 
 function resendEmail(user) {
   postWithAuth('/mail/resend-waiver', {
-    hike_id: props.waiverData.hike_id,
     user_id: user.member_id
   })
     .then(res => {
@@ -81,7 +80,6 @@ async function confirmedRemove() {
   const user = confirmUser.value
   try {
     const res = await postWithAuth('/active-hike/remove-user', {
-      hike_id: props.waiverData.hike_id,
       user_id: user.member_id
     })
 
@@ -122,7 +120,7 @@ const columns = [
       row.original.transport_type === "passenger"
         ? 'Passenger'
         : row.original.transport_type === "driver"
-          ? 'Driver'
+          ? `Driver (${row.original.vehicle_capacity})`
           : 'Self-Transport',
   },
   {
@@ -325,17 +323,16 @@ const table = useVueTable({
     </Table>
   </div>
 
-  <EditUserSignup
+  <ModifyUserModal
       v-if="editUser"
+      mode="waiver"
       :user="editUser"
-      :hike-id="waiverData.hike_id"
       @close="editUser = null"
       @saved="() => editUser = null"
   />
 
   <AddLateSignup
     v-if="showAddSignup"
-    :hike-id="waiverData.hike_id"
     @close="showAddSignup = false"
     @added="handleAdded"
   />

@@ -4,7 +4,7 @@ from typing import Callable, Any, TypeVar, Optional, Dict, Union
 import jwt
 from flask import request, jsonify, current_app, g, Response
 
-from .models import AdminUser
+from .models import AdminUser, ActiveHike
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -41,5 +41,16 @@ def admin_required(f: F) -> F:
 
         # stash on flask.g for handlers to use
         g.current_admin: AdminUser = admin  # type: ignore[attr-defined]
+        return f(*args, **kwargs)
+    return wrapped  # type: ignore[return-value]
+
+def waiver_phase_required(f: F) -> F:
+    @wraps(f)
+    def wrapped(*args: Any, **kwargs: Any) -> Union[Response, Any]:
+        active_hike = ActiveHike.query.first()
+        if not active_hike:
+            return jsonify(error="No current active hike"), 400
+        if active_hike.status.lower() != "waiver":
+            return jsonify(error="Hike is not in waiver phase"), 400
         return f(*args, **kwargs)
     return wrapped  # type: ignore[return-value]

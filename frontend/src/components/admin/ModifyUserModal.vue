@@ -5,6 +5,9 @@
         <DialogTitle>Edit Signup</DialogTitle>
       </DialogHeader>
 
+      <p v-if="props.mode === 'waitlist'" class="text-sm">
+        Switching a user from passenger to driver or self-transport will bump them off the waitlist and send them a waiver via email.
+      </p>
       <div class="grid gap-4 py-4">
         <div class="grid grid-cols-2 items-center gap-4">
           <Label for="name">Name</Label>
@@ -36,7 +39,7 @@
                   :key="v.id"
                   :value="v.id"
                 >
-                  {{ v.description }} ({{ v.passenger_seats }} seats)
+                  {{ v.description }} ({{ v.passenger_seats }} passengers)
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -123,8 +126,8 @@ import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 
 const props = defineProps({
+  mode:   { type: String, required: true }, // waiver or waitlist
   user:   { type: Object, required: true },
-  hikeId: { type: Number, required: true }
 })
 const emit = defineEmits(['saved','close'])
 const open = ref(true)
@@ -192,7 +195,6 @@ async function addVehicle() {
 async function onSave() {
   try {
     const payload = {
-      hike_id:        props.hikeId,
       user_id:        props.user.member_id,
       name:      form.name,
       transport_type: form.transport_type

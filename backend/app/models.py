@@ -32,7 +32,7 @@ class Signup(db.Model):
     signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
     transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self'
     is_checked_in = db.Column(db.Boolean, nullable=False, default=False) # Indicates if the member has been checked in for the hike
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=True) # Nullable for those who are not drivers
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), default=None, nullable=True) # Nullable for those who are not drivers
     status = db.Column(db.String(50), nullable=False, default='pending') # 'pending', 'confirmed', 'waitlisted'
     waitlist_pos = db.Column(db.Integer, nullable=True) # Nullable for those who are not on the waitlist
 
