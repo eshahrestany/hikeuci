@@ -1,100 +1,3 @@
-<template>
-  <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle>Edit Signup</DialogTitle>
-      </DialogHeader>
-
-      <p v-if="props.mode === 'waitlist'" class="text-sm">
-        Switching a user from passenger to driver or self-transport will bump them off the waitlist and send them a waiver via email.
-      </p>
-      <div class="grid gap-4 py-4">
-        <div class="grid grid-cols-2 items-center gap-4">
-          <Label for="name">Name</Label>
-          <Input id="name" v-model="form.name" />
-        </div>
-        <div class="grid grid-cols-2 items-center gap-4">
-          <Label for="transportType">Transport Type</Label>
-          <Select v-model="form.transport_type">
-            <SelectTrigger id="transportType">
-              <SelectValue placeholder="Select…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="driver">Driver</SelectItem>
-              <SelectItem value="passenger">Passenger</SelectItem>
-              <SelectItem value="self">Self-transport</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div v-if="form.transport_type === 'driver'" class="col-span-2 space-y-4">
-          <div v-if="vehicles.length">
-            <Label for="vehicleSelect">Choose Vehicle</Label>
-            <Select v-model="form.vehicle_id">
-              <SelectTrigger id="vehicleSelect">
-                <SelectValue placeholder="Select Vehicle…" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="v in vehicles"
-                  :key="v.id"
-                  :value="v.id"
-                >
-                  {{ v.description }} ({{ v.passenger_seats }} passengers)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div v-else class="space-y-2">
-            <div class="grid grid-cols-2 items-center gap-4">
-              <Label for="vehicleYear">Year</Label>
-              <Input
-                id="vehicleYear"
-                v-model="newVehicle.year"
-                placeholder="2021"
-              />
-            </div>
-            <div class="grid grid-cols-2 items-center gap-4">
-              <Label for="vehicleMake">Make</Label>
-              <Input
-                id="vehicleMake"
-                v-model="newVehicle.make"
-                placeholder="Toyota"
-              />
-            </div>
-            <div class="grid grid-cols-2 items-center gap-4">
-              <Label for="vehicleModel">Model</Label>
-              <Input
-                id="vehicleModel"
-                v-model="newVehicle.model"
-                placeholder="Corolla"
-              />
-            </div>
-            <NumberField
-              id="passengers"
-              v-model="newVehicle.passenger_seats"
-              :min="1"
-              :default-value="1"
-            >
-              <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
-              <NumberFieldContent class="max-w-1/4">
-                <NumberFieldDecrement />
-                <NumberFieldInput />
-                <NumberFieldIncrement />
-              </NumberFieldContent>
-            </NumberField>
-            <Button @click="addVehicle">Add Vehicle</Button>
-          </div>
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button variant="outline" @click="open = false">Cancel</Button>
-        <Button :disabled="saveDisabled" @click="onSave">Save</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-</template>
 
 <script setup>
 import {ref, reactive, watch, onMounted, computed} from 'vue'
@@ -221,3 +124,103 @@ async function onSave() {
   }
 }
 </script>
+
+
+<template>
+  <Dialog v-model:open="open">
+    <DialogContent class="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle v-if="props.mode === 'waiver'">Modify Signup</DialogTitle>
+        <DialogTitle v-else-if="props.mode === 'waitlist'">Modify Waitlist Entry</DialogTitle>
+      </DialogHeader>
+
+      <template v-if="props.mode === 'waitlist'">
+        <p class="text-sm">Switching a user from passenger to driver or self-transport will bump them off the waitlist and send them a waiver via email.</p>
+        <p class="text-sm">It will automatically do the same for however many waitlisted passengers this driver can carry.</p>
+      </template>
+      <div class="grid grid-cols-2 gap-4 py-4">
+        <Label for="name">Name</Label>
+
+        <!-- Transport Type -->
+        <Label for="transportType">Transport Type</Label>
+        <Input id="name" v-model="form.name" />
+
+        <Select v-model="form.transport_type">
+          <SelectTrigger id="transportType"><SelectValue placeholder="Select…" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="driver">Driver</SelectItem>
+            <SelectItem value="passenger">Passenger</SelectItem>
+            <SelectItem value="self">Self-transport</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <!-- Driver-only block -->
+        <div v-if="form.transport_type === 'driver'" class="col-span-full space-y-4">
+          <div v-if="vehicles.length">
+            <Label for="vehicleSelect">Choose Vehicle</Label>
+            <Select v-model="form.vehicle_id">
+              <SelectTrigger id="vehicleSelect">
+                <SelectValue placeholder="Select Vehicle…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="v in vehicles"
+                  :key="v.id"
+                  :value="v.id"
+                >
+                  {{ v.description }} ({{ v.passenger_seats }} passengers)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div v-else class="space-y-2">
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleYear">Year</Label>
+              <Input
+                id="vehicleYear"
+                v-model="newVehicle.year"
+                placeholder="2021"
+              />
+            </div>
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleMake">Make</Label>
+              <Input
+                id="vehicleMake"
+                v-model="newVehicle.make"
+                placeholder="Toyota"
+              />
+            </div>
+            <div class="grid grid-cols-2 items-center gap-4">
+              <Label for="vehicleModel">Model</Label>
+              <Input
+                id="vehicleModel"
+                v-model="newVehicle.model"
+                placeholder="Corolla"
+              />
+            </div>
+            <NumberField
+              id="passengers"
+              v-model="newVehicle.passenger_seats"
+              :min="1"
+              :default-value="1"
+            >
+              <Label for="passengers" class="font-semibold text-secondary-foreground">Passenger Capacity</Label>
+              <NumberFieldContent class="max-w-1/4">
+                <NumberFieldDecrement />
+                <NumberFieldInput />
+                <NumberFieldIncrement />
+              </NumberFieldContent>
+            </NumberField>
+            <Button @click="addVehicle">Add Vehicle</Button>
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button variant="outline" @click="open = false">Cancel</Button>
+        <Button :disabled="saveDisabled" @click="onSave">Save</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</template>
