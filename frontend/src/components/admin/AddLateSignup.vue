@@ -24,7 +24,6 @@ import { toast } from 'vue-sonner'
 import {Input} from "@/components/ui/input/index.js";
 import {cn} from "@/lib/utils.js";
 
-const props = defineProps({ hikeId: Number })
 const emit  = defineEmits(['close', 'added'])
 const open  = ref(true)
 
@@ -38,7 +37,7 @@ const selected    = ref(null)          // whole option object
 
 onMounted(loadEmails)
 async function loadEmails() {
-  const res = await fetchWithAuth(`/members/list-emails-not-in-hike`)
+  const res = await fetchWithAuth(`/active-hike/list-emails-not-in-hike`)
   const raw = res.ok ? await res.json() : []
 
   emailOptions.value = raw.map(o => ({
@@ -92,7 +91,6 @@ async function onSave() {
   if (!selected.value) return toast.error('Select a member')
   try {
     const payload = {
-      hike_id: props.hikeId,
       member_id: selected.value.member_id,
       transport_type: form.transport_type,
       vehicle_id: form.transport_type === 'driver' ? form.vehicle_id : null,

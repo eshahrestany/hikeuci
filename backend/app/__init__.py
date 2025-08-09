@@ -1,6 +1,7 @@
 from flask import Flask, send_from_directory
-from .extensions import db, migrate, CORS
+from .extensions import db, migrate
 from .routes import register_routes
+from flask_cors import CORS
 
 
 def create_app(config_object="config.Config"):

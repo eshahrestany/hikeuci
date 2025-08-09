@@ -1,24 +1,23 @@
-from flask import Blueprint, jsonify, current_app, Response, request
-
+from typing import List
+from flask import Blueprint, jsonify, Response, request, current_app
 from .. import db
+from ..decorators import admin_required, waiver_phase_required
 from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
-from ..decorators import admin_required
-from typing import List, Optional
-
 
 active_hike: Blueprint = Blueprint("active-hike", __name__)
 
+
 @active_hike.route('/upcoming', methods=['GET'])
 @admin_required
-def get_active_hike() -> Response:
+def get_active_hike_info():
     # find out the current phase
 
     # null phase: no scheduled hike
-    active_hike: ActiveHike or None = ActiveHike.query.first()
-    if active_hike is None:
-        return jsonify({"status": None})
+    hike: ActiveHike or None = ActiveHike.query.first()
+    if hike is None:
+        return jsonify(status="None"), 200
 
-    phase = active_hike.status
+    phase = hike.status
     return_data = {"status": phase}
 
     # voting phase: two or more hikes are slated for voting
@@ -30,28 +29,28 @@ def get_active_hike() -> Response:
             trail: Trail = Trail.query.get(hike.trail_id)
 
             rows = (
-                db.session.query(Member.first_name, Member.last_name)
+                db.session.query(Member.name)
                 .join(Vote, Member.id == Vote.member_id)
                 .filter(Vote.active_hike_id == hike.id)
                 .all()
             )
 
-            voter_names = [fname + " " + lname for (fname, lname) in rows]
+            names = [row.name for row in rows]
 
             return_data["candidates"].append({
                 "trail_id": trail.id,
                 "trail_name": trail.name,
                 "candidate_id": hike.id,
-                "candidate_num_votes": len(voter_names),
-                "candidate_voters": voter_names
+                "candidate_num_votes": len(names),
+                "candidate_voters": names
             })
 
-        return jsonify(return_data)
+        return jsonify(return_data), 200
 
     # signup phase: one hike has been selected and is open for signups
     # waiver phase: hikers for this trail have been selected and waivers have been sent
-    elif phase in ["signup", "waiver"]: # both phases require nearly identical data
-        trail: Trail = Trail.query.get(active_hike.trail_id)
+    elif phase in ["signup", "waiver"]:  # both phases require nearly identical data
+        trail: Trail = Trail.query.get(hike.trail_id)
         return_data["trail_id"] = trail.id
         return_data["trail_name"] = trail.name
 
@@ -59,44 +58,92 @@ def get_active_hike() -> Response:
             db.session.query(Member, Signup.transport_type, Signup.is_checked_in, Waiver.id.label("waiver_id"))
             .join(Signup, Member.id == Signup.member_id)
             .outerjoin(Waiver, Member.id == Waiver.member_id)
-            .filter(Signup.active_hike_id == active_hike.id)
+            .filter(Signup.active_hike_id == hike.id)
             .all()
         )
 
         users = []
         for member, transport_type, is_checked_in, waiver_id in rows:
-            users.append({
+            user_obj = {
                 "member_id": member.id,
-                "first_name": member.first_name,
-                "last_name": member.last_name,
+                "name": member.name,
                 "transport_type": transport_type,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in
-            })
+            }
+            if user_obj["transport_type"] == "driver":
+                vehicle = Vehicle.query.get(Signup.query.filter_by(
+                    active_hike_id=hike.id,
+                    member_id=member.id
+                ).first().vehicle_id)
+                user_obj["vehicle_id"] = vehicle.id
+                user_obj["vehicle_capacity"] = vehicle.passenger_seats
+            users.append(user_obj)
 
         # compute capacity from drivers’ vehicles
-        passenger_capacity = 0
-        driver_signups = Signup.query.filter_by(
-            active_hike_id=active_hike.id,
-            transport_type="driver"
-        ).all()
-        for signup in driver_signups:
-            vehicle = Vehicle.query.get(signup.vehicle_id)
-            if vehicle:
-                passenger_capacity += vehicle.passenger_seats
+        total_capacity = 0
+        for user in users:
+            if user["transport_type"] == "driver":
+                total_capacity += user["vehicle_capacity"]
 
         return_data["users"] = users
-        return_data["passenger_capacity"] = passenger_capacity
+        return_data["passenger_capacity"] = total_capacity
+        return jsonify(return_data), 200
 
-        return jsonify(return_data)
+
+@active_hike.route('/waitlist', methods=['GET'])
+@admin_required
+@waiver_phase_required
+def get_waitlist():
+    # fetch all members who are signed up but on the waitlist
+    waitlist_signups = Signup.query.filter_by(status="waitlisted").all()
+    waitlist_users = []
+    for signup in waitlist_signups:
+        member = Member.query.get(signup.member_id)
+        if member:
+            user_obj = {
+                "member_id": member.id,
+                "name": member.name,
+                'waitlist_pos': signup.waitlist_pos,
+            }
+            waitlist_users.append(user_obj)
+
+    return jsonify(waitlist_users), 200
 
 
-    else:
-        return jsonify({"status": None})
 
+@active_hike.route("/list-emails-not-in-hike", methods=["GET"])
+@admin_required
+def list_emails_not_in_hike():
+    # Already-signed-up member IDs
+    signed_ids = (db.session.query(Signup.member_id).all())
+    signed_ids = [mid for (mid,) in signed_ids]
+
+    # Waitlisted members
+    waitlisted_ids = (db.session.query(Signup.member_id).filter(Signup.status == "waitlisted").all())
+    waitlisted_members = (
+        Member.query
+        .filter(Member.id.in_(waitlisted_ids))
+        .order_by(Member.email)
+        .all()
+    )
+
+    # Unsigned-up members
+    unsigned_members = (
+        Member.query
+        .filter(~Member.id.in_(signed_ids))
+        .order_by(Member.email)
+        .all()
+    )
+
+    # Combine unsigned and waitlisted members
+    rows = unsigned_members + waitlisted_members
+
+    return jsonify([{"member_id": m.id, "email": m.email} for m in rows]), 200
 
 @active_hike.route('/check-in', methods=['POST'])
 @admin_required
+@waiver_phase_required
 def check_in():
     data = request.get_json() or {}
     user_id = data.get('user_id')
@@ -104,14 +151,6 @@ def check_in():
     # 1) Basic payload validation
     if user_id is None:
         return jsonify(error="Missing 'user_id'"), 400
-
-    # 2) Fetch the active hike and verify phase
-    active = ActiveHike.query.first()
-    if not active:
-        return jsonify(error="No current active hike"), 400
-    if active.status.lower() != 'waiver':
-        return jsonify(error="Hike is not in waiver phase"), 400
-
 
     # 3) Verify member exists
     member = Member.query.get(user_id)
@@ -121,14 +160,12 @@ def check_in():
     # 4) Verify waiver exists for this member/hike
     waiver = Waiver.query.filter_by(
         member_id=user_id,
-        active_hike_id=active.id
     ).first()
     if not waiver:
         return jsonify(error="Waiver not on file for this member"), 400
 
     # 5) Fetch the signup record (so we can flip is_checked_in)
     signup = Signup.query.filter_by(
-        active_hike_id=active.id,
         member_id=user_id
     ).first()
     if not signup:
@@ -149,13 +186,12 @@ def check_in():
 @admin_required
 def modify_user():
     data = request.get_json() or {}
-    user_id        = data.get('user_id')
-    first_name     = data.get('first_name')
-    last_name      = data.get('last_name')
+    user_id = data.get('user_id')
+    name = data.get('name')
     transport_type = data.get('transport_type')
 
     # 1) Validate payload
-    if None in (user_id, first_name, last_name, transport_type):
+    if None in (user_id, name, transport_type):
         return jsonify(error="Missing fields"), 400
 
     # 2) ActiveHike must exist and be in waiver phase
@@ -192,11 +228,8 @@ def modify_user():
         # 6) Apply updates
         signup.vehicle_id = vehicle_id
 
-    member.first_name    = first_name
-    member.last_name     = last_name
+    member.name = name
     signup.transport_type = transport_type
-
-
 
     db.session.commit()
     return jsonify(success=True), 200
@@ -233,9 +266,9 @@ def remove_user():
 @admin_required
 def add_user():
     data = request.get_json() or {}
-    member_id      = data.get("member_id")
+    member_id = data.get("member_id")
     transport_type = data.get("transport_type")
-    vehicle_id     = data.get("vehicle_id")      # may be None
+    vehicle_id = data.get("vehicle_id")  # may be None
 
     # ── validation ─────────────────────────────
     if None in (member_id, transport_type):
@@ -268,8 +301,7 @@ def add_user():
     m = Member.query.get(member_id)
     user_obj = {
         "member_id": m.id,
-        "first_name": m.first_name,
-        "last_name":  m.last_name,
+        "name": m.name,
         "transport_type": transport_type,
         "has_waiver": False,
         "is_checked_in": False,

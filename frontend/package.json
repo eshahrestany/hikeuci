@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 5001",
     "build": "vite build",
     "build:dev": "vite build --mode development --watch",
     "serve": "vite preview"
@@ -24,7 +24,7 @@
     "lucide-vue-next": "^0.395.0",
     "marked": "^13.0.0",
     "radix-vue": "^1.8.2",
-    "reka-ui": "^2.4.0",
+    "reka-ui": "^2.4.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",

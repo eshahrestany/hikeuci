@@ -10,7 +10,6 @@ Usage:
   python seed_db.py signup
   python seed_db.py waiver
 """
-import sys
 import random
 from datetime import datetime, timedelta, UTC
 
@@ -65,8 +64,7 @@ def seed_voting():
     total_members = 50 * len(active_hikes)
     for i in range(total_members):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
+            name=f"Member{i}",
             email=f"user{i}@example.com"
         )
         members.append(m)
@@ -107,9 +105,8 @@ def seed_signup():
     members = []
     for i in range(50):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
-            email=f"signup{i}@example.com"
+            name=f"Member{i}",
+            email=f"member{i}@example.com"
         )
         members.append(m)
     db.session.add_all(members)
@@ -139,14 +136,15 @@ def seed_signup():
                 member_id=m.id,
                 active_hike_id=ah.id,
                 transport_type="driver",
-                vehicle_id=vid
+                vehicle_id=vid,
+                status="pending"
             ))
         else:
             signups.append(Signup(
                 member_id=m.id,
                 active_hike_id=ah.id,
                 transport_type="passenger",
-                vehicle_id=None
+                status="pending"
             ))
     db.session.add_all(signups)
     db.session.commit()
@@ -173,59 +171,103 @@ def seed_waiver():
     members = []
     for i in range(50):
         m = Member(
-            first_name=f"First{i}",
-            last_name=f"Last{i}",
+            name=f"Member{i}",
             email=f"waiver{i}@example.com"
         )
         members.append(m)
     db.session.add_all(members)
     db.session.commit()
 
-    # Create vehicles and signups similar to signup scenario
-    drivers = random.sample(members, 8)
+    members_copy = members.copy()
+    random.shuffle(members_copy)
+
+    num_drivers = random.randint(8, 10)
+    num_self = random.randint(0, 4)
+    total_signups = 40
+
+    drivers = members_copy[:num_drivers]
+    self_transporters = members_copy[num_drivers: num_drivers + num_self]
+    remaining = members_copy[num_drivers + num_self:]
+
+    # pick exactly total_signups minus drivers/self slots
+    passenger_slots = max(0, total_signups - (num_drivers + num_self))
+    passengers = random.sample(remaining, k=min(len(remaining), passenger_slots))
+
+    # 2. create driver vehicles
     vehicles = []
-    for m in drivers:
-        v = Vehicle(
-            member_id=m.id,
-            year=2015 + random.randint(0, 5),
-            make="MakeA",
-            model="ModelB",
-            passenger_seats=random.randint(2, 7)
+    for d in drivers:
+        seats = random.randint(3, 4)
+        vehicles.append(
+            Vehicle(
+                member_id=d.id,
+                year=random.randint(2015, 2020),
+                make="MakeA",
+                model="ModelB",
+                passenger_seats=seats,
+            )
         )
-        vehicles.append(v)
     db.session.add_all(vehicles)
     db.session.commit()
 
+    # 3. compute total passenger capacity
+    capacity = sum(v.passenger_seats for v in vehicles)
+
+    # 4. build signups list
     signups = []
-    for m in random.sample(members, 40):
-        if m in drivers:
-            vid = next(v.id for v in vehicles if v.member_id == m.id)
-            signups.append(Signup(
-                member_id=m.id,
+
+    # drivers
+    for d in drivers:
+        vid = next(v.id for v in vehicles if v.member_id == d.id)
+        signups.append(
+            Signup(
+                member_id=d.id,
                 active_hike_id=ah.id,
                 transport_type="driver",
-                vehicle_id=vid
-            ))
+                vehicle_id=vid,
+                status="confirmed",
+            )
+        )
+
+    # self-transport
+    for s in self_transporters:
+        signups.append(
+            Signup(
+                member_id=s.id,
+                active_hike_id=ah.id,
+                transport_type="self",
+                status="confirmed",
+            )
+        )
+
+    # passengers (confirmed up to capacity, rest wait-listed)
+    for idx, p in enumerate(passengers, start=1):
+        if idx <= capacity:
+            status = "confirmed"
+            waitlist_pos = None
         else:
-            signups.append(Signup(
-                member_id=m.id,
+            status = "waitlisted"
+            waitlist_pos = idx - capacity
+        signups.append(
+            Signup(
+                member_id=p.id,
                 active_hike_id=ah.id,
                 transport_type="passenger",
-                vehicle_id=None
-            ))
+                status=status,
+                waitlist_pos=waitlist_pos,
+            )
+        )
+
     db.session.add_all(signups)
     db.session.commit()
 
-    # No votes in waiver scenario
-
-    # Create waivers for half the members
+    # create waivers for half the members
     waivers = [
         Waiver(
             member_id=m.id,
             signed_on=datetime.now(UTC) - timedelta(days=random.randint(0, 2)),
             active_hike_id=ah.id
         )
-        for m in random.sample(members, 25)
+        for m in random.sample(members, 20)
     ]
     db.session.add_all(waivers)
     db.session.commit()
