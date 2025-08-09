@@ -1,4 +1,5 @@
 from flask import Flask, send_from_directory
+from .lib.magic_link import MagicLinkManager
 from .extensions import db, migrate
 from .routes import register_routes
 from flask_cors import CORS
@@ -21,6 +22,8 @@ def create_app(config_object="config.Config"):
     # extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    magic_link_manager = MagicLinkManager()
+    magic_link_manager.init_app(app)
     CORS(app, resources={r"/*": {"origins": cfg_cls.CORS_ORIGIN}})
 
     # bring in model classes

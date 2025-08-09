@@ -21,6 +21,7 @@
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "libphonenumber-js": "^1.12.10",
     "lucide-vue-next": "^0.395.0",
     "marked": "^13.0.0",
     "radix-vue": "^1.8.2",

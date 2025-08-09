@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, Response, request, current_app
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import ActiveHike, Trail, Vote, Member, Signup, Vehicle, Waiver
+from typing import List, Optional
 
 active_hike: Blueprint = Blueprint("active-hike", __name__)
 
@@ -44,8 +45,6 @@ def get_active_hike_info():
                 "candidate_num_votes": len(names),
                 "candidate_voters": names
             })
-
-        return jsonify(return_data), 200
 
     # signup phase: one hike has been selected and is open for signups
     # waiver phase: hikers for this trail have been selected and waivers have been sent

@@ -7,6 +7,7 @@ class Member(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name  = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
+    tel        = db.Column(db.String(32), nullable=True)  # E164
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -22,6 +23,7 @@ class Trail(db.Model):
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
     trailhead_amaps_endpoint = db.Column(db.String(300), nullable=True)
     notes                    = db.Column(db.String(300), nullable=True)
+    description              = db.Column(db.Text, nullable=True)
 
 
 class Signup(db.Model):
@@ -97,4 +99,20 @@ class ActiveHike(db.Model):
     status = db.Column(db.String(50), nullable=False)
     planned_date = db.Column(db.DateTime, nullable=False)
     trail_id = db.Column(db.Integer, db.ForeignKey('trails.id'), nullable=False)
+    trail = db.relationship('Trail', backref=db.backref('active_hikes', lazy=True))
+
+class MagicLink(db.Model):
+    __tablename__ = 'magic_links'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
+    user = db.relationship('Member', backref=db.backref('magic_links', lazy=True))
+    active_hike = db.relationship('ActiveHike', backref=db.backref('magic_links', lazy=True))
+    expires_at = db.Column(db.DateTime, nullable=False)
+    is_used = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f'<MagicLink {self.token}>'
 
