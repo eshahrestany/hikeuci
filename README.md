@@ -12,6 +12,7 @@ alongside a modern Vue 3 front-end that consumes the API.
 |------------|------------|
 | **Back-end** | [Flask](https://flask.palletsprojects.com/) · SQLAlchemy · Alembic/Flask-Migrate |
 | **Database** | PostgreSQL (⇢ any SQLAlchemy-compatible DB – SQLite works for local development) |
+| **Task Queue** | Celery · Redis |
 | **Front-end** | [Vue 3](https://vuejs.org/) · Vite · Tailwind CSS |
 
 ---
