@@ -29,6 +29,7 @@ def google_login() -> tuple[Response, int]:
 
     # 3) Lookup admin user by Google subject (sub)
     sub: str = info["sub"]
+    current_app.logger.debug(f"Google user sub: {sub}")
     admin: Optional[AdminUser] = AdminUser.query.filter_by(provider_user_id=sub).first()
     if not admin:
         return jsonify({"error": "Not an admin user"}), 403
