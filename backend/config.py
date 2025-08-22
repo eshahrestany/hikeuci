@@ -24,6 +24,11 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_TOKEN_INFO_URL = os.getenv("GOOGLE_TOKEN_INFO_URL")
 
+    CELERY = {
+        "broker_url": os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
+        "result_backend": os.getenv("CELERY_RESULT_BACKEND")
+    }
+
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     FRONTEND_DIST = os.path.join(BASE_DIR, '..', 'frontend', 'dist')
     STATIC_FOLDER = os.path.join(FRONTEND_DIST, 'assets')

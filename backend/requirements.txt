@@ -6,3 +6,4 @@ pyjwt~=2.10.1
 requests~=2.32.4
 psycopg2-binary~=2.9.10
 flask_cors~=6.0.1
+Celery~=5.5.3
