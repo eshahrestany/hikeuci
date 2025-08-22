@@ -1,7 +1,6 @@
 .venv
 .idea
 /backend/.env
-/backend/migrations
 /backend/app/static/uploads
 /frontend/node_modules/
 /frontend/.env

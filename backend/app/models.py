@@ -5,7 +5,7 @@ from .extensions import db
 class Member(db.Model):
     __tablename__ = 'members'
     id         = db.Column(db.Integer, primary_key=True)
-    name  = db.Column(db.String(100), nullable=False)
+    name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
     tel        = db.Column(db.String(32), nullable=True)  # E164
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
@@ -17,7 +17,7 @@ class Trail(db.Model):
     id                       = db.Column(db.Integer, primary_key=True)
     name                     = db.Column(db.String(150), nullable=False)
     length_mi                = db.Column(db.Float, nullable=True)
-    difficulty               = db.Column(db.Integer, nullable=True) # 0 = easy, 1 = moderate, 2 = difficult, 3 = very difficult
+    difficulty               = db.Column(db.Integer, nullable=True)  # 0=e,1=m,2=d,3=vd
     added_on                 = db.Column(db.DateTime, default=datetime.now, nullable=False)
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
@@ -26,43 +26,40 @@ class Trail(db.Model):
     description              = db.Column(db.Text, nullable=True)
 
 
+class Hike(db.Model):
+    """
+    Hikes table. Use `status` to indicate lifecycle:
+    'active' current weekly hike and has non-null phase, 'completed' (past), 'canceled' (past)
+    """
+    __tablename__ = 'hikes'
+    id        = db.Column(db.Integer, primary_key=True)
+    trail_id  = db.Column(db.Integer, db.ForeignKey('trails.id'), default=None, nullable=True)
+    hike_date = db.Column(db.DateTime, nullable=False, index=True)
+    status    = db.Column(db.String(20), nullable=False, index=True, default='scheduled')
+    phase     = db.Column(db.String(20), nullable=True, default='pre-hike')  #  for status=active: 'voting', 'signups', 'waiver'
+    notes     = db.Column(db.Text, nullable=True)
+
+
+
 class Signup(db.Model):
     __tablename__ = 'signups'
-    id          = db.Column(db.Integer, primary_key=True)
-    member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
-    signup_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
-    transport_type = db.Column(db.String, nullable=False) # 'passenger', 'driver', 'self'
-    is_checked_in = db.Column(db.Boolean, nullable=False, default=False) # Indicates if the member has been checked in for the hike
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), default=None, nullable=True) # Nullable for those who are not drivers
-    status = db.Column(db.String(50), nullable=False, default='pending') # 'pending', 'confirmed', 'waitlisted'
-    waitlist_pos = db.Column(db.Integer, nullable=True) # Nullable for those who are not on the waitlist
+    id             = db.Column(db.Integer, primary_key=True)
+    member_id      = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    signup_date    = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    transport_type = db.Column(db.String(20), nullable=False)  # 'passenger','driver','self'
+    is_checked_in  = db.Column(db.Boolean, nullable=False, default=False)
+    vehicle_id     = db.Column(db.Integer, db.ForeignKey('vehicles.id'), default=None, nullable=True)
+    status         = db.Column(db.String(50), nullable=False, default='pending')  # 'pending','confirmed','waitlisted'
+    waitlist_pos   = db.Column(db.Integer, nullable=True)
+
 
 class Waiver(db.Model):
     __tablename__ = 'waivers'
-    id             = db.Column(db.Integer, primary_key=True)
-    member_id      = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
-    signed_on      = db.Column(db.DateTime, default=datetime.now, nullable=False)
-
-
-class HikersHistory(db.Model):
-    __tablename__ = 'hikers_history'
-    id         = db.Column(db.Integer, primary_key=True)
-    member_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id'),  nullable=False)
-    date_hiked = db.Column(db.DateTime, nullable=False)
-    notes      = db.Column(db.Text, nullable=True)
-
-
-class Hike(db.Model):
-    __tablename__ = 'hikes'
-    id         = db.Column(db.Integer, primary_key=True)
-    trail_id   = db.Column(db.Integer, db.ForeignKey('trails.id'),  nullable=False)
-    hike_date  = db.Column(db.DateTime, nullable=False)
-    leader_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=True)
-    status    = db.Column(db.String, default=None, nullable=True)
-    notes      = db.Column(db.Text, nullable=True)
+    id        = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    hike_id   = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    signed_on = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
 
 class Vehicle(db.Model):
@@ -77,42 +74,31 @@ class Vehicle(db.Model):
 
 class AdminUser(db.Model):
     __tablename__ = 'admin_users'
+    id               = db.Column(db.Integer, primary_key=True)
+    provider         = db.Column(db.String(50), nullable=False, default='google')
+    provider_user_id = db.Column(db.String(255), unique=True, nullable=False)
+    email            = db.Column(db.String(120), unique=True, nullable=False)
+    created_on       = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    id                 = db.Column(db.Integer, primary_key=True)
-    provider           = db.Column(db.String(50), nullable=False, default='google')
-    provider_user_id   = db.Column(db.String(255), unique=True, nullable=False)
-    email              = db.Column(db.String(120), unique=True, nullable=False)
-    created_on         = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
 class Vote(db.Model):
     __tablename__ = "votes"
+    id        = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=True)
+    trail_id  = db.Column(db.Integer, db.ForeignKey('trails.id'), nullable=False)
+    hike_id   = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
 
-    id = db.Column(db.Integer, primary_key=True)
-    member_id   = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=True)
-    active_hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'))
-
-
-class ActiveHike(db.Model):
-    __tablename__ = "active_hike"
-
-    id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(50), nullable=False)
-    planned_date = db.Column(db.DateTime, nullable=False)
-    trail_id = db.Column(db.Integer, db.ForeignKey('trails.id'), nullable=False)
-    trail = db.relationship('Trail', backref=db.backref('active_hikes', lazy=True))
 
 class MagicLink(db.Model):
     __tablename__ = 'magic_links'
-    id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(64), unique=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    hike_id = db.Column(db.Integer, db.ForeignKey('active_hike.id'), nullable=False)
-    user = db.relationship('Member', backref=db.backref('magic_links', lazy=True))
-    active_hike = db.relationship('ActiveHike', backref=db.backref('magic_links', lazy=True))
+    id         = db.Column(db.Integer, primary_key=True)
+    token      = db.Column(db.String(64), unique=True, nullable=False)
+    user_id    = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    hike_id    = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    user       = db.relationship('Member', backref=db.backref('magic_links', lazy=True))
     expires_at = db.Column(db.DateTime, nullable=False)
-    is_used = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_used    = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     def __repr__(self):
         return f'<MagicLink {self.token}>'
-

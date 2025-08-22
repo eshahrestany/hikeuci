@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, current_app, Response, request
+from ..models import Hike
 
 hike_signup: Blueprint = Blueprint("hike-signup", __name__)
 
@@ -17,18 +18,21 @@ def signup() -> tuple[Response, int]:
 
         magic_link = data["magic_link"]
         user = magic_link.user
-        trail = magic_link.active_hike.trail
+
+        hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
+        trail = hike.trail if (hike and hike.trail_id) else None  # Hike.trail backref from Trail.hikes
 
         return jsonify({
             "status": status,
             "formData": {
-                "name": f"{user.first_name} {user.last_name}",
+                "name": user.name,
                 "email": user.email,
                 "tel": user.tel,
             },
             "hike": {
-                "title": trail.name,
-                "description": trail.description or ''
+                # If trail not yet chosen (e.g., during voting), keep strings to avoid FE breakage
+                "title": trail.name if trail else "",
+                "description": (trail.description or "") if trail else ""
             }
         }), 200
 
