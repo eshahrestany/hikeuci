@@ -1,30 +1,26 @@
 import secrets
-import datetime
-from flask import current_app
-from ..models import MagicLink
+from ..models import MagicLink, Hike
 
 
 class MagicLinkManager:
-    def __init__(self, app=None):
+    def __init__(self, app, db):
         if app:
             self.init_app(app)
-
-    @property
-    def db(self):
-        return current_app.extensions['sqlalchemy'].db
+        if db:
+            self.db = db
 
     def init_app(self, app):
         app.extensions['magic_link_manager'] = self
 
-    def generate(self, user, hike_id):
+    """Generates a magic link token, specific to a user, hike, and phase. The link expires at the end of the current phase."""
+    def generate(self, user_id: int, hike_id: int, phase: str):
         token = secrets.token_urlsafe(32)
-        expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)
 
         magic_link = MagicLink(
             token=token,
-            user_id=user.id,
-            expires_at=expires_at,
-            hike_id=hike_id
+            user_id=user_id,
+            hike_id=hike_id,
+            phase=phase
         )
         self.db.session.add(magic_link)
         self.db.session.commit()
@@ -37,18 +33,11 @@ class MagicLinkManager:
         if not magic_link:
             return {'status': 'not_found', 'user': None}
 
-        if magic_link.expires_at < datetime.datetime.utcnow():
+        associated_hike = Hike.query.get(magic_link.hike_id)
+        if not associated_hike:
+            return {'status': 'invalid_hike_id', 'user': magic_link.user}
+
+        if associated_hike.status != 'active' or magic_link.phase != associated_hike.phase:
             return {'status': 'expired', 'user': magic_link.user}
 
-        if magic_link.is_used:
-            return {'status': 'used', 'user': magic_link.user}
-
         return {'status': 'valid', 'magic_link': magic_link}
-
-    def mark_as_used(self, token):
-        magic_link = MagicLink.query.filter_by(token=token).first()
-        if magic_link and not magic_link.is_used and magic_link.expires_at >= datetime.datetime.utcnow():
-            magic_link.is_used = True
-            self.db.session.commit()
-            return True
-        return False

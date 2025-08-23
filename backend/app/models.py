@@ -15,6 +15,7 @@ class Member(db.Model):
 class Trail(db.Model):
     __tablename__ = 'trails'
     id                       = db.Column(db.Integer, primary_key=True)
+    is_active_vote_candidate = db.Column(db.Boolean, default=False, nullable=False)
     name                     = db.Column(db.String(150), nullable=False)
     length_mi                = db.Column(db.Float, nullable=True)
     difficulty               = db.Column(db.Integer, nullable=True)  # 0=e,1=m,2=d,3=vd
@@ -95,9 +96,7 @@ class MagicLink(db.Model):
     token      = db.Column(db.String(64), unique=True, nullable=False)
     user_id    = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id    = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
-    user       = db.relationship('Member', backref=db.backref('magic_links', lazy=True))
-    expires_at = db.Column(db.DateTime, nullable=False)
-    is_used    = db.Column(db.Boolean, default=False, nullable=False)
+    phase      = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver'
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     def __repr__(self):

@@ -52,7 +52,12 @@ def seed_voting():
 
     # 3 candidate trails
     trails = [
-        Trail(name=f"Trail {i+1}", length_mi=round(random.uniform(3, 10), 1), difficulty=random.randint(0, 3))
+        Trail(
+            name=f"Trail {i+1}",
+            length_mi=round(random.uniform(3, 10), 1),
+            difficulty=random.randint(0, 3),
+            is_active_vote_candidate=True,
+        )
         for i in range(3)
     ]
     db.session.add_all(trails)
