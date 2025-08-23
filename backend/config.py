@@ -7,6 +7,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
+    BASE_URL = os.getenv("BASE_URL")
     user = os.getenv("POSTGRES_USER")
     pw = os.getenv("POSTGRES_PASSWORD")
     dbn = os.getenv("POSTGRES_DB")
@@ -37,3 +38,18 @@ class Config:
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
     ALLOWED_UPLOAD_EXTENSIONS = {'png'}
+
+    MAIL_SMTP_HOST = os.getenv("MAIL_SMTP_HOST")
+    MAIL_SMTP_PORT = int(os.getenv("MAIL_SMTP_PORT", 587))
+    MAIL_SMTP_USERNAME = os.getenv("MAIL_SMTP_USERNAME")
+    MAIL_SMTP_PASSWORD = os.getenv("MAIL_SMTP_PASSWORD")
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True").lower() in ['true', '1', 't']
+    MAIL_SMTP_TIMEOUT = int(os.getenv("MAIL_SMTP_TIMEOUT", 30))
+    MAIL_FROM = os.getenv("MAIL_FROM")
+
+    DIFFICULTY_INDEX = {
+        0: "Easy",
+        1: "Moderate",
+        2: "Difficult",
+        3: "Very Difficult"
+    }
