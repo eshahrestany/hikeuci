@@ -45,6 +45,9 @@ class Config:
     MAIL_SMTP_PASSWORD = os.getenv("MAIL_SMTP_PASSWORD")
     MAIL_SMTP_TIMEOUT = int(os.getenv("MAIL_SMTP_TIMEOUT", 30))
     MAIL_FROM = os.getenv("MAIL_FROM")
+    MAIL_BATCH_SIZE = int(os.getenv("MAIL_BATCH_SIZE", 100))
+    MAIL_MAX_ATTEMPTS = int(os.getenv("MAIL_SMTP_TIMEOUT", 3))
+    MAIL_BATCH_PAUSE_SEC = int(os.getenv("MAIL_BATCH_PAUSE_SEC", 5))
 
     DIFFICULTY_INDEX = {
         0: "Easy",
