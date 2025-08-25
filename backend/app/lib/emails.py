@@ -2,57 +2,10 @@ import smtplib
 import ssl
 from contextlib import contextmanager
 from email.message import EmailMessage
-from typing import Optional, Sequence
-from urllib.parse import quote_plus
+from typing import Optional
 
 from flask import current_app
 
-from ..models import Member, Trail
-
-try:
-    # Optional: nicer HTML rendering if 'markdown' is installed.
-    import markdown as _markdown_lib  # type: ignore
-except Exception:  # pragma: no cover
-    _markdown_lib = None
-
-
-class Emails:
-    """
-    Simple email utility.
-
-    Required Flask config keys (with reasonable defaults):
-      - MAIL_SMTP_HOST (str)
-      - MAIL_SMTP_PORT (int)                         [default: 25]
-      - MAIL_SMTP_USERNAME (str|None)                [default: None]
-      - MAIL_SMTP_PASSWORD (str|None)                [default: None]
-      - MAIL_USE_TLS (bool)                          [default: True]
-      - MAIL_FROM (str)                              [e.g., "hikingclub@uci.edu"]
-      - MAIL_REPLY_TO (str|None)                     [optional]
-      - BASE_URL (str)                               [URL of the app in production]
-
-    """
-
-    # ---------- Public API ----------
-    @classmethod
-    def send_voting_email(
-        cls,
-        member_id: int,
-        token: str,
-    ) -> bool:
-        """
-        Voting-phase email to a single member.
-        - Generates a single-use magic link token and builds:
-            {BASE_URL}/vote?token=<token>
-        - Renders minimal boilerplate markdown including:
-            - Greeting by member name
-            - Magic link button URL (displayed as a plain link in markdown)
-            - List of trail options with (difficulty)
-        - Calls the base sender and returns True/False.
-        """
-        # Generate token -> URL
-
-
-        return cls.send_multipart(to=to_email, subject=subj, text_body=text_body, html_body=html_body)
 
 class EmailConnection:
     @contextmanager
@@ -111,7 +64,7 @@ class EmailConnection:
             msg.set_content(text_body)
             msg.add_alternative(html_body, subtype="html")
 
-            # use the factored-out connection
+            # Send via SMTP
             with self.connect() as server:
                 self._smtp_send(msg=msg, server=server)
             return True

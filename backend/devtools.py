@@ -86,6 +86,44 @@ def seed_voting():
 
 
 
+def seed_email_vote():
+    clear_db()
+
+    # 3 candidate trails
+    trails = [
+        Trail(
+            name=f"Trail {i+1}",
+            length_mi=round(random.uniform(3, 10), 1),
+            difficulty=random.randint(0, 3),
+            is_active_vote_candidate=True,
+        )
+        for i in range(3)
+    ]
+    db.session.add_all(trails)
+    db.session.commit()
+
+    # one active hike in voting phase, no trail selected yet
+    hike = Hike(
+        hike_date=datetime.now() + timedelta(days=3),
+        status="active",
+        phase="voting",
+    )
+    db.session.add(hike)
+    db.session.commit()
+
+    members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
+               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
+               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
+               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
+               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               ]
+    db.session.add_all(members)
+    db.session.commit()
+
+    print("Seeded 'email vote campaign' scenario.")
+
+
+
 def seed_signup():
     """
     One active hike in 'signups' phase with a selected trail.
@@ -308,14 +346,15 @@ if __name__ == '__main__':
 
     app = create_app()
     with app.app_context():
-        if len(sys.argv) != 2 or sys.argv[1] not in ('voting', 'signup', 'waiver'):
+        scenario = sys.argv[1]
+        if scenario == 'voting':
+            seed_voting()
+        elif scenario == 'signup':
+            seed_signup()
+        elif scenario == 'waiver':
+            seed_waiver()
+        elif scenario == 'email_vote':
+            seed_email_vote()
+        else:
             print(__doc__)
             sys.exit(1)
-
-        phase = sys.argv[1]
-        if phase == 'voting':
-            seed_voting()
-        elif phase == 'signup':
-            seed_signup()
-        elif phase == 'waiver':
-            seed_waiver()

@@ -99,5 +99,24 @@ class MagicLink(db.Model):
     phase      = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver'
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
+
+class EmailCampaign(db.Model):
+    __tablename__ = 'email_campaigns'
+    id             = db.Column(db.Integer, primary_key=True)
+    type           = db.Column(db.String(50), nullable=False)  # 'voting', 'signups', 'waiver'
+    date_created   = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    date_completed = db.Column(db.DateTime, nullable=True)
+
+
+class EmailTask(db.Model):
+    __tablename__ = 'email_tasks'
+    id                = db.Column(db.Integer, primary_key=True)
+    campaign_id       = db.Column(db.Integer, db.ForeignKey('email_campaigns.id'), nullable=False)
+    member_id         = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    magic_link_id     = db.Column(db.Integer, db.ForeignKey('magic_links.id'), nullable=True)
+    status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed'
+    attempts          = db.Column(db.Integer, nullable=False, default=0)
+    sent_at           = db.Column(db.DateTime, nullable=True)
+
     def __repr__(self):
         return f'<MagicLink {self.token}>'
