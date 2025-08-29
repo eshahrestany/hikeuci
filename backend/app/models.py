@@ -17,7 +17,10 @@ class Trail(db.Model):
     id                       = db.Column(db.Integer, primary_key=True)
     is_active_vote_candidate = db.Column(db.Boolean, default=False, nullable=False)
     name                     = db.Column(db.String(150), nullable=False)
+    location                 = db.Column(db.String(150), nullable=True)
     length_mi                = db.Column(db.Float, nullable=True)
+    estimated_time_hr        = db.Column(db.Float, nullable=True)
+    required_water_liters    = db.Column(db.Float, nullable=True)
     difficulty               = db.Column(db.Integer, nullable=True)  # 0=e,1=m,2=d,3=vd
     added_on                 = db.Column(db.DateTime, default=datetime.now, nullable=False)
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
