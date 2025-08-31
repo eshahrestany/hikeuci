@@ -17,11 +17,11 @@ class Trail(db.Model):
     id                       = db.Column(db.Integer, primary_key=True)
     is_active_vote_candidate = db.Column(db.Boolean, default=False, nullable=False)
     name                     = db.Column(db.String(150), nullable=False)
-    location                 = db.Column(db.String(150), nullable=True)
-    length_mi                = db.Column(db.Float, nullable=True)
-    estimated_time_hr        = db.Column(db.Float, nullable=True)
-    required_water_liters    = db.Column(db.Float, nullable=True)
-    difficulty               = db.Column(db.Integer, nullable=True)  # 0=e,1=m,2=d,3=vd
+    location                 = db.Column(db.String(150), nullable=False)
+    length_mi                = db.Column(db.Float, nullable=False)
+    estimated_time_hr        = db.Column(db.Float, nullable=False)
+    required_water_liters    = db.Column(db.Float, nullable=False)
+    difficulty               = db.Column(db.Integer, nullable=False)  # 0=e,1=m,2=d,3=vd
     added_on                 = db.Column(db.DateTime, default=datetime.now, nullable=False)
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
@@ -38,10 +38,14 @@ class Hike(db.Model):
     __tablename__ = 'hikes'
     id        = db.Column(db.Integer, primary_key=True)
     trail_id  = db.Column(db.Integer, db.ForeignKey('trails.id'), default=None, nullable=True)
-    hike_date = db.Column(db.DateTime, nullable=False, index=True)
     status    = db.Column(db.String(20), nullable=False, index=True, default='scheduled')
     phase     = db.Column(db.String(20), nullable=True, default='pre-hike')  #  for status=active: 'voting', 'signups', 'waiver'
-    notes     = db.Column(db.Text, nullable=True)
+    # dates
+    created_date   = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    voting_date = db.Column(db.DateTime, nullable=False) # when votes are sent
+    signup_date = db.Column(db.DateTime, nullable=False)
+    waiver_date = db.Column(db.DateTime, nullable=False)
+    hike_date = db.Column(db.DateTime, nullable=False, index=True)
 
 
 

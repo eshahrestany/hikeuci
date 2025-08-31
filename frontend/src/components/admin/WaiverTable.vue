@@ -120,7 +120,7 @@ const columns = [
       row.original.transport_type === "passenger"
         ? 'Passenger'
         : row.original.transport_type === "driver"
-          ? `Driver (${row.original.vehicle_capacity})`
+          ? `Driver (${row.original.vehicle_capacity} passengers)`
           : 'Self-Transport',
   },
   {

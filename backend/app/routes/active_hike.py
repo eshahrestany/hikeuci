@@ -31,17 +31,7 @@ def get_active_hike_info():
     if phase == "voting":
         # Each vote row ties this active hike to a candidate Trail via Vote.trail_id
         # Build candidate list with counts, then attach voter names per trail.
-        candidates = (
-            db.session.query(
-                Trail.id.label("trail_id"),
-                Trail.name.label("trail_name"),
-                func.count(Vote.id).label("candidate_num_votes"),
-            )
-            .join(Vote, Vote.trail_id == Trail.id)
-            .filter(Vote.hike_id == hike.id)
-            .group_by(Trail.id, Trail.name)
-            .all()
-        )
+        candidates = Trail.query.filter_by(is_active_vote_candidate=True).all()
 
         results = []
         for row in candidates:
@@ -49,20 +39,18 @@ def get_active_hike_info():
             voter_rows = (
                 db.session.query(Member.name)
                 .join(Vote, Member.id == Vote.member_id)
-                .filter(and_(Vote.hike_id == hike.id, Vote.trail_id == row.trail_id))
+                .filter(and_(Vote.hike_id == hike.id, Vote.trail_id == row.id))
                 .all()
             )
             names = [r.name for r in voter_rows]
             results.append({
-                "trail_id": row.trail_id,
-                "trail_name": row.trail_name,
-                # There isn't a separate "candidate_id" row anymore; keep the key for compatibility.
-                "candidate_id": row.trail_id,
-                "candidate_num_votes": int(row.candidate_num_votes or 0),
-                "candidate_voters": names,
+                "trail_id": row.id,
+                "trail_name": row.name,
+                "trail_num_votes": len(names),
+                "trail_voters": names,
             })
 
-        return_data["candidates"] = results
+        return_data["trails"] = results
         return jsonify(return_data), 200
 
     # SIGNUPS or WAIVER: report selected trail + roster + capacity

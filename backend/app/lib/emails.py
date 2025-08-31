@@ -11,7 +11,7 @@ class EmailConnection:
     @contextmanager
     def connect(self):
         """
-        Open an SMTP connection based on Flask config and yield the server.
+        Open an SMTP connection with TLS based on Flask config and yield the server.
         Ensures TLS and optional login. Always closes (quit/close) on exit.
         """
         cfg = current_app.config
@@ -22,16 +22,14 @@ class EmailConnection:
         port = int(cfg.get("MAIL_SMTP_PORT", 587))
         username = cfg.get("MAIL_SMTP_USERNAME")
         password = cfg.get("MAIL_SMTP_PASSWORD")
-        use_tls = bool(cfg.get("MAIL_USE_TLS", True))
         timeout = float(cfg.get("MAIL_SMTP_TIMEOUT", 30))
 
         context = ssl.create_default_context()
         server = smtplib.SMTP(host=host, port=port, timeout=timeout)
         try:
             server.ehlo()
-            if use_tls:
-                server.starttls(context=context)
-                server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
             if username:  # Some relays are IP-allowed; don't force auth
                 server.login(username, password or "")
             yield server

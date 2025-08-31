@@ -1,6 +1,5 @@
 import time
 from datetime import datetime
-from html import escape as _html_escape
 from typing import List
 from make_celery import celery_app
 from flask import current_app
@@ -98,6 +97,16 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     max_attempts = int(cfg.get("MAIL_MAX_ATTEMPTS", 3))
     batch_pause_sec = float(cfg.get("MAIL_BATCH_PAUSE_SEC", 0.0))
 
+    camp = EmailCampaign.query.get(campaign_id)
+    phase = camp.type
+    hike = Hike.query.get(hike_id)
+    trail = Trail.query.get(hike.trail_id) if phase != "voting" else None
+
+    if phase == "voting":
+        trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
+        trails = [{"name": t.name,
+               "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
+              for t in trail_options]
     sent_total = failed_total = 0
     conn = EmailConnection()
 
@@ -121,23 +130,34 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                 name = getattr(member, "name", None)
                 to_email = getattr(member, "email", None)
                 base_url = current_app.config.get("BASE_URL", "").rstrip("/")
-                magic_url = f"{base_url}/vote?token={quote_plus(ml.token)}"  # change path per phase if needed
+                endpoint_dict = {
+                    "voting": "vote",
+                    "signup": "signup",
+                    "waiver": "waiver"
+                }
+                magic_url = f"{base_url}/{endpoint_dict[phase]}?token={ml.token}"
 
-                # Trails list (compute once per batch if static)
-                trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
-                trails = [{"name": t.name,
-                           "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
-                          for t in trail_options]
-
-                # Render from templates
-                subj, text_body, html_body = render_phase_email(
-                    phase,
-                    name=name,
-                    magic_url=magic_url,
-                    trails=trails,
-                    hike=hike,
-                    member=member,
-                )
+                # Render the correct phase template with the necessary context
+                if phase == "voting":
+                    subj, text_body, html_body = render_phase_email(
+                        phase,
+                        member_name=name,
+                        magic_url=magic_url,
+                        trails=trails,
+                    )
+                elif phase == "signup":
+                    subj, text_body, html_body = render_phase_email(
+                        phase,
+                        member_name=name,
+                        magic_url=magic_url,
+                        hike_day=hike.strftime("%A"),
+                        hike_trail_name=trail.name,
+                        hike_town_name=trail.location,
+                        hike_length_mi=trail.length_mi,
+                        hike_estimated_time_hr=trail.estimated_time_hr,
+                        hike_difficulty=current_app.config["DIFFICULTY_INDEX"][trail.difficulty],
+                        num_liters=trail.required_water_liters,
+                    )
 
                 # send the email
                 result = conn.send(to_email, subj, text_body, html_body)
@@ -155,15 +175,13 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                     failed_total += 1
                     current_app.logger.exception(
                         "Vote email send failed for member_id=%s (attempt %s/%s)",
-                        member_id, email_task.attempts, max_attempts
+                        member.id, email_task.attempts, max_attempts
                     )
 
         if batch_pause_sec > 0:
             time.sleep(batch_pause_sec)
 
-    camp = EmailCampaign.query.get(campaign_id)
-    if camp:
-        camp.date_completed = datetime.now()
-        db.session.commit()
+    camp.date_completed = datetime.now()
+    db.session.commit()
 
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}

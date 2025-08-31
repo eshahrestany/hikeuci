@@ -39,11 +39,14 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
     ALLOWED_UPLOAD_EXTENSIONS = {'png'}
 
-    MAIL_SMTP_HOST = os.getenv("MAIL_SMTP_HOST")
-    MAIL_SMTP_PORT = int(os.getenv("MAIL_SMTP_PORT", 587))
-    MAIL_SMTP_USERNAME = os.getenv("MAIL_SMTP_USERNAME")
-    MAIL_SMTP_PASSWORD = os.getenv("MAIL_SMTP_PASSWORD")
-    MAIL_SMTP_TIMEOUT = int(os.getenv("MAIL_SMTP_TIMEOUT", 30))
+    DUMMY_EMAIL_MODE = os.getenv("DUMMY_EMAIL_MODE").lower() in ('true', '1', 't')
+
+    if not DUMMY_EMAIL_MODE:
+        MAIL_SMTP_HOST = os.getenv("MAIL_SMTP_HOST")
+        MAIL_SMTP_PORT = int(os.getenv("MAIL_SMTP_PORT", 587))
+        MAIL_SMTP_USERNAME = os.getenv("MAIL_SMTP_USERNAME")
+        MAIL_SMTP_PASSWORD = os.getenv("MAIL_SMTP_PASSWORD")
+        MAIL_SMTP_TIMEOUT = int(os.getenv("MAIL_SMTP_TIMEOUT", 30))
     MAIL_FROM = os.getenv("MAIL_FROM")
     MAIL_BATCH_SIZE = int(os.getenv("MAIL_BATCH_SIZE", 100))
     MAIL_MAX_ATTEMPTS = int(os.getenv("MAIL_SMTP_TIMEOUT", 3))
