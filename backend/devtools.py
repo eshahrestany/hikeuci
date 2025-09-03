@@ -22,13 +22,17 @@ from app.models import (
     Vehicle,
     Vote,
     Hike,
-    MagicLink,   # if present; safe to import
+    MagicLink,
+    EmailCampaign,
+    EmailTask
 )
 
 
 def clear_db():
     """Delete in child→parent order to satisfy FKs."""
     for model in (
+        EmailTask,
+        EmailCampaign,
         MagicLink,
         Signup,
         Vote,
@@ -38,11 +42,7 @@ def clear_db():
         Trail,
         Member,
     ):
-        try:
-            db.session.query(model).delete()
-        except Exception:
-            # In case a model isn't present in your current app build
-            pass
+        db.session.query(model).delete()
     db.session.commit()
     print("Database cleared.")
 
@@ -53,8 +53,11 @@ def seed_voting():
     # 3 candidate trails
     trails = [
         Trail(
-            name=f"Trail {i+1}",
+            name=f"Trail {i + 1}",
+            location="Trail location",
             length_mi=round(random.uniform(3, 10), 1),
+            estimated_time_hr=random.randint(2, 8) / 2.0,
+            required_water_liters=random.randint(1, 4) / 2.0,
             difficulty=random.randint(0, 3),
             is_active_vote_candidate=True,
         )
@@ -65,9 +68,12 @@ def seed_voting():
 
     # one active hike in VOTING phase, NO trail selected yet
     hike = Hike(
-        hike_date=datetime.now() + timedelta(days=3),
         status="active",
         phase="voting",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now() + timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -86,6 +92,50 @@ def seed_voting():
 
 
 
+def seed_email_vote():
+    clear_db()
+
+    # 3 candidate trails
+    trails = [
+        Trail(
+            name=f"Trail {i+1}",
+            location="Trail location",
+            length_mi=round(random.uniform(3, 10), 1),
+            estimated_time_hr=random.randint(2, 8)/2.0,
+            required_water_liters=random.randint(1, 4)/2.0,
+            difficulty=random.randint(0, 3),
+            is_active_vote_candidate=True,
+        )
+        for i in range(3)
+    ]
+    db.session.add_all(trails)
+    db.session.commit()
+
+    # one active hike in voting phase, no trail selected yet
+    hike = Hike(
+        status="active",
+        phase="voting",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now() + timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
+    )
+    db.session.add(hike)
+    db.session.commit()
+
+    members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
+               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
+               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
+               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
+               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               ]
+    db.session.add_all(members)
+    db.session.commit()
+
+    print("Seeded 'email vote campaign' scenario.")
+
+
+
 def seed_signup():
     """
     One active hike in 'signups' phase with a selected trail.
@@ -96,13 +146,11 @@ def seed_signup():
     # 1) Trail
     trail = Trail(
         name="Santiago Creek Trail and Barnham Ridge",
+        location="Santiago Canyon",
         length_mi=6.0,
         difficulty=2,  # Moderate
-        description=(
-            "This Saturday, we will be hiking Santiago Creek Trail and Barnham Ridge in Santiago Oaks Park. "
-            "The hike is around 6 miles (~2.5 hours), rated Moderate. Meet at UTC 7:45 AM, depart 8:00 AM. "
-            "Drivers are guaranteed a spot; form closes Thursday evening. Bring at least 1L of water."
-        ),
+        estimated_time_hr=3.5,
+        required_water_liters=1,
     )
     db.session.add(trail)
     db.session.commit()
@@ -110,9 +158,12 @@ def seed_signup():
     # 2) Active hike in SIGNUPS phase (trail chosen)
     hike = Hike(
         trail_id=trail.id,
-        hike_date=datetime.now() + timedelta(days=7),
         status="active",
         phase="signup",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now() + timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -169,6 +220,46 @@ def seed_signup():
 
     print("Seeded 'signups' scenario.")
 
+def seed_email_signup():
+    clear_db()
+
+    # 1) Trail
+    trail = Trail(
+        name="Santiago Creek Trail and Barnham Ridge",
+        location="Santiago Canyon",
+        length_mi=6.0,
+        estimated_time_hr=3.5,
+        required_water_liters=1,
+        difficulty=2,  # Moderate
+        description="important info about this specific trail!"
+    )
+    db.session.add(trail)
+    db.session.commit()
+
+    # 2) Active hike in SIGNUPS phase (trail chosen)
+    hike = Hike(
+        trail_id=trail.id,
+        status="active",
+        phase="signup",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now()+ timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
+    )
+    db.session.add(hike)
+    db.session.commit()
+
+    members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
+               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
+               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
+               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
+               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               ]
+    db.session.add_all(members)
+    db.session.commit()
+
+    print("Seeded 'email signup campaign' scenario.")
+
 
 def seed_waiver():
     """
@@ -179,16 +270,26 @@ def seed_waiver():
     clear_db()
 
     # 1) Trail
-    trail = Trail(name="Waiver Trail", length_mi=6.5, difficulty=3)
+    trail = Trail(
+        name="Santiago Creek Trail and Barnham Ridge",
+        length_mi=6.0,
+        difficulty=2,  # Moderate
+        estimated_time_hr=3.5,
+        location="Santiago Canyon",
+        required_water_liters=1,
+    )
     db.session.add(trail)
     db.session.commit()
 
     # 2) Active hike in WAIVER phase
     hike = Hike(
         trail_id=trail.id,
-        hike_date=datetime.now() + timedelta(days=3),
         status="active",
         phase="waiver",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now() + timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -302,20 +403,101 @@ def seed_waiver():
     print("Seeded 'waiver' scenario.")
 
 
+def seed_email_waiver():
+    clear_db()
+
+    # 1) Trail
+    trail = Trail(
+        name="Santiago Creek Trail and Barnham Ridge",
+        location="Santiago Canyon",
+        length_mi=6.0,
+        difficulty=2,  # Moderate
+        estimated_time_hr=3.5,
+        required_water_liters=1,
+        description="important info about this specific trail!"
+    )
+    db.session.add(trail)
+    db.session.commit()
+
+    # 2) Active hike in WAIVER phase
+    hike = Hike(
+        trail_id=trail.id,
+        status="active",
+        phase="waiver",
+        voting_date=datetime.now() + timedelta(days=1),
+        signup_date=datetime.now() + timedelta(days=3),
+        waiver_date=datetime.now() + timedelta(days=5),
+        hike_date=datetime.now() + timedelta(days=7)
+    )
+    db.session.add(hike)
+    db.session.commit()
+
+    members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
+               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
+               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
+               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
+               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               ]
+    db.session.add_all(members)
+    db.session.commit()
+
+    transports = ["driver"] * 2 + ["passenger"] * 2 + ["self"]
+
+    signups = []
+    i = 0
+    for member in members:
+        transport_type = transports.pop(random.randint(0, len(transports)-1))
+        if transport_type == "driver":
+            new_vehicle = Vehicle(
+                member_id=member.id,
+                year=2018 + random.randint(0, 6),
+                make="MakeX",
+                model="ModelY",
+                passenger_seats=random.randint(2, 6),
+            )
+            db.session.add(new_vehicle)
+            db.session.commit()
+
+        signups.append(Signup(
+            member_id=member.id,
+            hike_id=hike.id,
+            signup_date=datetime.now() + timedelta(minutes=i),
+            transport_type=transport_type,
+            status="confirmed",
+            vehicle_id=
+                Vehicle.query.filter_by(member_id=member.id).first().id
+                if transport_type == "driver"
+                else None
+        ))
+        i += 1
+
+    db.session.add_all(signups)
+    db.session.commit()
+
+    print("Seeded 'email signup campaign' scenario.")
+
+
 if __name__ == '__main__':
     import sys
     from app import create_app
 
     app = create_app()
     with app.app_context():
-        if len(sys.argv) != 2 or sys.argv[1] not in ('voting', 'signup', 'waiver'):
+        scenario = sys.argv[1]
+        if scenario == 'voting':
+            seed_voting()
+        elif scenario == 'signup':
+            seed_signup()
+        elif scenario == 'waiver':
+            seed_waiver()
+        elif scenario == 'email_voting':
+            seed_email_vote()
+        elif scenario == 'email_signup':
+            seed_email_signup()
+        elif scenario == 'email_waiver':
+            seed_email_waiver()
+        elif scenario == "clear":
+            clear_db()
+        else:
             print(__doc__)
             sys.exit(1)
-
-        phase = sys.argv[1]
-        if phase == 'voting':
-            seed_voting()
-        elif phase == 'signup':
-            seed_signup()
-        elif phase == 'waiver':
-            seed_waiver()

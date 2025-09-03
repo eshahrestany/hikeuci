@@ -4,41 +4,41 @@
       Current Phase: <Badge class="text-md">Voting</Badge>
     </p>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Card v-for="candidate in votingData.candidates" :key="candidate.candidate_id">
+      <Card v-for="trail in votingData.trails" :key="trail.trail_id">
         <CardHeader>
           <img
             class="h-24 w-full object-cover rounded-md mb-2"
-            :src="`/api/images/uploads/${candidate.trail_id}.png`"
-            :alt="candidate.trail_name"
+            :src="`/api/images/uploads/${trail.trail_id}.png`"
+            :alt="trail.trail_name"
           />
-          <CardTitle>{{ candidate.trail_name }}</CardTitle>
+          <CardTitle>{{ trail.trail_name }}</CardTitle>
         </CardHeader>
         <CardContent>
           <p class="text-sm mb-1">
             Votes:
-            {{ candidate.candidate_num_votes }}
-            ({{ votePercentage(candidate) }}%)
+            {{ trail.trail_num_votes }}
+            ({{ votePercentage(trail) }}%)
           </p>
-          <Progress :value="parseFloat(votePercentage(candidate))" class="mb-2" />
+          <Progress :value="parseFloat(votePercentage(trail))" class="mb-2" />
           <Button
             variant="outline"
             class="mb-2 p-0"
-            @click="showVoters[candidate.candidate_id] = !showVoters[candidate.candidate_id]"
+            @click="showVoters[trail.trail_id] = !showVoters[trail.trail_id]"
           >
-            <ChevronDown v-if="showVoters[candidate.candidate_id]" />
+            <ChevronDown v-if="showVoters[trail.trail_id]" />
             <ChevronRight v-else />
             {{
-              showVoters[candidate.candidate_id]
+              showVoters[trail.trail_id]
                 ? 'Hide Votes'
                 : 'See Votes'
             }}
           </Button>
           <ul
-            v-if="showVoters[candidate.candidate_id]"
+            v-if="showVoters[trail.trail_id]"
             class="list-disc list-inside text-sm space-y-1"
           >
             <li
-              v-for="(name, idx) in candidate.candidate_voters"
+              v-for="(name, idx) in trail.trail_voters"
               :key="idx"
             >
               {{ name }}
@@ -64,11 +64,11 @@ const props = defineProps({
 
 const showVoters = reactive({})
 const totalVotes = computed(() =>
-  props.votingData.candidates.reduce((sum, c) => sum + c.candidate_num_votes, 0)
+  props.votingData.trails.reduce((sum, c) => sum + c.trail_num_votes, 0)
 )
 
-function votePercentage(candidate) {
+function votePercentage(trail) {
   if (totalVotes.value === 0) return 0
-  return ((candidate.candidate_num_votes / totalVotes.value) * 100).toFixed(1)
+  return ((trail.trail_num_votes / totalVotes.value) * 100).toFixed(1)
 }
 </script>

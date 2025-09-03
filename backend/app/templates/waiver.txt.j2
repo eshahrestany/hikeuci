@@ -1,0 +1,36 @@
+Hello {{ member_name }}!
+
+If you have received this email, it means you are on our list of hikers for the upcoming hike on {{ hike_day }} at {{ hike_trail_name }}.
+{% if description %}
+Important: {{ description }}
+{% endif %}
+{% if transport_type == "passenger" %}
+You have signed up for this hike as a passenger. Carpools will be arranged once everyone has arrived at the Chick Fil A/Chipotle area in UTC. We will leave promptly at {{ hike_time }}, so please arrive 15 minutes early to check in. Please be punctual, as we know some of you have other commitments after the hike.
+{% elif transport_type == "driver" %}
+You have signed up for this hike as a driver. Please arrive at the Chick Fil A/Chipotle area in UTC 15 minutes early to check in. We will leave promptly at {{ hike_time }}, so please be punctual, as we know some of you have other commitments after the hike.
+As a driver, you are responsible for bringing your own vehicle and ensuring that you have enough space for your passengers. Please also ensure that you have enough gas for the trip to and from the trailhead.
+We understand that things come up and plans can change. If you need to cancel as a driver, please use the link below to cancel your spot as soon as possible so that we can arrange for another driver if needed.
+{% elif transport_type == "self" %}
+You have signed up for this hike as a self-transport. Please arrive at the trailhead on time. We will leave from UTC at {{ hike_time }}, so it is up to you to determine what time you'll need to arrive at the trailhead so that you can arrive at the same time as the rest of us.
+{% endif %}
+Please click the link below to fill out and sign the waiver form or to modify your signup status.
+Your personal waiver link (do not share this with anyone!):
+{{ magic_url }}
+
+Google maps link to the trailhead:
+{{ hike_trail_gmap_link }}
+Apple maps link to the trailhead:
+{{ hike_trail_amap_link }}
+
+A couple of reminders before the hike:
+-Fill out your waiver by {{ hike_day }} {{ hike_time }}.
+-Recommended items: water, light snack, sunscreen, hat, sunglasses, and comfortable athletic shoes to wear on the hike.
+
+See you {{ hike_day }} and have a great rest of the week!
+Best,
+Hiking Club at UCI Officers
+Official UCI Campus Page: Hiking Club at UCI Campus Orgs
+Email: hikingclub@uci.edu
+Linktree: linktr.ee/hikingclubatuci
+Instagram: @hikingclubatucirvine
+Discord: discord.gg/tGwU6HeBYv

@@ -1,5 +1,9 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
+from jinja2 import ChoiceLoader, FileSystemLoader
+
 from .extensions import db, migrate, celery_init_app
 from .lib.magic_link import MagicLinkManager
 from .routes import register_routes
@@ -26,6 +30,12 @@ def create_app(config_object="config.Config"):
     magic_link_manager = MagicLinkManager(app, db)
     magic_link_manager.init_app(app)
     CORS(app, resources={r"/*": {"origins": cfg_cls.CORS_ORIGIN}})
+
+    email_template_folder = os.path.join(app.root_path, "templates")
+    app.jinja_loader = ChoiceLoader([
+        app.jinja_loader,  # existing /templates
+        FileSystemLoader(email_template_folder),  # also look in /templates
+    ])
 
     # bring in model classes
     from . import models

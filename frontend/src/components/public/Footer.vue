@@ -129,7 +129,11 @@
 
         <!-- Watermark -->
         <p class="text-xs text-stone/50">
-          Made by {{ creators }}.
+          Made with ♥ by Evan Shahrestany<br/>
+          with help from Gabriel Dodge and Sterling Radisay
+        </p>
+        <p class="text-xs text-stone/50">
+          <a href="https://github.com/eshahrestany/hikeuci" target="_blank">Want to contribute? Check out the Github repo!</a>
         </p>
       </div>
     </div>
@@ -138,16 +142,6 @@
 
 <script setup lang="ts">
 import uciLogo from '../../assets/uci_logo.png';
-const props = defineProps({
-  /**
-   * Comma‑separated list or sentence of creators to display in the watermark.
-   */
-  creators: {
-    type: String,
-    default: 'Evan Shahrestany and Gabriel Dodge',
-  },
-});
-
 /**
  * Current year – avoids having to update the template annually.
  */
