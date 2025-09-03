@@ -15,6 +15,9 @@ class EmailConnection:
         Ensures TLS and optional login. Always closes (quit/close) on exit.
         """
         cfg = current_app.config
+        if cfg.get("DUMMY_EMAIL_MODE"):
+            yield None
+            return # no-op in dummy mode
         host = cfg.get("MAIL_SMTP_HOST")
         if not host:
             raise RuntimeError("MAIL_SMTP_HOST must be set")
@@ -63,6 +66,9 @@ class EmailConnection:
             msg.add_alternative(html_body, subtype="html")
 
             # Send via SMTP
+            if cfg.get("DUMMY_EMAIL_MODE"):
+                current_app.logger.info("Dummy email mode: Not sending email content:\n%s", msg)
+                return True
             with self.connect() as server:
                 self._smtp_send(msg=msg, server=server)
             return True
