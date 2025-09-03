@@ -22,13 +22,17 @@ from app.models import (
     Vehicle,
     Vote,
     Hike,
-    MagicLink,   # if present; safe to import
+    MagicLink,
+    EmailCampaign,
+    EmailTask
 )
 
 
 def clear_db():
     """Delete in child→parent order to satisfy FKs."""
     for model in (
+        EmailTask,
+        EmailCampaign,
         MagicLink,
         Signup,
         Vote,
@@ -38,11 +42,7 @@ def clear_db():
         Trail,
         Member,
     ):
-        try:
-            db.session.query(model).delete()
-        except Exception:
-            # In case a model isn't present in your current app build
-            pass
+        db.session.query(model).delete()
     db.session.commit()
     print("Database cleared.")
 
@@ -231,6 +231,7 @@ def seed_email_signup():
         estimated_time_hr=3.5,
         required_water_liters=1,
         difficulty=2,  # Moderate
+        description="important info about this specific trail!"
     )
     db.session.add(trail)
     db.session.commit()
@@ -413,6 +414,7 @@ def seed_email_waiver():
         difficulty=2,  # Moderate
         estimated_time_hr=3.5,
         required_water_liters=1,
+        description="important info about this specific trail!"
     )
     db.session.add(trail)
     db.session.commit()

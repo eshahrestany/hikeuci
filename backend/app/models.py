@@ -26,7 +26,6 @@ class Trail(db.Model):
     alltrails_endpoint       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
     trailhead_amaps_endpoint = db.Column(db.String(300), nullable=True)
-    notes                    = db.Column(db.String(300), nullable=True)
     description              = db.Column(db.Text, nullable=True)
 
 
@@ -102,15 +101,18 @@ class MagicLink(db.Model):
     __tablename__ = 'magic_links'
     id         = db.Column(db.Integer, primary_key=True)
     token      = db.Column(db.String(64), unique=True, nullable=False)
-    user_id    = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
+    member_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id    = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
-    phase      = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver'
+    type       = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver', 'modify'
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    first_used = db.Column(db.DateTime, nullable=True)
+    used_count = db.Column(db.Integer, nullable=False, default=0)
 
 
 class EmailCampaign(db.Model):
     __tablename__ = 'email_campaigns'
     id             = db.Column(db.Integer, primary_key=True)
+    hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
     type           = db.Column(db.String(50), nullable=False)  # 'voting', 'signups', 'waiver'
     date_created   = db.Column(db.DateTime, default=datetime.now, nullable=False)
     date_completed = db.Column(db.DateTime, nullable=True)
@@ -121,7 +123,6 @@ class EmailTask(db.Model):
     id                = db.Column(db.Integer, primary_key=True)
     campaign_id       = db.Column(db.Integer, db.ForeignKey('email_campaigns.id'), nullable=False)
     member_id         = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    magic_link_id     = db.Column(db.Integer, db.ForeignKey('magic_links.id'), nullable=True)
     status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed'
     attempts          = db.Column(db.Integer, nullable=False, default=0)
     sent_at           = db.Column(db.DateTime, nullable=True)

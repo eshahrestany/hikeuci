@@ -11,14 +11,18 @@
               <p style="margin:0 0 12px;">Hi {{ member_name }},</p>
 
               <p style="margin:0 0 12px;">
-                This Saturday, we’ll be hiking <strong>{{ hike_trail_name }}</strong> in <strong>{{ hike_town_name }}</strong>.
+                This {{ hike_day }} at {{ hike_time }} we’ll be hiking <strong>{{ hike_trail_name }}</strong> in <strong>{{ hike_town_name }}</strong>.
                 The route is approximately <strong>{{ hike_length_mi }}</strong> miles and should take about
                 <strong>{{ hike_estimated_time_hr }}</strong> hours to complete. This hike is classified as
                 <strong>{{ hike_difficulty }}</strong>.
               </p>
-
+              {% if description %}
+                  <p style="margin:0 0 12px;">
+                      <strong>Important: </strong>{{ description }}
+                  </p>
+              {% endif %}
               <p style="margin:0 0 12px;">
-                <strong>Important:</strong> Please bring enough water. A good rule of thumb is
+                Please bring enough water. A good rule of thumb is
                 ~1 liter every 2 hours. For this hike, we recommend bringing
                 <strong>{{ num_liters }}</strong>
                 {% if num_liters == 1 %}liter{% else %}liters{% endif %}.

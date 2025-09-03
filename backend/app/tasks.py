@@ -6,9 +6,19 @@ from flask import current_app
 
 from . import db
 from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike
-from .lib.emails import EmailConnection
+from .lib.email_connection import EmailConnection
 from .lib.email_templates import render_phase_email
 
+
+def flatten_num(x: float or int) -> float or int:
+    """
+    If x is a float and represents an integer value (e.g., 3.0), return it as an int.
+    Otherwise, return x unchanged.
+    This is useful for displaying numbers in emails without unnecessary decimal points.
+    """
+    if isinstance(x, float) and x.is_integer():
+        return int(x)
+    return x
 
 def start_email_campaign(hike_id: int) -> int:
     """
@@ -26,7 +36,7 @@ def start_email_campaign(hike_id: int) -> int:
         raise RuntimeError(f"{phase} phase email campaign already completed for this hike")
 
     # 1) Create campaign
-    campaign = EmailCampaign(type=phase, date_created=datetime.now())
+    campaign = EmailCampaign(hike_id=hike_id, type=phase, date_created=datetime.now())
     db.session.add(campaign)
     db.session.commit()
 
@@ -34,7 +44,11 @@ def start_email_campaign(hike_id: int) -> int:
     EmailTask.query.delete()
     db.session.commit()
 
-    # 3) Populate tasks from all members
+    # 3) Clear prior magic links for this hike
+    MagicLink.query.filter_by(hike_id=hike_id).delete()
+    db.session.commit()
+
+    # 4) Populate tasks from all members
     mlm = current_app.extensions.get("magic_link_manager")
     if mlm is None:
         raise RuntimeError("MagicLinkManager is not initialized")
@@ -58,20 +72,19 @@ def start_email_campaign(hike_id: int) -> int:
         if not to_email:
             continue
 
-        # create token + row in MagicLink table
-        token = mlm.generate(user_id=m.id, hike_id=hike_id, phase=phase)
-        ml = MagicLink.query.filter_by(token=token).first()
-
         tasks.append(
             EmailTask(
                 campaign_id=campaign.id,
                 member_id=m.id,
-                magic_link_id=ml.id if ml else None,
                 status="pending",
                 attempts=0,
                 sent_at=None,
             )
         )
+
+        mlm.generate(member_id=m.id, hike_id=hike_id, type=phase)
+        if phase == "waiver":
+            mlm.generate(member_id=m.id, hike_id=hike_id, type="modify")
 
     if tasks:
         db.session.add_all(tasks)
@@ -105,8 +118,8 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     if phase == "voting":
         trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
         trails = [{"name": t.name,
-               "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
-              for t in trail_options]
+                   "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
+                  for t in trail_options]
     sent_total = failed_total = 0
     conn = EmailConnection()
 
@@ -124,7 +137,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
         with conn.connect() as server:
             for email_task in batch:
                 member = Member.query.get(email_task.member_id)
-                ml = MagicLink.query.get(email_task.magic_link_id)
+                ml = MagicLink.query.filter_by(member_id=member.id, hike_id=hike_id, type=phase).first()
 
                 # Derive per-recipient context
                 name = getattr(member, "name", None)
@@ -136,6 +149,8 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                     "waiver": "waiver"
                 }
                 magic_url = f"{base_url}/{endpoint_dict[phase]}?token={ml.token}"
+                if phase == "waiver":
+                    signup = Signup.query.filter_by(hike_id=hike_id, member_id=member.id).first()
 
                 # Render the correct phase template with the necessary context
                 if phase == "voting":
@@ -150,13 +165,33 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                         phase,
                         member_name=name,
                         magic_url=magic_url,
-                        hike_day=hike.strftime("%A"),
+                        hike_day=hike.hike_date.strftime("%A %-m/%-d"),
+                        hike_time=hike.hike_date.strftime("%-I:%M %p"),
                         hike_trail_name=trail.name,
                         hike_town_name=trail.location,
-                        hike_length_mi=trail.length_mi,
-                        hike_estimated_time_hr=trail.estimated_time_hr,
+                        hike_length_mi=flatten_num(trail.length_mi),
+                        hike_estimated_time_hr=flatten_num(trail.estimated_time_hr),
                         hike_difficulty=current_app.config["DIFFICULTY_INDEX"][trail.difficulty],
-                        num_liters=trail.required_water_liters,
+                        num_liters=flatten_num(trail.required_water_liters),
+                        description=trail.description,
+                    )
+                elif phase == "waiver":
+                    subj, text_body, html_body = render_phase_email(
+                        phase,
+                        member_name=name,
+                        transport_type=signup.transport_type,
+                        magic_url=magic_url,
+                        hike_trail_gmap_link=trail.trailhead_gmaps_endpoint,
+                        hike_trail_amap_link=trail.trailhead_amaps_endpoint,
+                        hike_day=hike.hike_date.strftime("%A %-m/%-d"),
+                        hike_time=hike.hike_date.strftime("%-I:%M %p"),
+                        hike_trail_name=trail.name,
+                        hike_town_name=trail.location,
+                        hike_length_mi=flatten_num(trail.length_mi),
+                        hike_estimated_time_hr=flatten_num(trail.estimated_time_hr),
+                        hike_difficulty=current_app.config["DIFFICULTY_INDEX"][trail.difficulty],
+                        num_liters=flatten_num(trail.required_water_liters),
+                        description=trail.description,
                     )
 
                 # send the email
@@ -182,6 +217,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
             time.sleep(batch_pause_sec)
 
     camp.date_completed = datetime.now()
+    hike.email_campaign_completed = True
     db.session.commit()
 
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}
