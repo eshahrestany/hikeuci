@@ -136,10 +136,10 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
         with conn.connect() as server:
             for email_task in batch:
+                # derive per-recipient context
                 member = Member.query.get(email_task.member_id)
                 ml = MagicLink.query.filter_by(member_id=member.id, hike_id=hike_id, type=phase).first()
 
-                # Derive per-recipient context
                 name = getattr(member, "name", None)
                 to_email = getattr(member, "email", None)
                 base_url = current_app.config.get("BASE_URL", "").rstrip("/")
@@ -209,7 +209,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                     db.session.commit()
                     failed_total += 1
                     current_app.logger.exception(
-                        "Vote email send failed for member_id=%s (attempt %s/%s)",
+                        f"{phase} email send failed for member_id=%s (attempt %s/%s)",
                         member.id, email_task.attempts, max_attempts
                     )
 
