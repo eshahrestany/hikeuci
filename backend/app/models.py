@@ -56,10 +56,11 @@ class Signup(db.Model):
     hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
     signup_date    = db.Column(db.DateTime, default=datetime.now, nullable=False)
     transport_type = db.Column(db.String(20), nullable=False)  # 'passenger','driver','self'
+    food_interest  = db.Column(db.Boolean, nullable=False)
     is_checked_in  = db.Column(db.Boolean, nullable=False, default=False)
+    status = db.Column(db.String(50), nullable=False, default='pending')  # 'pending','confirmed','waitlisted'
+    waitlist_pos = db.Column(db.Integer, nullable=True)
     vehicle_id     = db.Column(db.Integer, db.ForeignKey('vehicles.id'), default=None, nullable=True)
-    status         = db.Column(db.String(50), nullable=False, default='pending')  # 'pending','confirmed','waitlisted'
-    waitlist_pos   = db.Column(db.Integer, nullable=True)
 
 
 class Waiver(db.Model):

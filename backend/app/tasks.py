@@ -50,8 +50,6 @@ def start_email_campaign(hike_id: int) -> int:
 
     # 4) Populate tasks from all members
     mlm = current_app.extensions.get("magic_link_manager")
-    if mlm is None:
-        raise RuntimeError("MagicLinkManager is not initialized")
 
     if phase in ("voting", "signup"):
         members: List[Member] = Member.query.all()

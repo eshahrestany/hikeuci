@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, current_app, Response, request
-from ..models import Hike
+from ..models import Hike, Member, MagicLink, Trail, Vehicle
 
 hike_signup: Blueprint = Blueprint("hike-signup", __name__)
 
@@ -16,24 +16,36 @@ def signup() -> tuple[Response, int]:
         if status != "valid":
             return jsonify({"status": status, "formData": None}), 200
 
-        magic_link = data["magic_link"]
-        user = magic_link.user
+        mlm = current_app.extensions.get("magic_link_manager")
+        if mlm.validate(token)["status"] != "valid":
+            return jsonify({"error": "Token is invalid"}), 400
+
+        magic_link = MagicLink.query.filter_by(token=token).first()
+        member = Member.query.get(magic_link.member_id)
 
         hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
-        trail = hike.trail if (hike and hike.trail_id) else None  # Hike.trail backref from Trail.hikes
+        trail = Trail.query.get(hike.trail_id)
+
+        vehicles = Vehicle.query.filter_by(member_id=member.id).all()
+        vehicles_data = [{
+            "id": v.id,
+            "make": v.make,
+            "model": v.model,
+            "year": v.year,
+            "passenger_seats": v.passenger_seats
+        } for v in vehicles]
 
         return jsonify({
             "status": status,
             "formData": {
-                "name": user.name,
-                "email": user.email,
-                "tel": user.tel,
+                "name": member.name,
+                "email": member.email,
+                "tel": member.tel,
             },
             "hike": {
-                # If trail not yet chosen (e.g., during voting), keep strings to avoid FE breakage
-                "title": trail.name if trail else "",
-                "description": (trail.description or "") if trail else ""
-            }
+                "title": trail.name,
+            },
+            "vehicles": vehicles_data
         }), 200
 
     if request.method == "POST":
