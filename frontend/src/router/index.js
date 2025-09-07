@@ -23,6 +23,12 @@ const routes = [
         component: () => import('../views/admin/Dashboard.vue'),
         meta: { requiresAuth: true },
     },
+    {
+        path: '/admin/trails',
+        name: 'Dashboard trails',
+        component: () => import('../views/admin/DashboardTrails.vue'),
+        meta: { requiresAuth: true },
+    },
 ]
 const router = createRouter({
   history: createWebHistory(),
