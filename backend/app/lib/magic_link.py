@@ -35,9 +35,9 @@ class MagicLinkManager:
 
         associated_hike = Hike.query.get(magic_link.hike_id)
         if not associated_hike:
-            return {'status': 'invalid_hike_id', 'user': magic_link.user}
+            return {'status': 'invalid_hike_id', 'user': magic_link.user_id}
 
         if associated_hike.status != 'active' or magic_link.type != associated_hike.phase:
-            return {'status': 'expired', 'user': magic_link.user}
+            return {'status': 'expired', 'user': magic_link.user_id}
 
         return {'status': 'valid', 'magic_link': magic_link}

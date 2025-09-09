@@ -57,7 +57,12 @@ const newVehicle = reactive({
 
 const hasVehicles = computed(() => Array.isArray(vehicles.value) && vehicles.value.length > 0)
 const validNewVehicle = computed(() =>
-    !!newVehicle.year && !!newVehicle.make && !!newVehicle.model && Number(newVehicle.passenger_seats) >= 1
+    Number(newVehicle.year) >= 1960 &&
+    Number(newVehicle.year) <= new Date().getFullYear() + 1 &&
+    !!newVehicle.make &&
+    !!newVehicle.model &&
+    Number(newVehicle.passenger_seats) >= 1 &&
+    Number(newVehicle.passenger_seats) <= 7
 )
 const isDriver = computed(() => transportation.value === 'is_driver')
 const addingNewVehicle = ref(false)
@@ -167,6 +172,7 @@ async function submitForm() {
     if (hasVehicles.value && !addingNewVehicle.value) {   // <-- missing paren fixed
       payload.vehicle_id = selectedVehicleId.value
     } else {
+      payload.vehicle_id = 'new'
       payload.new_vehicle = {
         year: newVehicle.year,
         make: newVehicle.make,
@@ -353,7 +359,7 @@ async function submitForm() {
                     <Input id="vehicleModel" v-model="newVehicle.model" placeholder="Corolla"/>
                   </div>
 
-                  <NumberField id="passengers" v-model="newVehicle.passenger_seats" :min="1" :default-value="1">
+                  <NumberField id="passengers" v-model="newVehicle.passenger_seats" :min="1" :max="7" :default-value="1">
                     <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
                     <NumberFieldContent class="max-w-1/4">
                       <NumberFieldDecrement/>
