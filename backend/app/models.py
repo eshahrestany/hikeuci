@@ -7,7 +7,7 @@ class Member(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
-    tel        = db.Column(db.String(32), nullable=True)  # E164
+    tel        = db.Column(db.Integer, nullable=True)
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 

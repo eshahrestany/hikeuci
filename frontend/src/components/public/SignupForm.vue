@@ -21,6 +21,8 @@ import {
 import {Skeleton} from '@/components/ui/skeleton'
 import {parsePhoneNumberFromString} from 'libphonenumber-js'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select/index.js";
+import { SPhoneInput } from "@/components/ui/phone-input";
+import { PlusCircle } from "lucide-vue-next";
 
 const props = defineProps({
   title: {
@@ -32,21 +34,72 @@ const props = defineProps({
 const hikeTitle = ref(props.title)
 const loading = ref(true)
 const error = ref(null)
-const vehicles = ref([])
 
-// driver vehicle state
+const vehicles = ref([])
 const tokenRef = ref('')
 const selectedVehicleId = ref(null)
+
+const name = ref('')
+const email = ref('')
+const phoneNumber = ref('')
+const phoneNumberAlreadySet = ref(false)
+const foodPreference = ref(null)
+const transportation = ref(null)
+const driverConfirmationName = ref('')
+const phoneTouched = ref(false)
+
 const newVehicle = reactive({
   year: '',
   make: '',
   model: '',
   passenger_seats: 1
 })
+
 const hasVehicles = computed(() => Array.isArray(vehicles.value) && vehicles.value.length > 0)
 const validNewVehicle = computed(() =>
     !!newVehicle.year && !!newVehicle.make && !!newVehicle.model && Number(newVehicle.passenger_seats) >= 1
 )
+const isDriver = computed(() => transportation.value === 'is_driver')
+const addingNewVehicle = ref(false)
+const driverInfoValid = computed(() => {
+  if (driverConfirmationName.value !== name.value) return false
+  if (hasVehicles.value && !addingNewVehicle.value) {
+    return !!selectedVehicleId.value
+  }
+  return validNewVehicle.value
+})
+
+const isPhoneValid = computed(() => !!phone.value)
+const phone = computed(() => {
+  const input = phoneNumber.value
+  if (!input) return null
+  const parsed = parsePhoneNumberFromString(input, 'US')
+  return parsed && parsed.isValid() ? parsed.format('E.164') : null
+})
+
+const allowSubmit = computed(() => {
+  if (!name.value || !email.value || !foodPreference.value || !transportation.value || !isPhoneValid.value) return false
+  if (isDriver.value && !driverInfoValid.value) return false
+  return true
+})
+
+// Clear vehicle selection when user toggles off driver
+watch(transportation, v => {
+  if (v !== 'is_driver') selectedVehicleId.value = null
+})
+
+function updatePhoneNumber(newValue) {
+  phoneNumber.value = newValue
+  phoneTouched.value = true
+}
+
+function startAddVehicle() {
+  addingNewVehicle.value = true
+  selectedVehicleId.value = null
+}
+function cancelAddVehicle() {
+  addingNewVehicle.value = false
+}
 
 // Fetch signup data
 onMounted(async () => {
@@ -100,66 +153,64 @@ onMounted(async () => {
   }
 })
 
-const name = ref('')
-const email = ref('')
-const phoneNumber = ref('')
-const phoneNumberAlreadySet = ref(false)
+async function submitForm() {
+  if (!allowSubmit.value) return
 
-const transportation = ref('arrange-own')
-const driverConfirmationName = ref('')
+  const payload = {
+    token: tokenRef.value,
+    tel: phone.value,
+    food: foodPreference.value,
+    transportation: transportation.value,
+  }
 
-const isDriver = computed(() => transportation.value === 'can-drive')
-const isDriverConfirmed = computed(() => {
-  return isDriver.value ? driverConfirmationName.value.toLowerCase() === name.value.toLowerCase() : true
-})
-
-// phone validation
-const phoneTouched = ref(false)
-const e164Phone = computed(() => {
-  const input = phoneNumber.value
-  if (!input) return null
-  const parsed = parsePhoneNumberFromString(input, 'US')
-  return parsed && parsed.isValid() ? parsed.format('E.164') : null
-})
-const isPhoneValid = computed(() => !!e164Phone.value)
-
-// Clear vehicle selection when user toggles off driver
-watch(transportation, v => {
-  if (v !== 'can-drive') selectedVehicleId.value = null
-})
-
-// Add a vehicle (public endpoint using token identity)
-async function addVehicle() {
-  try {
-    const res = await fetch('/api/vehicles', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        token: tokenRef.value,
+  if (isDriver.value) {
+    if (hasVehicles.value && !addingNewVehicle.value) {   // <-- missing paren fixed
+      payload.vehicle_id = selectedVehicleId.value
+    } else {
+      payload.new_vehicle = {
+        year: newVehicle.year,
         make: newVehicle.make,
         model: newVehicle.model,
-        year: newVehicle.year,
-        passenger_seats: Number(newVehicle.passenger_seats)
-      })
+        passenger_seats: Number(newVehicle.passenger_seats),
+      }
+    }
+  }
+
+  try {
+    loading.value = true
+    error.value = null
+
+    const res = await fetch('/api/hike-signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     })
-    if (!res.ok) throw new Error(await res.text() || 'Failed to add vehicle')
-    const created = await res.json()
-    vehicles.value.push(created)
-    selectedVehicleId.value = created.id
+
+    if (!res.ok) {
+      let errMessage = `HTTP error! status: ${res.status}`
+      try {
+        const errData = await res.json()
+        errMessage = errData.error || errMessage
+      } catch { /* ignore */
+      }
+      throw new Error(errMessage)
+    }
+
+    const jsonResponse = await res.json()
+    if (jsonResponse.success) {
+      window.location.href = '/signup-success'
+    } else {
+      throw new Error(jsonResponse.error || 'Unknown error occurred')
+    }
   } catch (e) {
-    console.error(e)
-    alert('Could not add vehicle. Please try again.')
+    error.value = e.message
+  } finally {
+    loading.value = false
   }
 }
 
-// Final submit disable gate (drivers must select/add a vehicle)
-const submitDisabled = computed(() => {
-  const driverMissingVehicle = isDriver.value && !selectedVehicleId.value
-  return !isPhoneValid.value || !isDriverConfirmed.value || driverMissingVehicle
-})
-
-// NOTE: When building the final submit payload, include:
-// if (isDriver.value) payload.vehicle_id = selectedVehicleId.value
 </script>
 
 
@@ -181,9 +232,7 @@ const submitDisabled = computed(() => {
             </div>
           </div>
           <template v-else>
-            <h1
-                class="text-center text-3xl font-bold text-uci-blue tracking-tight sm:text-4xl font-montserrat"
-            >
+            <h1 class="text-center text-3xl font-bold text-uci-blue tracking-tight sm:text-4xl font-montserrat">
               {{ hikeTitle }}
             </h1>
           </template>
@@ -201,42 +250,25 @@ const submitDisabled = computed(() => {
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div class="space-y-2">
                 <Label for="name" class="font-semibold text-midnight">Name</Label>
-                <Input
-                    id="name"
-                    type="text"
-                    v-model="name"
-                    disabled
-                />
+                <Input id="name" type="text" v-model="name" disabled/>
               </div>
               <div class="space-y-2">
                 <Label for="email" class="font-semibold text-midnight">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    v-model="email"
-                    disabled
-                />
+                <Input id="email" type="email" v-model="email" disabled/>
               </div>
             </div>
             <div class="space-y-2">
               <Label for="phone" class="font-semibold text-midnight">Phone Number</Label>
-              <Input
-                  id="phone"
-                  type="tel"
-                  v-model="phoneNumber"
-                  placeholder="e.g., (123) 456-7890"
-                  @blur="phoneTouched = true"
-                  :disabled="phoneNumberAlreadySet"
-              />
+              <SPhoneInput @update:model-value="updatePhoneNumber"/>
             </div>
             <div v-if="phoneTouched && !isPhoneValid" class="text-red-500 text-sm mt-1">
-              Please enter a valid phone number. Country codes are allowed (e.g., +1 (123) 456-7890).
+              Please enter a valid phone number.
             </div>
             <div class="space-y-3 pt-2">
               <Label class="font-semibold text-midnight">
                 Are you interested in getting after-hike food?
               </Label>
-              <RadioGroup default-value="no" class="flex items-center gap-6">
+              <RadioGroup v-model="foodPreference" class="flex items-center gap-6">
                 <div class="flex items-center gap-2">
                   <RadioGroupItem id="food-yes" value="yes"/>
                   <Label for="food-yes" class="font-normal">Yes</Label>
@@ -251,22 +283,22 @@ const submitDisabled = computed(() => {
               <Label class="font-semibold text-midnight">
                 How do you plan on getting to the event?
               </Label>
-              <RadioGroup v-model="transportation" default-value="arrange-own" class="grid gap-3">
+              <RadioGroup v-model="transportation" class="grid gap-3">
                 <div class="flex items-center gap-2">
-                  <RadioGroupItem id="drive-yes" value="can-drive"/>
-                  <Label for="drive-yes" class="font-normal">
+                  <RadioGroupItem id="driver" value="is_driver"/>
+                  <Label for="driver" class="font-normal">
                     I can drive and I am willing to transport other members
                   </Label>
                 </div>
                 <div class="flex items-center gap-2">
-                  <RadioGroupItem id="drive-no" value="need-ride"/>
-                  <Label for="drive-no" class="font-normal">
+                  <RadioGroupItem id="passenger" value="is_passenger"/>
+                  <Label for="passenger" class="font-normal">
                     I do not have my own transportation and need to carpool with other members
                   </Label>
                 </div>
                 <div class="flex items-center gap-2">
-                  <RadioGroupItem id="drive-self" value="arrange-own"/>
-                  <Label for="drive-self" class="font-normal">
+                  <RadioGroupItem id="self-transport" value="is_self-transport"/>
+                  <Label for="self-transport" class="font-normal">
                     I will arrange my own transportation to the trailhead.
                   </Label>
                 </div>
@@ -278,28 +310,33 @@ const submitDisabled = computed(() => {
               <!-- Vehicle Input (dynamic) -->
               <div class="space-y-4">
                 <!-- Existing vehicles: choose one -->
-                <div v-if="hasVehicles" class="space-y-2">
-                  <Label for="vehicleSelect" class="font-semibold text-midnight">Choose your vehicle</Label>
-                  <Select v-model="selectedVehicleId">
-                    <SelectTrigger id="vehicleSelect">
-                      <SelectValue placeholder="Select Vehicle…"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem
-                          v-for="v in vehicles"
-                          :key="v.id"
-                          :value="v.id"
-                      >
-                        {{ v.description || `${v.year} ${v.make} ${v.model}` }}
-                        ({{ v.passenger_seats }} passengers)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div v-if="hasVehicles" class="grid grid-cols-2">
+                  <div class="space-y-2">
+                    <Label for="vehicleSelect" class="font-semibold text-midnight">Choose your vehicle</Label>
+                    <Select v-model="selectedVehicleId" :disabled="addingNewVehicle">
+                      <SelectTrigger id="vehicleSelect">
+                        <SelectValue placeholder="Select Vehicle…"/>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem v-for="v in vehicles" :key="v.id" :value="v.id">
+                          {{ v.description || `${v.year} ${v.make} ${v.model}` }}
+                          ({{ v.passenger_seats }} passengers)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="vehicleSelect" class="font-semibold text-midnight">Or add a new one</Label>
+                    <Button class="items-center" type="button" variant="outline" @click="startAddVehicle">
+                      <PlusCircle/>
+                      Add new vehicle
+                    </Button>
+                  </div>
                 </div>
 
-                <!-- No vehicles yet: add one -->
-                <div v-else class="space-y-2">
-                  <p class="text-sm text-stone-600">
+                <!-- New vehicle form -->
+                <div v-if="!hasVehicles || addingNewVehicle" class="space-y-2">
+                  <p v-if="!hasVehicles" class="text-sm text-stone-600">
                     We don’t have a vehicle on file for you yet. Add one below:
                   </p>
 
@@ -316,12 +353,7 @@ const submitDisabled = computed(() => {
                     <Input id="vehicleModel" v-model="newVehicle.model" placeholder="Corolla"/>
                   </div>
 
-                  <NumberField
-                      id="passengers"
-                      v-model="newVehicle.passenger_seats"
-                      :min="1"
-                      :default-value="1"
-                  >
+                  <NumberField id="passengers" v-model="newVehicle.passenger_seats" :min="1" :default-value="1">
                     <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
                     <NumberFieldContent class="max-w-1/4">
                       <NumberFieldDecrement/>
@@ -329,17 +361,10 @@ const submitDisabled = computed(() => {
                       <NumberFieldIncrement/>
                     </NumberFieldContent>
                   </NumberField>
-
-                  <Button :disabled="!validNewVehicle" @click="addVehicle">Add Vehicle</Button>
                 </div>
-
-                <!-- Driver must choose/add a vehicle gate -->
-                <p
-                    v-if="isDriver && !selectedVehicleId"
-                    class="text-xs text-red-600"
-                >
-                  Please select or add a vehicle to continue.
-                </p>
+                <div class="flex gap-2" v-if="hasVehicles && addingNewVehicle">
+                  <Button type="button" variant="secondary" @click="cancelAddVehicle">Cancel</Button>
+                </div>
               </div>
 
               <div class="space-y-3 text-sm text-stone-700 p-4 bg-stone-100 rounded-lg">
@@ -364,7 +389,9 @@ const submitDisabled = computed(() => {
         </CardContent>
         <CardFooter v-if="!loading && !error" class="p-6 pt-0">
           <Button class="w-full bg-uci-blue text-lg font-semibold text-white hover:bg-uci-blue/90"
-                  :disabled="!isDriverConfirmed || !isPhoneValid">
+                  :disabled="!allowSubmit"
+                  @click="submitForm"
+          >
             Submit
           </Button>
         </CardFooter>
