@@ -15,6 +15,6 @@ def render_phase_email(phase: str, **context: Any) -> Tuple[str, str, str]:
     Context should include: name, magic_url, trails (list[{name,difficulty}]), etc.
     """
     subject = EMAIL_SUBJECTS.get(phase)
-    text_body = render_template(f"{phase}.txt.j2", **context)
-    html_body = render_template(f"{phase}.html.j2", **context)
+    text_body = render_template(f"email/{phase}.txt.j2", **context)
+    html_body = render_template(f"email/{phase}.html.j2", **context)
     return subject, text_body, html_body

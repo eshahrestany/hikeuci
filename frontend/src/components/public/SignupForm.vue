@@ -23,6 +23,7 @@ import {parsePhoneNumberFromString} from 'libphonenumber-js'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select/index.js";
 import { SPhoneInput } from "@/components/ui/phone-input";
 import { PlusCircle } from "lucide-vue-next";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip/index.js";
 
 const props = defineProps({
   title: {
@@ -34,6 +35,9 @@ const props = defineProps({
 const hikeTitle = ref(props.title)
 const loading = ref(true)
 const error = ref(null)
+const signupSuccess = ref(false)
+const alreadySigned = ref(false)
+const cancelSuccess = ref(false)
 
 const vehicles = ref([])
 const tokenRef = ref('')
@@ -133,22 +137,22 @@ onMounted(async () => {
     if (jsonResponse.formData === null) {
       const status = jsonResponse.status
       let message = status || 'Data is null'
-      if (status === 'not_found') {
-        message = 'The signup link you visited is invalid. The token provided does not exist. Please check your email for the correct link or contact the club for assistance.'
-      }
       throw new Error(message)
     }
 
-    const data = jsonResponse.formData
-    name.value = data.name
-    email.value = data.email
-    phoneNumber.value = data.tel || ''
-    phoneNumberAlreadySet.value = !!data.tel
-    phoneTouched.value = !!data.tel
+    if (jsonResponse.status === "signed") {
+      alreadySigned.value = true
+    }
+    else if (jsonResponse.status === "ready") {
+      const data = jsonResponse.formData
+      console.log(data)
+      name.value = data.name
+      email.value = data.email
+      phoneNumber.value = data.tel || ''
+      phoneNumberAlreadySet.value = !!data.tel
+      phoneTouched.value = !!data.tel
 
-    vehicles.value = jsonResponse.vehicles || []
-
-    if (jsonResponse.hike) {
+      vehicles.value = jsonResponse.vehicles || []
       hikeTitle.value = jsonResponse.hike.title
     }
   } catch (e) {
@@ -162,7 +166,6 @@ async function submitForm() {
   if (!allowSubmit.value) return
 
   const payload = {
-    token: tokenRef.value,
     tel: phone.value,
     food: foodPreference.value,
     transportation: transportation.value,
@@ -186,7 +189,7 @@ async function submitForm() {
     loading.value = true
     error.value = null
 
-    const res = await fetch('/api/hike-signup', {
+    const res = await fetch(`/api/hike-signup?token=${tokenRef.value}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -206,7 +209,42 @@ async function submitForm() {
 
     const jsonResponse = await res.json()
     if (jsonResponse.success) {
-      window.location.href = '/signup-success'
+      signupSuccess.value = true
+    } else {
+      throw new Error(jsonResponse.error || 'Unknown error occurred')
+    }
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    loading.value = false
+  }
+}
+
+async function submitCancelRequest() {
+  try {
+    loading.value = true
+    error.value = null
+
+    const res = await fetch(`/api/hike-signup/cancel?token=${tokenRef.value}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!res.ok) {
+      let errMessage = `HTTP error! status: ${res.status}`
+      try {
+        const errData = await res.json()
+        errMessage = errData.error || errMessage
+      } catch {
+      }
+      throw new Error(errMessage)
+    }
+
+    const jsonResponse = await res.json()
+    if (jsonResponse[0].success) {
+      cancelSuccess.value = true
     } else {
       throw new Error(jsonResponse.error || 'Unknown error occurred')
     }
@@ -252,6 +290,20 @@ async function submitForm() {
           <div v-else-if="error" class="text-red-500 text-center">
             {{ error }}
           </div>
+          <div v-else-if="signupSuccess" class="text-center text-stone-700">
+            <p class="text-lg font-medium">You have succesfully signed up for this hike.</p>
+            <p class="text-sm text-stone-600 mt-2">You can return to this link before the signup deadline to cancel if needed.</p>
+          </div>
+          <div v-else-if="alreadySigned" class="text-center text-stone-700">
+            <p v-if="cancelSuccess">Successfully canceled.</p>
+            <p v-else class="text-lg font-medium">
+              You have already signed up for this event. If you need to cancel your signup, please click the button below.
+            </p>
+            <p class="text-sm text-stone-600 mt-2">You can still re-sign up for the hike before the signup submission deadline.</p>
+            <div v-if="!cancelSuccess" class="mt-6">
+              <Button type="button" variant="destructive" @click="submitCancelRequest">Cancel My Signup</Button>
+            </div>
+          </div>
           <div v-else class="space-y-6">
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div class="space-y-2">
@@ -265,7 +317,8 @@ async function submitForm() {
             </div>
             <div class="space-y-2">
               <Label for="phone" class="font-semibold text-midnight">Phone Number</Label>
-              <SPhoneInput @update:model-value="updatePhoneNumber"/>
+              <Input v-if="phoneNumber" v-model="phoneNumber" disabled/>
+              <SPhoneInput v-else @update:model-value="updatePhoneNumber"/>
             </div>
             <div v-if="phoneTouched && !isPhoneValid" class="text-red-500 text-sm mt-1">
               Please enter a valid phone number.
@@ -347,26 +400,43 @@ async function submitForm() {
                   </p>
 
                   <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleYear">Year</Label>
+                    <Label for="vehicleYear" class="font-semibold text-midnight">Year</Label>
                     <Input id="vehicleYear" v-model="newVehicle.year" placeholder="2021"/>
                   </div>
                   <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleMake">Make</Label>
+                    <Label for="vehicleMake" class="font-semibold text-midnight">Make</Label>
                     <Input id="vehicleMake" v-model="newVehicle.make" placeholder="Toyota"/>
                   </div>
                   <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleModel">Model</Label>
+                    <Label for="vehicleModel" class="font-semibold text-midnight">Model</Label>
                     <Input id="vehicleModel" v-model="newVehicle.model" placeholder="Corolla"/>
                   </div>
-
-                  <NumberField id="passengers" v-model="newVehicle.passenger_seats" :min="1" :max="7" :default-value="1">
+                  <div class="grid grid-cols-2 items-center gap-4">
                     <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
-                    <NumberFieldContent class="max-w-1/4">
-                      <NumberFieldDecrement/>
-                      <NumberFieldInput/>
-                      <NumberFieldIncrement/>
-                    </NumberFieldContent>
-                  </NumberField>
+                    <div class="max-w-[80px] min-w-[120px]">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <NumberField
+                                id="passengers"
+                                v-model="newVehicle.passenger_seats"
+                                :min="1"
+                                :max="7"
+                                :default-value="1">
+                              <NumberFieldContent>
+                                <NumberFieldDecrement/>
+                                <NumberFieldInput/>
+                                <NumberFieldIncrement/>
+                              </NumberFieldContent>
+                            </NumberField>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p class="text-sm">This number represents the number of passengers you can carry, not including yourself.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
                 </div>
                 <div class="flex gap-2" v-if="hasVehicles && addingNewVehicle">
                   <Button type="button" variant="secondary" @click="cancelAddVehicle">Cancel</Button>
@@ -393,7 +463,7 @@ async function submitForm() {
             </div>
           </div>
         </CardContent>
-        <CardFooter v-if="!loading && !error" class="p-6 pt-0">
+        <CardFooter v-if="!loading && !signupSuccess && !alreadySigned && !error" class="p-6 pt-0">
           <Button class="w-full bg-uci-blue text-lg font-semibold text-white hover:bg-uci-blue/90"
                   :disabled="!allowSubmit"
                   @click="submitForm"
