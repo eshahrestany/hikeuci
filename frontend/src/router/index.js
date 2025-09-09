@@ -18,6 +18,16 @@ const routes = [
         component: () => import('../views/public/Signup.vue'),
     },
     {
+        path: '/waiver',
+        name: 'Waiver',
+        component: () => import('../views/public/Waiver.vue'),
+    },
+    {
+        'path': '/esign-policy',
+        name: 'EsignPolicy',
+        component: () => import('../views/public/EsignPolicy.vue'),
+    },
+    {
         path: '/admin',
         name: 'Dashboard',
         component: () => import('../views/admin/Dashboard.vue'),

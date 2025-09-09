@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, current_app, Response, request
 from ..models import Hike, Member, MagicLink, Trail, Vehicle, Signup
+from .. import db
 
 hike_signup: Blueprint = Blueprint("hike-signup", __name__)
 
@@ -23,7 +24,13 @@ def signup() -> tuple[Response, int]:
         magic_link = MagicLink.query.filter_by(token=token).first()
         member = Member.query.get(magic_link.member_id)
 
-        hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
+        hike = Hike.query.get(magic_link.hike_id)
+
+        # check if already signed up
+        existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
+        if existing_signup:
+            return jsonify({"status": "signed"}), 200
+
         trail = Trail.query.get(hike.trail_id)
 
         vehicles = Vehicle.query.filter_by(member_id=member.id).all()
@@ -36,7 +43,7 @@ def signup() -> tuple[Response, int]:
         } for v in vehicles]
 
         return jsonify({
-            "status": status,
+            "status": "ready",
             "formData": {
                 "name": member.name,
                 "email": member.email,
@@ -50,8 +57,6 @@ def signup() -> tuple[Response, int]:
 
     if request.method == "POST":
         # token and hike validations
-        print(request.json)
-        return
         token = request.args.get("token")
         if not token:
             return jsonify({"error": "Token is missing"}), 400
@@ -72,6 +77,11 @@ def signup() -> tuple[Response, int]:
         if hike.status != "active" or hike.phase != "signup":
             return jsonify({"error": "Hike is not open for signup"}), 400
 
+        # check if already signed up
+        existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
+        if existing_signup:
+            return jsonify({"error": "Member has already signed up for this hike"}), 400
+
         # form data validations
         form_data = request.json
         if not form_data:
@@ -85,7 +95,7 @@ def signup() -> tuple[Response, int]:
         if transport_type not in ["is_driver", "is_passenger", "is_self-transport"]:
             return jsonify({"error": "Invalid transportation type"}), 400
 
-        if transport_type == "is_driver" and (form.data.get("vehicle_id") is None or form.data.get("new_vehicle") is None):
+        if transport_type == "is_driver" and (form_data.get("vehicle_id") is None or form_data.get("new_vehicle") is None):
             return jsonify({"error": "Vehicle information is required for drivers"}), 400
 
         # phone validation and update
@@ -111,7 +121,7 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-            return jsonify({"message": "Successfully signed up as a passenger"}), 200
+            return jsonify({"message": "Successfully signed up as a passenger", "success": True}), 200
 
         elif transport_type == "is_self-transport":
             s = Signup(
@@ -122,7 +132,7 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-            return jsonify({"message": "Successfully signed up as a self-transport"}), 200
+            return jsonify({"message": "Successfully signed up as a self-transport", "success": True}), 200
 
         elif transport_type == "is_driver":
             vehicle_id = form_data.get("vehicle_id")
@@ -171,4 +181,39 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-            return jsonify({"message": "Successfully signed up as a driver"}), 200
+            return jsonify({"message": "Successfully signed up as a driver", "success": True}), 200
+
+
+@hike_signup.route("/cancel", methods=["GET", "POST"])
+def cancel_signup():
+    # token and hike validations
+    print()
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token is missing"}), 400
+
+    mlm = current_app.extensions.get("magic_link_manager")
+    result = mlm.validate(token)
+    if result["status"] != "valid":
+        return jsonify({"error": "Token is invalid"}), 400
+
+    member = Member.query.get(result["magic_link"].member_id)
+    if not member:
+        return jsonify({"error": "Member not found"}), 404
+
+    hike = Hike.query.get(result["magic_link"].hike_id)
+    if not hike:
+        return jsonify({"error": "Hike not found"}), 404
+
+    if hike.status != "active" or hike.phase != "signup":
+        return jsonify({"error": "Hike is not open for signup"}), 400
+
+    # check if already signed up
+    existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
+    if not existing_signup:
+        return jsonify({"error": "User has not signed up for this hike"}, 400)
+
+    db.session.delete(existing_signup)
+    db.session.commit()
+
+    return jsonify({"success": True}, 200)
