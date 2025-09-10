@@ -261,7 +261,7 @@ async function submitForm() {
     <div class="absolute inset-0"/>
     <div class="relative mx-auto w-fit min-w-2xl px-2">
       <Card class="bg-white border">
-        <CardContent class="p-6 pt-0">
+        <CardContent class="px-6 py-2">
           <div v-if="loading" class="space-y-4">
             <Skeleton class="h-4 w-full"/>
             <Skeleton class="h-4 w-full"/>
@@ -269,6 +269,9 @@ async function submitForm() {
           </div>
           <div v-else-if="error" class="text-red-500 text-center">
             {{ error }}
+          </div>
+          <div v-else-if="submitSuccess" class="text-center">
+            Your waiver has been submitted successfully. See you there!
           </div>
           <div v-else class="space-y-6">
             <div v-html="waiverContent" class="prose max-w-none"></div>

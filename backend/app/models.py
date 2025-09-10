@@ -68,7 +68,12 @@ class Waiver(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id   = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    is_minor  = db.Column(db.Boolean, nullable=False)
+    age       = db.Column(db.Integer, nullable=True)
+    signature_1_b64 = db.Column(db.Text, nullable=False)
+    signature_2_b64 = db.Column(db.Text, nullable=False)
     signed_on = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
 
 
 class Vehicle(db.Model):
