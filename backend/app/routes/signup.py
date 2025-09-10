@@ -15,7 +15,7 @@ def signup() -> tuple[Response, int]:
         data = current_app.extensions["magic_link_manager"].validate(token)
         status = data["status"]
         if status != "valid":
-            return jsonify({"status": status, "formData": None}), 200
+            return jsonify({"error": "This link is invalid or has expired."}), 400
 
         mlm = current_app.extensions.get("magic_link_manager")
         if mlm.validate(token)["status"] != "valid":

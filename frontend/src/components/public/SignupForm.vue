@@ -123,6 +123,7 @@ onMounted(async () => {
     tokenRef.value = token
 
     const res = await fetch(`/api/hike-signup?token=${token}`)
+    console.log(res)
     if (!res.ok) {
       let errMessage = `HTTP error! status: ${res.status}`
       try {
@@ -412,7 +413,7 @@ async function submitCancelRequest() {
                   </div>
                   <div class="grid grid-cols-2 items-center gap-4">
                     <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
-                    <div class="max-w-[80px] min-w-[120px]">
+                    <div class="max-w-[80px]">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger as-child>
