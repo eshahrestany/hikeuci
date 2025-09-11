@@ -7,7 +7,7 @@ class Member(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
-    tel        = db.Column(db.String(32), nullable=True)  # E164
+    tel        = db.Column(db.String(15), nullable=True)
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -56,10 +56,11 @@ class Signup(db.Model):
     hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
     signup_date    = db.Column(db.DateTime, default=datetime.now, nullable=False)
     transport_type = db.Column(db.String(20), nullable=False)  # 'passenger','driver','self'
+    food_interest  = db.Column(db.Boolean, nullable=False)
     is_checked_in  = db.Column(db.Boolean, nullable=False, default=False)
+    status = db.Column(db.String(50), nullable=False, default='pending')  # 'pending','confirmed','waitlisted'
+    waitlist_pos = db.Column(db.Integer, nullable=True)
     vehicle_id     = db.Column(db.Integer, db.ForeignKey('vehicles.id'), default=None, nullable=True)
-    status         = db.Column(db.String(50), nullable=False, default='pending')  # 'pending','confirmed','waitlisted'
-    waitlist_pos   = db.Column(db.Integer, nullable=True)
 
 
 class Waiver(db.Model):
@@ -67,7 +68,13 @@ class Waiver(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id   = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    print_name = db.Column(db.String(50), nullable=False)
+    is_minor  = db.Column(db.Boolean, nullable=False)
+    age       = db.Column(db.Integer, nullable=True)
+    signature_1_b64 = db.Column(db.Text, nullable=False)
+    signature_2_b64 = db.Column(db.Text, nullable=False)
     signed_on = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
 
 
 class Vehicle(db.Model):

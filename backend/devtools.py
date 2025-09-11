@@ -6,9 +6,9 @@ Seed and clear the HikeUCI database for three test scenarios (post-refactor):
   - waiver: 1 active Hike in 'waiver' phase with a Trail, ~40 confirmed + waitlist, ~20 waivers
 
 Usage:
-  python seed_db.py voting
-  python seed_db.py signup
-  python seed_db.py waiver
+  python devtools.py voting
+  python devtools.py signup
+  python devtools.py waiver
 """
 import random
 from datetime import datetime, timedelta
@@ -160,6 +160,7 @@ def seed_signup():
         trail_id=trail.id,
         status="active",
         phase="signup",
+        food_interest=random.choice([True, False]),
         voting_date=datetime.now() + timedelta(days=1),
         signup_date=datetime.now() + timedelta(days=3),
         waiver_date=datetime.now() + timedelta(days=5),
@@ -202,6 +203,7 @@ def seed_signup():
                     member_id=m.id,
                     hike_id=hike.id,
                     transport_type="driver",
+                    food_interest=random.choice([True, False]),
                     vehicle_id=vid,
                     status="pending",
                 )
@@ -211,6 +213,7 @@ def seed_signup():
                 Signup(
                     member_id=m.id,
                     hike_id=hike.id,
+                    food_interest=random.choice([True, False]),
                     transport_type="passenger",
                     status="pending",
                 )
@@ -347,6 +350,7 @@ def seed_waiver():
                 member_id=d.id,
                 hike_id=hike.id,
                 transport_type="driver",
+                food_interest=random.choice([True, False]),
                 vehicle_id=vid,
                 status="confirmed",
             )
@@ -358,6 +362,7 @@ def seed_waiver():
             Signup(
                 member_id=s.id,
                 hike_id=hike.id,
+                food_interest=random.choice([True, False]),
                 transport_type="self",
                 status="confirmed",
             )
@@ -378,6 +383,7 @@ def seed_waiver():
                 member_id=p.id,
                 hike_id=hike.id,
                 transport_type="passenger",
+                food_interest=random.choice([True, False]),
                 status=status,
                 waitlist_pos=waitlist_pos,
             )
@@ -394,6 +400,10 @@ def seed_waiver():
             member_id=mid,
             hike_id=hike.id,
             signed_on=datetime.now() - timedelta(days=random.randint(0, 2)),
+            print_name="",
+            is_minor=False,
+            signature_1_b64="",
+            signature_2_b64=""
         )
         for mid in waiver_members
     ]
@@ -463,6 +473,7 @@ def seed_email_waiver():
             hike_id=hike.id,
             signup_date=datetime.now() + timedelta(minutes=i),
             transport_type=transport_type,
+            food_interest=random.choice([True, False]),
             status="confirmed",
             vehicle_id=
                 Vehicle.query.filter_by(member_id=member.id).first().id

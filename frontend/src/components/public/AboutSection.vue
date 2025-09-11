@@ -66,7 +66,3 @@ const props = defineProps({
   },
 });
 </script>
-
-<style scoped>
-/* Add component‑specific styles here if needed */
-</style>

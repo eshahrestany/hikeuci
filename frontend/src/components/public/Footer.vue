@@ -4,24 +4,17 @@
       <!-- UCI Logo & address -->
       <div class="flex flex-col gap-4">
         <img
-          :src="uciLogo"
-          alt="University of California, Irvine"
-          loading="lazy"
+            :src="uciLogo"
+            alt="University of California, Irvine"
+            loading="lazy"
         />
         <address class="not-italic text-sm leading-relaxed">
-          Hiking Club @ UCI<br />
-          University of California, Irvine<br />
+          Hiking Club @ UCI<br/>
+          University of California, Irvine<br/>
           Irvine, CA&nbsp;92697
         </address>
       </div>
-
-      <!-- Quick links -->
-      <nav aria-label="Footer navigation" class="grid gap-2">
-        <router-link to="/" class="hover:text-uci-gold">Home</router-link>
-        <router-link to="/about" class="hover:text-uci-gold">About Us</router-link>
-        <router-link to="/leadership" class="hover:text-uci-gold">Leadership</router-link>
-        <router-link to="/login" class="hover:text-uci-gold">Member Portal</router-link>
-      </nav>
+      <div class="hidden md:block"></div>
 
       <!-- Contact & meta -->
       <div class="flex flex-col gap-4">
@@ -31,9 +24,9 @@
           <div class="flex gap-4 mt-2">
             <!-- Email -->
             <a
-              href="mailto:hikingclub@uci.edu"
-              aria-label="Email"
-              class="hover:text-uci-gold transition-colors"
+                href="mailto:hikingclub@uci.edu"
+                aria-label="Email"
+                class="hover:text-uci-gold transition-colors"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -43,17 +36,18 @@
                 <path
                     fill="currentColor"
                     fill-rule="evenodd"
-                    d="M2 3.5h12a.5.5 0 0 1 .5.5v.572L8 8.286L1.5 4.572V4a.5.5 0 0 1 .5-.5Zm-.5 2.8V12a.5.5 0 0 0 .5.5h12a.5.5 0 0 0 .5-.5V6.3L8.372 9.8L8 10.014L7.628 9.8L1.5 6.3ZM0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Z" clip-rule="evenodd"/>
+                    d="M2 3.5h12a.5.5 0 0 1 .5.5v.572L8 8.286L1.5 4.572V4a.5.5 0 0 1 .5-.5Zm-.5 2.8V12a.5.5 0 0 0 .5.5h12a.5.5 0 0 0 .5-.5V6.3L8.372 9.8L8 10.014L7.628 9.8L1.5 6.3ZM0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Z"
+                    clip-rule="evenodd"/>
               </svg>
             </a>
 
             <!-- Instagram -->
             <a
-              href="https://instagram.com/hikingclubatucirvine"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              class="hover:text-uci-gold transition-colors"
+                href="https://instagram.com/hikingclubatucirvine"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                class="hover:text-uci-gold transition-colors"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -68,11 +62,11 @@
 
             <!-- Discord -->
             <a
-              href="https://discord.gg/jWcN8dWQzC"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Discord"
-              class="hover:text-uci-gold transition-colors"
+                href="https://discord.gg/jWcN8dWQzC"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Discord"
+                class="hover:text-uci-gold transition-colors"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -86,11 +80,11 @@
             </a>
             <!-- Linktree -->
             <a
-              href="https://linktr.ee/hikingclubatuci"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Linktree"
-              class="hover:text-uci-gold transition-colors"
+                href="https://linktr.ee/hikingclubatuci"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Linktree"
+                class="hover:text-uci-gold transition-colors"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -103,11 +97,11 @@
             </a>
             <!-- Github -->
             <a
-              href="https://github.com/eshahrestany/hikeuci"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Github"
-              class="hover:text-uci-gold transition-colors"
+                href="https://github.com/eshahrestany/hikeuci"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Github"
+                class="hover:text-uci-gold transition-colors"
             >
               <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -127,13 +121,18 @@
           © {{ year }} Hiking Club @ UCI. All rights reserved.
         </p>
 
+        <router-link to="/esign-policy" class="text-sm text-stone/70 hover:text-uci-gold">Electronic Records and
+          Signatures Policy
+        </router-link>
+
         <!-- Watermark -->
         <p class="text-xs text-stone/50">
           Made with ♥ by Evan Shahrestany<br/>
           with help from Gabriel Dodge and Sterling Radisay
         </p>
-        <p class="text-xs text-stone/50">
-          <a href="https://github.com/eshahrestany/hikeuci" target="_blank">Want to contribute? Check out the Github repo!</a>
+        <p class="text-xs text-stone/50 hover:text-uci-gold">
+          <a href="https://github.com/eshahrestany/hikeuci" target="_blank">Want to contribute? Check out the Github
+            repo!</a>
         </p>
       </div>
     </div>
@@ -142,6 +141,7 @@
 
 <script setup lang="ts">
 import uciLogo from '../../assets/uci_logo.png';
+
 /**
  * Current year – avoids having to update the template annually.
  */
