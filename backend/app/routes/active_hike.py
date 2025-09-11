@@ -22,7 +22,7 @@ def get_active_hike_info():
     # Determine current active hike + phase
     hike = _current_active_hike()
     if hike is None:
-        return jsonify(status="None"), 200
+        return jsonify(status=None), 200
 
     phase = (hike.phase or "").lower()
     return_data = {"status": phase}
