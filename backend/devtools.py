@@ -6,9 +6,9 @@ Seed and clear the HikeUCI database for three test scenarios (post-refactor):
   - waiver: 1 active Hike in 'waiver' phase with a Trail, ~40 confirmed + waitlist, ~20 waivers
 
 Usage:
-  python seed_db.py voting
-  python seed_db.py signup
-  python seed_db.py waiver
+  python devtools.py voting
+  python devtools.py signup
+  python devtools.py waiver
 """
 import random
 from datetime import datetime, timedelta
@@ -400,6 +400,9 @@ def seed_waiver():
             member_id=mid,
             hike_id=hike.id,
             signed_on=datetime.now() - timedelta(days=random.randint(0, 2)),
+            is_minor=False,
+            signature_1_b64="",
+            signature_2_b64=""
         )
         for mid in waiver_members
     ]
