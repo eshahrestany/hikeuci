@@ -136,7 +136,16 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
             for email_task in batch:
                 # derive per-recipient context
                 member = Member.query.get(email_task.member_id)
+                if not member:
+                    email_task.status = "failed"
+                    db.session.commit()
+                    break
+
                 ml = MagicLink.query.filter_by(member_id=member.id, hike_id=hike_id, type=phase).first()
+                if not ml:
+                    email_task.status = "failed"
+                    db.session.commit()
+                    break
 
                 name = getattr(member, "name", None)
                 to_email = getattr(member, "email", None)

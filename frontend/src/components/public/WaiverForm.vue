@@ -32,6 +32,8 @@ const age = ref(17)
 const printName = ref(null)
 
 const submitSuccess = ref(false)
+const alreadySigned = ref(false)
+const cancelSuccess = ref(false)
 
 function mountESignSlots() {
   // helper to replace a slot with a mounted VueSignaturePad + Clear button
@@ -196,7 +198,7 @@ onMounted(async () => {
     if (jsonResponse.status === 'ready') {
       waiverContent.value = jsonResponse.content
     } else if (jsonResponse.status === 'signed') {
-      throw new Error('You have already signed this waiver. Thank you!')
+      alreadySigned.value = true
     }
   } catch (e) {
     error.value = e.message
@@ -251,6 +253,38 @@ async function submitForm() {
   }
 }
 
+async function submitCancelRequest() {
+  try {
+    loading.value = true
+    error.value = null
+
+    const res = await fetch(`/api/hike-waiver/cancel?token=${tokenRef.value}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    if (!res.ok) {
+      let errMessage = `HTTP error! status: ${res.status}`
+      try {
+        const errData = await res.json()
+        errMessage = errData.error || errMessage
+      } catch {}
+      throw new Error(errMessage)
+    }
+
+    const jsonResponse = await res.json()
+    if (jsonResponse.success) {
+      cancelSuccess.value = true
+    } else {
+      throw new Error(jsonResponse.error || 'Unknown error occurred')
+    }
+  } catch (e) {
+    error.value = e.message || 'Request failed'
+  } finally {
+    loading.value = false
+  }
+}
+
 </script>
 
 <template>
@@ -272,6 +306,16 @@ async function submitForm() {
           </div>
           <div v-else-if="submitSuccess" class="text-center">
             Your waiver has been submitted successfully. See you there!
+          </div>
+          <div v-else-if="alreadySigned" class="text-center text-stone-700">
+            <p v-if="cancelSuccess">Successfully canceled.</p>
+            <p v-else class="text-lg font-medium">
+              You have already submitted your waiver. If you need to cancel, please click the button below.
+            </p>
+            <p class="text-sm text-red-500 mt-2">By cancelling you will be forfeiting your spot and won't be able to sign back up!</p>
+            <div v-if="!cancelSuccess" class="mt-6">
+              <Button type="button" variant="destructive" @click="submitCancelRequest">Cancel My Signup</Button>
+            </div>
           </div>
           <div v-else class="space-y-6">
             <div v-html="waiverContent" class="prose max-w-none"></div>

@@ -71,3 +71,35 @@ def hike_waiver_page():
         db.session.commit()
 
         return jsonify({"status": "submitted", "success": True}), 200
+
+@hike_waiver.route("/cancel", methods=["POST"])
+def cancel():
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token is missing"}), 400
+
+    data = current_app.extensions["magic_link_manager"].validate(token)
+    status = data["status"]
+    if status != "valid":
+        return jsonify({"error": "This link is invalid or has expired."}), 400
+
+    magic_link = MagicLink.query.filter_by(token=token).first()
+    member = Member.query.get(magic_link.member_id)
+    if not member:
+        return jsonify({"error": "Member not found"}), 404
+
+    hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
+    trail = Trail.query.get(hike.trail_id)
+
+    existing_signup = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
+    if not existing_signup:
+        return jsonify({"error": "User does not have a signup for this hike"})
+
+    # just delete the signup and magic link, don't delete waiver.
+
+    db.session.delete(existing_signup)
+    db.session.delete(magic_link)
+    db.session.commit()
+
+
+    return jsonify({"status": "Cancelled successfully", "success": True}), 200
