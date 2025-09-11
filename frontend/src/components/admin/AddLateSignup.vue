@@ -37,7 +37,7 @@ const selected    = ref(null)          // whole option object
 
 onMounted(loadEmails)
 async function loadEmails() {
-  const res = await fetchWithAuth(`/active-hike/list-emails-not-in-hike`)
+  const res = await fetchWithAuth(`/admin/list-emails-not-in-hike`)
   const raw = res.ok ? await res.json() : []
 
   emailOptions.value = raw.map(o => ({
@@ -95,7 +95,7 @@ async function onSave() {
       transport_type: form.transport_type,
       vehicle_id: form.transport_type === 'driver' ? form.vehicle_id : null,
     }
-    const res = await postWithAuth('/active-hike/add-user', payload)
+    const res = await postWithAuth('/admin/add-user', payload)
     if (!res.ok) throw new Error(await res.text())
     const added = await res.json()   // backend returns new user object
     toast.success('Late signup added')

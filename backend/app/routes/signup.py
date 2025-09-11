@@ -95,7 +95,7 @@ def signup() -> tuple[Response, int]:
         if transport_type not in ["is_driver", "is_passenger", "is_self-transport"]:
             return jsonify({"error": "Invalid transportation type"}), 400
 
-        if transport_type == "is_driver" and (form_data.get("vehicle_id") is None or form_data.get("new_vehicle") is None):
+        if transport_type == "is_driver" and (form_data.get("vehicle_id") is None):
             return jsonify({"error": "Vehicle information is required for drivers"}), 400
 
         # phone validation and update

@@ -7,7 +7,7 @@ class Member(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
-    tel        = db.Column(db.Integer, nullable=True)
+    tel        = db.Column(db.String(15), nullable=True)
     joined_on  = db.Column(db.DateTime, default=datetime.now, nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -68,6 +68,7 @@ class Waiver(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id   = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
+    print_name = db.Column(db.String(50), nullable=False)
     is_minor  = db.Column(db.Boolean, nullable=False)
     age       = db.Column(db.Integer, nullable=True)
     signature_1_b64 = db.Column(db.Text, nullable=False)

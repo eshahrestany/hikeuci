@@ -3,9 +3,9 @@ from sqlalchemy import and_, func
 
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
-from ..models import Hike, Trail, Vote, Member, Signup, Vehicle, Waiver
+from ..models import Hike, Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink
 
-active_hike: Blueprint = Blueprint("active-hike", __name__)
+dashboard: Blueprint = Blueprint("dashboard", __name__)
 
 
 def _current_active_hike() -> Hike | None:
@@ -16,7 +16,7 @@ def _current_active_hike() -> Hike | None:
     )
 
 
-@active_hike.route('/upcoming', methods=['GET'])
+@dashboard.route('/upcoming', methods=['GET'])
 @admin_required
 def get_active_hike_info():
     # Determine current active hike + phase
@@ -110,7 +110,7 @@ def get_active_hike_info():
     return jsonify(return_data), 200
 
 
-@active_hike.route('/waitlist', methods=['GET'])
+@dashboard.route('/waitlist', methods=['GET'])
 @admin_required
 @waiver_phase_required
 def get_waitlist():
@@ -138,7 +138,7 @@ def get_waitlist():
     return jsonify(waitlist_users), 200
 
 
-@active_hike.route("/list-emails-not-in-hike", methods=["GET"])
+@dashboard.route("/list-emails-not-in-hike", methods=["GET"])
 @admin_required
 def list_emails_not_in_hike():
     hike = _current_active_hike()
@@ -172,7 +172,7 @@ def list_emails_not_in_hike():
     return jsonify([{"member_id": m.id, "email": m.email} for m in rows]), 200
 
 
-@active_hike.route('/check-in', methods=['POST'])
+@dashboard.route('/check-in', methods=['POST'])
 @admin_required
 @waiver_phase_required
 def check_in():
@@ -205,7 +205,7 @@ def check_in():
     return jsonify(success=True), 200
 
 
-@active_hike.route('/modify-user', methods=['POST'])
+@dashboard.route('/modify-user', methods=['POST'])
 @admin_required
 def modify_user():
     data = request.get_json() or {}
@@ -252,7 +252,7 @@ def modify_user():
     return jsonify(success=True), 200
 
 
-@active_hike.route('/remove-user', methods=['POST'])
+@dashboard.route('/remove-user', methods=['POST'])
 @admin_required
 def remove_user():
     data = request.get_json() or {}
@@ -264,6 +264,9 @@ def remove_user():
     if not hike or (hike.phase or "").lower() != 'waiver':
         return jsonify(error="Not in waiver phase"), 400
 
+    # delete active magic link
+    MagicLink.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
+
     # delete waiver for THIS hike
     Waiver.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
     # delete signup for THIS hike
@@ -273,7 +276,7 @@ def remove_user():
     return jsonify(success=True), 200
 
 
-@active_hike.route("/add-user", methods=["POST"])
+@dashboard.route("/add-user", methods=["POST"])
 @admin_required
 def add_user():
     data = request.get_json() or {}
