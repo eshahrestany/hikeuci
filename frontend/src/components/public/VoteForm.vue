@@ -195,7 +195,7 @@ onMounted(async () => {
                 <div class="p-4">
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <h3 class="text-lg font-semibold text-midnight">{{ t.name }}</h3>
+                      <h3 class="text-lg font-bold text-midnight">{{ t.name }}</h3>
                       <p class="text-sm text-stone-600">{{ t.location }}</p>
                     </div>
                   </div>
@@ -222,7 +222,7 @@ onMounted(async () => {
                       </p>
                     </div>
                   </div>
-                  <div class="mt-2 text-lg" :class="difficultyColor(t.difficulty)">
+                  <div class="mt-2 text-lg font-semibold" :class="difficultyColor(t.difficulty)">
                     {{ t.difficulty }}
                   </div>
 
