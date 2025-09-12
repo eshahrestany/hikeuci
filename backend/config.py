@@ -58,3 +58,6 @@ class Config:
         2: "Difficult",
         3: "Very Difficult"
     }
+
+    HIKE_RESET_TIME_HR = int(os.getenv("HIKE_RESET_TIME_HR", 6))
+    # the number of hours after a hike's scheduled time at which it is internally marked as inactive and a past hike.

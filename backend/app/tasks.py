@@ -7,9 +7,10 @@ from make_celery import celery_app
 from flask import current_app
 
 from . import db
-from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike
+from .lib import phases
 from .lib.email_connection import EmailConnection
 from .lib.email_templates import render_phase_email
+from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike
 
 
 def flatten_num(x: float or int) -> float or int:
@@ -229,6 +230,35 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}
 
+
 @celery_app.task(name="app.tasks.check_and_update_phase")
 def check_and_update_phase():
-    print(datetime.now())
+    ah = Hike.query.filter_by(status="active")
+    if not ah: return
+
+    now = datetime.now()
+
+    if ah.phase is None: # hike has just been created
+        if ah.voting_date is not None: # will this hike have a vote?
+            if now >= ah.voting_date:
+                phases.initiate_vote_phase(ah)
+                start_email_campaign(ah.id)
+
+        else: # no vote, skip to signup phase
+            if now >= ah.signup_date:
+                phases.initiate_signup_phase(ah)
+                start_email_campaign(ah.id)
+
+    elif ah.phase == "voting":
+        if now >= ah.signup_date:
+            phases.initiate_signup_phase(ah)
+            start_email_campaign(ah.id)
+
+    elif ah.phase == "signup":
+        if now >= ah.waiver_date:
+            phases.initiate_waiver_phase(ah)
+            start_email_campaign(ah.id)
+
+    elif ah.phase == "waiver":
+        if now >= ah.hike_date + current_app.config.get("HIKE_RESET_TIME_HR"):
+            phases.complete_hike(ah)
