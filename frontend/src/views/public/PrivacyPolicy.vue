@@ -5,10 +5,10 @@
       <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-10">
         <div>
           <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-blue font-montserrat">
-            UCI Hiking Club – Electronic Records and Signatures Policy
+            UCI Hiking Club – Privacy Policy
           </h1>
           <p class="mt-2 text-midnight/80">
-            This page explains how the Club uses electronic records and signatures, your rights, and how consent works.
+            This page explains what information we collect, why we collect it, and how you can manage your data.
           </p>
         </div>
 
@@ -58,73 +58,98 @@
         <section id="purpose" class="space-y-3">
           <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Purpose</h2>
           <p class="text-lg leading-relaxed text-midnight/90">
-            The UCI Hiking Club (“the Club”) uses electronic records and electronic signatures to streamline membership,
-            event registration, liability waivers, and communications. This policy explains how electronic records and
-            signatures are used, how members’ rights are protected, and what consent means.
+            The UCI Hiking Club (“the Club”) is committed to protecting the privacy of its members. This policy explains
+            how we collect, use, store, and share personal information.
           </p>
         </section>
 
-        <!-- Legal Effect -->
-        <section id="legal-effect" class="space-y-3">
-          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Legal Effect</h2>
+        <!-- Information We Collect -->
+        <section id="collected-info" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Information We Collect</h2>
           <p class="leading-relaxed text-midnight/90">
-            In accordance with the Electronic Signatures in Global and National Commerce Act (E-SIGN Act):
+            We may collect the following information when you join or participate in the Club:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
-            <li>Electronic signatures collected by the Club are legally binding and enforceable.</li>
-            <li>Electronic records (including but not limited to event agreements) have the same legal validity as paper documents.</li>
+            <li>Contact details (name, email address, phone number, student ID).</li>
+            <li>Vehicle information if you sign up as a driver.</li>
+            <li>Participation records (event sign-ups, waivers, attendance).</li>
+            <li>Photos or videos taken at Club events.</li>
           </ul>
         </section>
 
-        <!-- Consent to Electronic Records -->
-        <section id="consent" class="space-y-3">
-          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Consent to Electronic Records</h2>
+        <!-- How We Use Your Information -->
+        <section id="info-usage" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">How We Use Your Information</h2>
+          <p class="leading-relaxed text-midnight/90">
+            We use collected information to:
+          </p>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
-            <li>By participating in Club activities or submitting forms electronically, members agree to receive, sign, and store records in electronic form.</li>
-            <li>Members have the right to request paper copies of any record at no additional cost.</li>
-            <li>
-              Members may withdraw consent to electronic records at any time by notifying the Club in writing (email or paper notice).
-              Withdrawal will not affect the validity of records already signed.
-            </li>
+            <li>Register members and manage Club communications.</li>
+            <li>Organize and administer hikes, trips, and events.</li>
+            <li>Ensure participant safety</li>
+            <li>Comply with UC Irvine and legal requirements.</li>
+            <li>Promote Club activities through photos or event summaries.</li>
           </ul>
         </section>
 
-        <!-- Delivery and Accessibility -->
-        <section id="delivery" class="space-y-3">
-          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Delivery and Accessibility</h2>
+        <!-- Information Sharing -->
+        <section id="info-sharing" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Information Sharing</h2>
+          <p class="leading-relaxed text-midnight/90">
+            The club will not sell or rent member information.
+            We may share information only with:
+          </p>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
-            <li>Electronic records will be provided via this website (the HikeUCI platform).</li>
-            <li>Members must ensure they have access to the necessary technology (computer, smartphone, internet connection, and PDF reader).</li>
-            <li>Records will remain available in electronic format for at least three (3) years after signing.</li>
+            <li>UC Irvine and other associated entities (e.g. other clubs in the event of a collaboration) .</li>
+            <li>Emergency responders (if necessary for health or safety).</li>
+            <li>Service Providers used to manage forms securely</li>
           </ul>
         </section>
 
-        <!-- Authentication and Security -->
-        <section id="security" class="space-y-3">
-          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Authentication and Security</h2>
-          <p class="leading-relaxed text-midnight/90">To protect members and the Club:</p>
+        <!-- Data Retention -->
+        <section id="data-retention" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Data Retention</h2>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
-            <li>Each electronic signature must be linked to a unique identifier (an email address).</li>
-            <li>Audit trails (including time, date, and signer identity) will be preserved.</li>
-            <li>Records will be stored securely in accordance with HikeUCI Data Retention policies.</li>
+            <li>Membership records will be stored for the duration of your active membership and up to three (3) years after.</li>
+            <li>Liability waivers will be retained for at least seven (7) years in line with best practices.</li>
+            <li>Photos/videos may be retained indefinitely unless a member requests removal.</li>
           </ul>
         </section>
 
         <!-- Member Rights -->
         <section id="member-rights" class="space-y-3">
           <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Member Rights</h2>
+          <p class="leading-relaxed text-midnight/90">
+            Members have the right to:
+          </p>
+          <ul class="list-disc pl-6 space-y-2 text-midnight/90">
+            <li>Access and update their personal information.</li>
+            <li>Request deletion of records (unless retention is required for legal purposes e.g. liability waivers).</li>
+            <li>Opt out of photos/videos being used in Club promotions.</li>
+          </ul>
+        </section>
+
+        <!-- Security -->
+        <section id="security" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Security</h2>
+          <p class="leading-relaxed text-midnight/90">
+            We use storage tools (e.g., UCI Google Drive, HikeUCI Platform) to protect records. Access is limited to authorized Club officers.
+          </p>
+        </section>
+
+         <!-- "Contact" -->
+        <section id="member-rights" class="space-y-3">
+          <h2 class="text-2xl font-bold text-uci-blue font-montserrat">Contact</h2>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
             <li>
-              Members may request copies of signed electronic records by emailing the Club at
+              Questions or privacy requests can be directed to
               <a
                 href="mailto:hikingclub@uci.edu"
                 class="underline decoration-uci-blue/40 underline-offset-2 hover:decoration-uci-blue"
               >hikingclub@uci.edu</a>.
             </li>
-            <li>Members may revoke consent for future electronic records at any time, without penalty.</li>
           </ul>
         </section>
-
         <!-- Footer / Adoption -->
         <section id="adoption" class="space-y-1">
           <p class="text-midnight/90"><span class="font-semibold">Adopted by:</span> UCI Hiking Club Board</p>
@@ -136,8 +161,9 @@
 </template>
 
 <script setup>
-import { Printer, ArrowLeft } from 'lucide-vue-next';
+import {ArrowLeft, Printer} from 'lucide-vue-next';
 import { Button } from "@/components/ui/button";
+
 function onPrint() {
   window.print()
 }

@@ -28,6 +28,11 @@ const routes = [
         component: () => import('../views/public/EsignPolicy.vue'),
     },
     {
+        'path': '/privacy-policy',
+        name: 'PrivacyPolicy',
+        component: () => import('../views/public/PrivacyPolicy.vue'),
+    },
+    {
         path: '/admin',
         name: 'Dashboard',
         component: () => import('../views/admin/Dashboard.vue'),
