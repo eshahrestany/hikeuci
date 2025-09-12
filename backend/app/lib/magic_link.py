@@ -37,10 +37,10 @@ class MagicLinkManager:
 
         associated_hike = Hike.query.get(magic_link.hike_id)
         if not associated_hike:
-            return {'status': 'invalid_hike_id', 'user': magic_link.user_id}
+            return {'status': 'invalid_hike_id', 'user': magic_link.member_id}
 
         if associated_hike.status != 'active' or magic_link.type != associated_hike.phase:
-            return {'status': 'expired', 'user': magic_link.user_id}
+            return {'status': 'expired', 'user': magic_link.member_id}
 
         if not magic_link.first_used:
             magic_link.first_use = datetime.now()

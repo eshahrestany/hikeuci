@@ -400,6 +400,7 @@ def seed_waiver():
             member_id=mid,
             hike_id=hike.id,
             signed_on=datetime.now() - timedelta(days=random.randint(0, 2)),
+            print_name="",
             is_minor=False,
             signature_1_b64="",
             signature_2_b64=""

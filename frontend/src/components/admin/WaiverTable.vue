@@ -39,7 +39,7 @@ function handleAdded(newUser) {
 // Row-level actions
 async function checkInRow(user) {
   try {
-    const res = await postWithAuth('/active-hike/check-in', {
+    const res = await postWithAuth('/admin/check-in', {
       user_id: user.member_id,
     })
     if (!res.ok) {
@@ -79,7 +79,7 @@ function removeRow(user) {
 async function confirmedRemove() {
   const user = confirmUser.value
   try {
-    const res = await postWithAuth('/active-hike/remove-user', {
+    const res = await postWithAuth('/admin/remove-user', {
       user_id: user.member_id
     })
 

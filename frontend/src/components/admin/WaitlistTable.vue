@@ -72,7 +72,7 @@ const { fetchWithAuth } = useAuth()
 const data = shallowRef([])
 
 async function loadWaitlist() {
-  const res = await fetchWithAuth('/active-hike/waitlist')
+  const res = await fetchWithAuth('/admin/waitlist')
   if (!res.ok) return
   const users = await res.json()
   data.value = users.sort((a, b) => a.waitlist_pos - b.waitlist_pos)

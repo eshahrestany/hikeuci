@@ -106,7 +106,7 @@ async function onSave() {
       payload.vehicle_id = form.vehicle_id
     }
 
-    const res = await postWithAuth('/active-hike/modify-user', payload)
+    const res = await postWithAuth('/admin/modify-user', payload)
     if (!res.ok) {
       const err = await res.text()
       throw new Error(err || 'Unknown error')

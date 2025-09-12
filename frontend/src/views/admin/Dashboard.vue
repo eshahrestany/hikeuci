@@ -64,7 +64,7 @@ const response = ref({ status: null, candidates: [], users: [], trail_id: null, 
 async function loadUpcoming() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/active-hike/upcoming')
+    const res = await fetchWithAuth('/admin/upcoming')
     response.value = await res.json()
     console.info(response.value)
   } catch {

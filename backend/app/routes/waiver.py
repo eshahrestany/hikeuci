@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import Blueprint, request, jsonify, current_app, render_template
-from ..models import Member, Hike, Trail, MagicLink, Waiver
+from ..models import Member, Hike, Trail, MagicLink, Waiver, Signup
 from .. import db
 
 hike_waiver: Blueprint = Blueprint("hike-waiver", __name__)
@@ -24,6 +24,10 @@ def hike_waiver_page():
 
     hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
     trail = Trail.query.get(hike.trail_id)
+
+    signup = Signup.query.filter_by(member_id=member.id, hike_id=hike.id).first()
+    if not signup:
+        return jsonify({"error": "Member is not signed up for this hike"}), 404
 
     existing_waiver = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if existing_waiver:
@@ -61,6 +65,7 @@ def hike_waiver_page():
         waiver = Waiver(
             member_id=member.id,
             hike_id=hike.id,
+            print_name=name,
             is_minor=is_minor,
             age=age,
             signature_1_b64=signature_1_b64,

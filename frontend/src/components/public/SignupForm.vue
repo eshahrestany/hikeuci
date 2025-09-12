@@ -123,7 +123,6 @@ onMounted(async () => {
     tokenRef.value = token
 
     const res = await fetch(`/api/hike-signup?token=${token}`)
-    console.log(res)
     if (!res.ok) {
       let errMessage = `HTTP error! status: ${res.status}`
       try {
@@ -317,7 +316,7 @@ async function submitCancelRequest() {
             </div>
             <div class="space-y-2">
               <Label for="phone" class="font-semibold text-midnight">Phone Number</Label>
-              <Input v-if="phoneNumber" v-model="phoneNumber" disabled/>
+              <Input v-if="phoneNumberAlreadySet" v-model="phoneNumber" disabled/>
               <SPhoneInput v-else @update:model-value="updatePhoneNumber"/>
             </div>
             <div v-if="phoneTouched && !isPhoneValid" class="text-red-500 text-sm mt-1">
