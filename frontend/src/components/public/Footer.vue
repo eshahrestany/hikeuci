@@ -1,6 +1,6 @@
 <template>
   <footer class="bg-midnight text-stone font-montserrat">
-    <div class="max-w-7xl mx-auto px-6 py-12 grid gap-12 md:grid-cols-3">
+    <div class="max-w-7xl mx-auto px-6 py-6 grid gap-12 md:grid-cols-3">
       <!-- UCI Logo & address -->
       <div class="flex flex-col gap-4">
         <img
@@ -17,7 +17,7 @@
       <div class="hidden md:block"></div>
 
       <!-- Contact & meta -->
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
         <!-- Social / contact -->
         <div>
           <p class="font-semibold text-uci-gold">Connect</p>
@@ -121,8 +121,12 @@
           © {{ year }} Hiking Club @ UCI. All rights reserved.
         </p>
 
-        <router-link to="/esign-policy" class="text-sm text-stone/70 hover:text-uci-gold">Electronic Records and
-          Signatures Policy
+        <router-link to="/esign-policy" class="text-sm text-stone/70 hover:text-uci-gold">
+          Electronic Records and Signatures Policy
+        </router-link>
+
+        <router-link to="/privacy-policy" class="text-sm text-stone/70 hover:text-uci-gold">
+          Privacy Policy
         </router-link>
 
         <!-- Watermark -->
