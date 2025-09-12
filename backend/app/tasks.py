@@ -1,6 +1,8 @@
 import time
 from datetime import datetime
 from typing import List
+
+from celery.schedules import crontab
 from make_celery import celery_app
 from flask import current_app
 
@@ -81,8 +83,6 @@ def start_email_campaign(hike_id: int) -> int:
         )
 
         mlm.generate(member_id=m.id, hike_id=hike_id, type=phase)
-        if phase == "waiver":
-            mlm.generate(member_id=m.id, hike_id=hike_id, type="modify")
 
     if tasks:
         db.session.add_all(tasks)
@@ -228,3 +228,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     db.session.commit()
 
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}
+
+@celery_app.task(name="app.tasks.check_and_update_phase")
+def check_and_update_phase():
+    print(datetime.now())

@@ -110,7 +110,7 @@ class MagicLink(db.Model):
     token      = db.Column(db.String(64), unique=True, nullable=False)
     member_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id    = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
-    type       = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver', 'modify'
+    type       = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver'
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     first_used = db.Column(db.DateTime, nullable=True)
     used_count = db.Column(db.Integer, nullable=False, default=0)
