@@ -1,6 +1,6 @@
-from flask import send_from_directory, Blueprint, request, current_app, abort, jsonify
+from flask import Blueprint, request, current_app, jsonify
 from ..decorators import admin_required
-from ..models import Hike, Member
+from ..models import Member
 from ..lib.model_utils import current_active_hike
 
 mail = Blueprint('mail', __name__)
