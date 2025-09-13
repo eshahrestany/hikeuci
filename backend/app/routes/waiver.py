@@ -6,6 +6,7 @@ from .. import db
 
 hike_waiver: Blueprint = Blueprint("hike-waiver", __name__)
 
+
 @hike_waiver.route("", methods=["GET", "POST"])
 def hike_waiver_page():
     token = request.args.get("token")
@@ -34,7 +35,8 @@ def hike_waiver_page():
         return jsonify({"status": "signed"}), 200
 
     if request.method == "GET":
-        content = render_template("waiver_content.html.j2", event_description=trail.name, event_date=hike.hike_date.strftime("%A, %B %d, %Y"))
+        content = render_template("waiver_content.html.j2", event_description=trail.name,
+                                  event_date=hike.hike_date.strftime("%A, %B %d, %Y"))
         return jsonify({"status": "ready", "content": content}), 200
     elif request.method == "POST":
         form_data = request.json
@@ -75,7 +77,10 @@ def hike_waiver_page():
         db.session.add(waiver)
         db.session.commit()
 
+        current_app.extensions["celery"].send_task("app.tasks.generate_waiver_pdf", args=[waiver.id])
+
         return jsonify({"status": "submitted", "success": True}), 200
+
 
 @hike_waiver.route("/cancel", methods=["POST"])
 def cancel():
@@ -105,6 +110,5 @@ def cancel():
     db.session.delete(existing_signup)
     db.session.delete(magic_link)
     db.session.commit()
-
 
     return jsonify({"status": "Cancelled successfully", "success": True}), 200

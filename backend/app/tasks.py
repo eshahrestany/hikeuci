@@ -162,7 +162,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
 
 @celery_app.task(name="app.tasks.send_email")
-def send_email(email_type: str, member_id: int, hike_id, repeat=False, files=None):
+def send_email(email_type: str, member_id: int, hike_id, files=None):
     """
     Task to send a singular email. Much of the code is re-used from the batch send function.
     I've abstracted a number of these out to lib/email_helpers.py but haven't done the same 4 batches.
