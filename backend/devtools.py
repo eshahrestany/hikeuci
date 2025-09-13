@@ -31,16 +31,16 @@ from app.models import (
 def clear_db():
     """Delete in child→parent order to satisfy FKs."""
     for model in (
-            EmailTask,
-            EmailCampaign,
-            MagicLink,
-            Signup,
-            Vote,
-            Waiver,
-            Vehicle,
-            Hike,
-            Trail,
-            Member,
+        EmailTask,
+        EmailCampaign,
+        MagicLink,
+        Signup,
+        Vote,
+        Waiver,
+        Vehicle,
+        Hike,
+        Trail,
+        Member,
     ):
         db.session.query(model).delete()
     db.session.commit()
@@ -91,17 +91,18 @@ def seed_voting():
     print("Seeded 'voting' scenario.")
 
 
+
 def seed_email_vote():
     clear_db()
 
     # 3 candidate trails
     trails = [
         Trail(
-            name=f"Trail {i + 1}",
+            name=f"Trail {i+1}",
             location="Trail location",
             length_mi=round(random.uniform(3, 10), 1),
-            estimated_time_hr=random.randint(2, 8) / 2.0,
-            required_water_liters=random.randint(1, 4) / 2.0,
+            estimated_time_hr=random.randint(2, 8)/2.0,
+            required_water_liters=random.randint(1, 4)/2.0,
             difficulty=random.randint(0, 3),
             is_active_vote_candidate=True,
         )
@@ -134,6 +135,7 @@ def seed_email_vote():
     print("Seeded 'email vote campaign' scenario.")
 
 
+
 def seed_signup():
     """
     One active hike in 'signups' phase with a selected trail.
@@ -141,30 +143,60 @@ def seed_signup():
     """
     clear_db()
 
-    # 1) Trail
-    trail = Trail(
+    # 1) Trails
+    trails = [Trail(
         name="Santiago Creek Trail and Barnham Ridge",
         location="Santiago Canyon",
         length_mi=6.0,
         difficulty=2,  # Moderate
         estimated_time_hr=3.5,
-        required_water_liters=1,
-    )
-    db.session.add(trail)
+        required_water_liters=1
+    ), Trail(
+        name="Crystal Cove Loop",
+        location="Newport Coast",
+        length_mi=7.5,
+        difficulty=3,
+        estimated_time_hr=4,
+        required_water_liters=2,
+    )]
+    db.session.add_all(trails)
     db.session.commit()
 
-    # 2) Active hike in SIGNUPS phase (trail chosen)
-    hike = Hike(
-        trail_id=trail.id,
+    # 1.5) add some past hikes
+    hikes = [Hike(
+        trail_id=trails[0].id,
+        status="past",
+        phase=None,
+        voting_date=datetime.now() - timedelta(weeks=3, days=-1),
+        signup_date=datetime.now() - timedelta(weeks=3, days=-3),
+        waiver_date=datetime.now() - timedelta(weeks=3, days=-5),
+        hike_date=datetime.now() - timedelta(weeks=3, days=-7)
+    ), Hike(
+        trail_id=trails[1].id,
+        status="past",
+        phase=None,
+        voting_date=datetime.now() - timedelta(weeks=2, days=-1),
+        signup_date=datetime.now() - timedelta(weeks=2, days=-3),
+        waiver_date=datetime.now() - timedelta(weeks=2, days=-5),
+        hike_date=datetime.now() - timedelta(weeks=2, days=-7)
+    ), Hike(
+        trail_id=trails[0].id,
+        status="past",
+        phase=None,
+        voting_date=datetime.now() - timedelta(weeks=1, days=-1),
+        signup_date=datetime.now() - timedelta(weeks=1, days=-3),
+        waiver_date=datetime.now() - timedelta(weeks=1, days=-5),
+        hike_date=datetime.now() - timedelta(weeks=1, days=-6)
+    ), Hike(
+        trail_id=trails[1].id,
         status="active",
         phase="signup",
-        food_interest=random.choice([True, False]),
         voting_date=datetime.now() + timedelta(days=1),
         signup_date=datetime.now() + timedelta(days=3),
         waiver_date=datetime.now() + timedelta(days=5),
         hike_date=datetime.now() + timedelta(days=7)
-    )
-    db.session.add(hike)
+    )]
+    db.session.add_all(hikes)
     db.session.commit()
 
     # 3) ~50 members
@@ -191,7 +223,52 @@ def seed_signup():
     db.session.add_all(vehicles)
     db.session.commit()
 
-    # 5) Signups: drivers + passengers
+    # 5) Random attendance for the last two past hikes (useful for testing selection script)
+    # Build a quick lookup for each driver's vehicle
+    vehicles_by_member = {v.member_id: v for v in vehicles}
+    driver_ids = {m.id for m in drivers}
+
+    # Find the last two past hikes by date (most recent first)
+    past_sorted = sorted(
+        [h for h in hikes if h.status == "past"],
+        key=lambda h: h.hike_date,
+        reverse=True
+    )
+    recent_two = past_sorted[:2]
+
+    ATTEND_PROB = 0.35      # chance any member attended a given past hike
+    DRIVER_PROB = 0.40      # if the member is a driver, chance they acted as driver
+    SELF_PROB   = 0.10      # chance a non-driver goes as "self" instead of passenger
+
+    past_signups = []
+    for h in recent_two:
+        for m in members:
+            if random.random() < ATTEND_PROB:
+                transport_type = "passenger"
+                vehicle_id = None
+
+                if m.id in driver_ids and random.random() < DRIVER_PROB:
+                    transport_type = "driver"
+                    vehicle_id = vehicles_by_member[m.id].id
+                elif random.random() < SELF_PROB:
+                    transport_type = "self"
+
+                past_signups.append(
+                    Signup(
+                        member_id=m.id,
+                        hike_id=h.id,
+                        status="attended",          # counted by your priority logic
+                        transport_type=transport_type,
+                        vehicle_id=vehicle_id
+                    )
+                )
+
+    db.session.add_all(past_signups)
+    db.session.commit()
+
+
+    # 6) Signups: drivers + passengers
+    hike = hikes[3]
     signups = []
     for m in members:
         if m in drivers:
@@ -221,7 +298,6 @@ def seed_signup():
 
     print("Seeded 'signups' scenario.")
 
-
 def seed_email_signup():
     clear_db()
 
@@ -244,7 +320,7 @@ def seed_email_signup():
         status="active",
         phase="signup",
         voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
+        signup_date=datetime.now()+ timedelta(days=3),
         waiver_date=datetime.now() + timedelta(days=5),
         hike_date=datetime.now() + timedelta(days=7)
     )
@@ -455,7 +531,7 @@ def seed_email_waiver():
     signups = []
     i = 0
     for member in members:
-        transport_type = transports.pop(random.randint(0, len(transports) - 1))
+        transport_type = transports.pop(random.randint(0, len(transports)-1))
         if transport_type == "driver":
             new_vehicle = Vehicle(
                 member_id=member.id,
@@ -475,9 +551,9 @@ def seed_email_waiver():
             food_interest=random.choice([True, False]),
             status="confirmed",
             vehicle_id=
-            Vehicle.query.filter_by(member_id=member.id).first().id
-            if transport_type == "driver"
-            else None
+                Vehicle.query.filter_by(member_id=member.id).first().id
+                if transport_type == "driver"
+                else None
         ))
         i += 1
 
