@@ -2,6 +2,16 @@ import random
 from typing import List
 from ..models import Hike, Signup, Vehicle
 
+def calc_passenger_capacity(drivers: List[Signup]) -> int:
+    """Returns a list of signup ids to set as confirmed, and a list of signup ids to set as waitlisted in order
+    (first item is first on the waistlist)"""
+    vehicle_ids = [d.vehicle_id for d in drivers if d.vehicle_id]
+    if not vehicle_ids:
+        return 0
+    vehicles = Vehicle.query.filter(Vehicle.id.in_(vehicle_ids)).all()
+    cap_by_id = {v.id: v.passenger_seats for v in vehicles}
+    return sum(cap_by_id.get(d.vehicle_id, 0) for d in drivers)
+
 
 def run(hike_id: int) -> tuple[List[int], List[int]]:
     current_hike = Hike.query.get(hike_id)
@@ -14,13 +24,13 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
 
     past_hikes = (Hike.query
                   .filter(Hike.hike_date < current_hike.hike_date)
+                  .filter(Hike.id != current_hike.id)
                   .order_by(Hike.hike_date.desc())
                   .limit(2)
                   .all()
                   )
 
-    passenger_capacity = sum([Vehicle.query.get(d.vehicle_id).passenger_capacity for d in pending_drivers])
-    print(passenger_capacity)
+    passenger_capacity = calc_passenger_capacity(pending_drivers)
 
     # drivers and self-transports are always confirmed
     confirmed += [d.id for d in pending_drivers]
@@ -36,10 +46,10 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
             while len(pending_passengers) > 0:
                 chosen_passenger = pending_passengers.pop(random.randrange(len(pending_passengers)))
                 if passenger_capacity > 0:
-                    confirmed.append(chosen_passenger)
+                    confirmed.append(chosen_passenger.id)
                     passenger_capacity -= 1
                 else:
-                    waitlisted.append(chosen_passenger)
+                    waitlisted.append(chosen_passenger.id)
 
         elif len(past_hikes) == 1:
             # only data available from 1 previous hike
@@ -50,7 +60,7 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
             did_last = []
 
             for p in list(pending_passengers):  # iterate over a copy
-                went_last = Signup.query.filter_by(member_id=p.id, hike_id=last_id).first() is not None
+                went_last = Signup.query.filter_by(member_id=p.member_id, hike_id=last_id).first() is not None
                 if went_last:
                     did_last.append(p)
                 else:
@@ -65,10 +75,10 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
 
             for p in ordered:
                 if passenger_capacity > 0:
-                    confirmed.append(p)
+                    confirmed.append(p.id)
                     passenger_capacity -= 1
                 else:
-                    waitlisted.append(p)
+                    waitlisted.append(p.id)
 
             pending_passengers.clear()
 
@@ -85,8 +95,8 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
             attended_last = []
 
             for p in list(pending_passengers):
-                went_last = Signup.query.filter_by(member_id=p.id, hike_id=last_id).first() is not None
-                went_two_ago = Signup.query.filter_by(member_id=p.id, hike_id=two_ago_id).first() is not None
+                went_last = Signup.query.filter_by(member_id=p.member_id, hike_id=last_id).first() is not None
+                went_two_ago = Signup.query.filter_by(member_id=p.member_id, hike_id=two_ago_id).first() is not None
 
                 if not went_last and not went_two_ago:
                     missed_both.append(p)
@@ -104,10 +114,10 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
 
             for p in ordered:
                 if passenger_capacity > 0:
-                    confirmed.append(p)
+                    confirmed.append(p.id)
                     passenger_capacity -= 1
                 else:
-                    waitlisted.append(p)
+                    waitlisted.append(p.id)
 
             pending_passengers.clear()
 

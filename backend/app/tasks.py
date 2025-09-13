@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 import pymupdf
 from make_celery import celery_app
@@ -299,27 +299,28 @@ def check_and_update_phase():
 
     now = datetime.now()
 
-    if ah.phase is None:  # hike has just been created
-        if ah.voting_date is not None:  # will this hike have a vote?
-            if now >= ah.voting_date:
-                phases.initiate_vote_phase(ah)
-                #start_email_campaign(ah.id)
+    match ah.phase:
+        case None:  # hike has just been created
+            if ah.voting_date is not None:  # will this hike have a vote?
+                if now >= ah.voting_date:
+                    phases.initiate_vote_phase(ah)
+                    #start_email_campaign(ah.id)
 
-        else:  # no vote, skip to signup phase
+            else:  # no vote, skip to signup phase
+                if now >= ah.signup_date:
+                    phases.initiate_signup_phase(ah)
+                    #start_email_campaign(ah.id)
+
+        case "voting":
             if now >= ah.signup_date:
                 phases.initiate_signup_phase(ah)
                 #start_email_campaign(ah.id)
 
-    elif ah.phase == "voting":
-        if now >= ah.signup_date:
-            phases.initiate_signup_phase(ah)
-            #start_email_campaign(ah.id)
+        case "signup":
+            if now >= ah.waiver_date:
+                phases.initiate_waiver_phase(ah)
+                #start_email_campaign(ah.id)
 
-    elif ah.phase == "signup":
-        if now >= ah.waiver_date:
-            phases.initiate_waiver_phase(ah)
-            #start_email_campaign(ah.id)
-
-    elif ah.phase == "waiver":
-        if now >= ah.hike_date + current_app.config.get("HIKE_RESET_TIME_HR"):
-            phases.complete_hike(ah)
+        case "waiver":
+            if now >= ah.hike_date + timedelta(hours=current_app.config.get("HIKE_RESET_TIME_HR")):
+                phases.complete_hike(ah)

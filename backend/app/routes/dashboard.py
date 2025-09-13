@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import and_, func
 
 from .. import db
@@ -247,6 +247,19 @@ def modify_user():
 
     member.name = name
     signup.transport_type = transport_type
+
+    if signup.status == "waitlisted":
+        signup.status = "confirmed"
+        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+
+    if signup.transport_type == "driver":
+        capacity = Vehicle.query.get(signup.vehicle_id).passenger_seats
+        waitlist = list(Signup.query.with_entities(Signup.id).filter_by(hike_id=hike.id, status="waitlisted"))
+        while capacity > 0 and len(waitlist) > 0:
+            s = Signup.query.get(waitlist.pop(0))
+            s.status = "confirmed"
+            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", s.member_id, hike.id])
+            capacity -= 1
 
     db.session.commit()
     return jsonify(success=True), 200

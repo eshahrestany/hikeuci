@@ -257,6 +257,7 @@ def seed_signup():
                     Signup(
                         member_id=m.id,
                         hike_id=h.id,
+                        food_interest=random.choice([True, False]),
                         status="attended",          # counted by your priority logic
                         transport_type=transport_type,
                         vehicle_id=vehicle_id

@@ -1,7 +1,7 @@
 """ Scripts that run at the turn of a phase """
 
 import random
-from ..models import Hike, Trail, Vote, Signup
+from ..models import Hike, Trail, Vote, Signup, MagicLink
 from .. import db
 from . import selection_algorithm
 
@@ -28,8 +28,6 @@ def initiate_signup_phase(ah: Hike):
         top_ids = [tid for tid, c in counts.items() if c == top]
         winner = Trail.query.get(random.choice(top_ids))
 
-        # votes will be deleted once complete_hike is called later on
-
         ah.trail_id = winner.id
         for trail in candidates:
             trail.is_active_vote_candidate = False
@@ -43,12 +41,28 @@ def initiate_waiver_phase(ah):
     if ah.phase != "signup":
         raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot start waiver phase")
 
-    selection_algorithm.run(ah.id)
+    confirmed, waitlisted = selection_algorithm.run(ah.id)
     ah.phase = "waiver"
+    ah.email_campaign_completed = False
+    # update signups
+    print(f"confirmed signup IDs: {confirmed}")
+    print(f"waitlisted signup IDs: {waitlisted}")
+    Signup.query.filter(Signup.id.in_(confirmed)).update({Signup.status: "confirmed"}, synchronize_session='auto')
+
+    for pos, sid in enumerate(waitlisted, 1):
+        s = Signup.query.get(sid)
+        s.status = "waitlisted"
+        s.waitlist_pos = pos
+
+    db.session.commit()
 
 
 def complete_hike(ah):
     if ah.phase != "waiver":
         raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot mark hike as completed")
 
-    Vote.query.filter_by(hike_id=ah.id).delete()
+    MagicLink.query.filter_by(hike_id=ah.id).delete()
+
+    ah.status = "past"
+    ah.phase = None
+    db.session.commit()
