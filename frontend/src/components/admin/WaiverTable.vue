@@ -59,8 +59,9 @@ function modifyRow(user) {
 }
 
 function resendEmail(user) {
-  postWithAuth('/mail/resend-waiver', {
-    user_id: user.member_id
+  postWithAuth('/mail/resend', {
+    email_type: "waiver",
+    member_id: user.member_id
   })
     .then(res => {
       if (!res.ok) throw new Error('Failed to resend email')
