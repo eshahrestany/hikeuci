@@ -272,7 +272,6 @@ def generate_waiver_pdf(waiver_id, email_user=True):
     doc.bake()
 
     pdf_bytes = doc.write(deflate=True, clean=True, garbage=4)
-    waiver.pdf_bytes = pdf_bytes
     db.session.commit()
 
     doc.close()
