@@ -16,6 +16,7 @@ EMAIL_SUBJECTS = {
     "voting": "Vote for this week's hike",
     "signup": "Sign up for this week's hike",
     "waiver": "Complete your hike waiver",
+    "waiver_confirmation": "Completed: Your hike waiver"
 }
 
 
@@ -25,10 +26,6 @@ def render_email_batch(email_type, hike: Hike):
     """
 
     batch = {}
-
-    # Transactional Emails
-    if email_type == "waiver_confirmation":
-        raise NotImplementedError()
 
     if email_type == "voting":
         trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
@@ -55,7 +52,7 @@ def render_email_batch(email_type, hike: Hike):
         # good to go
         return _render_email_batch(email_type, batch)
 
-    elif email_type == "waiver":
+    elif email_type in ["waiver", "waiver_confirmation"]:
         # added data
         batch["hike_trail_gmap_link"] = trail.trailhead_gmaps_endpoint
         batch["hike_trail_amap_link"] = trail.trailhead_amaps_endpoint
@@ -66,7 +63,7 @@ def render_email_batch(email_type, hike: Hike):
         raise ValueError(f"Email type {email_type} not recognized")
 
 
-def _render_email_batch(email_type: str, batch) -> Tuple:
+def _render_email_batch(email_type: str, batch: dict) -> Tuple:
     subject = EMAIL_SUBJECTS.get(email_type)
     text_body = env.get_template(f"email/{email_type}.txt.j2")
     html_body = env.get_template(f"email/{email_type}.html.j2")

@@ -22,7 +22,7 @@
                             <p style="margin:0 0 12px;"><strong>Important:</strong> {{ batch.description }}</p>
                         {% endif %}
 
-                        {% if batch.transport_type == "passenger" %}
+                        {% if personalization.transport_type == "passenger" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as a <strong>passenger</strong>. Carpools will be arranged once everyone
                                 arrives at the
@@ -31,7 +31,7 @@
                                 <strong>15 minutes early</strong> to check in. Thanks for being punctual—many folks have
                                 commitments after the hike.
                             </p>
-                        {% elif batch.transport_type == "driver" %}
+                        {% elif personalization.transport_type == "driver" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as a <strong>driver</strong>. Please arrive at the Chick-fil-A/Chipotle
                                 area in UTC
@@ -45,7 +45,7 @@
                                 as soon as possible
                                 so we can arrange another driver if needed.
                             </p>
-                        {% elif batch.transport_type == "self" %}
+                        {% elif personalization.transport_type == "self" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as <strong>self-transport</strong>. Please arrive at the trailhead on
                                 time.
@@ -62,7 +62,7 @@
                         </p>
 
                         <p style="margin:0 0 20px;">
-                            <a href="{{ batch.magic_url }}"
+                            <a href="{{ personalization.magic_url }}"
                                style="display:inline-block;text-decoration:none;padding:12px 18px;border-radius:6px;
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Sign Waiver</a>
                         </p>

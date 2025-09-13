@@ -1,13 +1,16 @@
 import time
 from datetime import datetime
 from typing import List
+
+import pymupdf
 from make_celery import celery_app
 from flask import current_app
 from . import db
-from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike
+from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike, Waiver
 from .lib.email_connection import EmailConnection
 from .lib.email_templates import render_email_batch
-from .lib.email_utils import get_personalization
+from .lib.email_utils import get_personalization, EmailFile
+from .lib.pdftools import fill_signature, fill_text_rich
 
 
 def start_email_campaign(hike_id: int) -> int:
@@ -97,7 +100,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     hike = Hike.query.get(hike_id)
 
     # modularize email template w/ static batch data
-    subj, text_body_mod, html_body_mod, batch = render_email_batch(email_type, hike)
+    subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
 
     sent_total = failed_total = 0
     conn = EmailConnection()
@@ -126,8 +129,8 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
                 # Render modules to personalized emails
                 personalization = get_personalization(email_type, hike, member)
-                text_body = text_body_mod.email(personalization, batch)
-                html_body = html_body_mod.email(personalization, batch)
+                text_body = text_body_mod.email(personalization, batch_text)
+                html_body = html_body_mod.email(personalization, batch_text)
 
                 # send the email
                 result = conn.send(to_email, subj, text_body, html_body)
@@ -159,7 +162,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
 
 @celery_app.task(name="app.tasks.send_email")
-def send_email(email_type: str, member_id: int, hike_id, repeat=False):
+def send_email(email_type: str, member_id: int, hike_id, repeat=False, files=None):
     """
     Task to send a singular email. Much of the code is re-used from the batch send function.
     I've abstracted a number of these out to lib/email_helpers.py but haven't done the same 4 batches.
@@ -175,23 +178,117 @@ def send_email(email_type: str, member_id: int, hike_id, repeat=False):
     if not member:
         raise ValueError("invalid member_id")
 
+    if files:  # deserialize files back to EmailFile classes
+        files = [EmailFile.from_dict(file) for file in files]
+
     # modularize email template w/ static batch data
-    subj, text_body_mod, html_body_mod, batch = render_email_batch(email_type, hike)
+    subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
 
     # render modules
     personalization = get_personalization(email_type, hike, member)
-    text_body = text_body_mod.email(personalization, batch)
-    html_body = html_body_mod.email(personalization, batch)
+    text_body = text_body_mod.email(personalization, batch_text)
+    html_body = html_body_mod.email(personalization, batch_text)
 
     conn = EmailConnection()
 
     with conn.connect() as server:
         to_email = getattr(member, "email", None)
 
-        res = conn.send(to_email, subj, text_body, html_body)
+        res = conn.send(to_email, subj, text_body, html_body, files=files)
 
         if not res:
             current_app.logger.exception(
                 f"{email_type} email send failed for member_id=%s (attempt 1/1)",
                 member.id
             )
+
+
+@celery_app.task(name="app.tasks.generate_waiver_pdf")
+def generate_waiver_pdf(waiver_id, email_user=True):
+    waiver = Waiver.query.get(waiver_id)
+    if not waiver:
+        raise ValueError("invalid waiver_id")
+
+    member = Member.query.get(waiver.member_id)
+    if not member:
+        raise ValueError("invalid waiver.member_id")
+
+    hike = Hike.query.get(waiver.hike_id)
+    if not hike:
+        raise ValueError("invalid waiver.hike_id")
+
+    trail = Trail.query.get(hike.trail_id)
+
+    doc = pymupdf.open("app/templates/waiver_fillable.pdf")
+    page = doc.load_page(0)  # single-page document
+
+    # Always will be filled:
+    fill_text_rich(page,
+                   "fname",
+                   waiver.print_name,
+                   font_size=16
+                   )
+    fill_text_rich(page,
+                   "event_description",
+                   f"PARTICIPANT SPORTING EVENT DESCRIPTION: <b>{trail.name.title()}</b>"
+                   )
+    fill_text_rich(page,
+                   "event_date",
+                   f"SPORTING EVENT DATE: <b>{hike.hike_date.strftime('%A %B %d, %Y')}</b>"
+                   )
+
+    if waiver.is_minor:
+        fill_signature(doc, "sig1_minor", waiver.signature_1_b64.split(",")[1])
+        fill_signature(doc, "sig2_minor", waiver.signature_2_b64.split(",")[1])
+        fill_text_rich(page,
+                       "date1_minor",
+                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       font_size=12
+                       )
+        fill_text_rich(page,
+                       "date2_minor",
+                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       font_size=12
+                       )
+        fill_text_rich(page,
+                       "age",
+                       str(waiver.age)
+                       )
+    else:
+        fill_signature(doc, "sig1_user", waiver.signature_1_b64.split(",")[1])
+        fill_signature(doc, "sig2_user", waiver.signature_2_b64.split(",")[1])
+        fill_text_rich(page,
+                       "date1_user",
+                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       font_size=12
+                       )
+        fill_text_rich(page,
+                       "date2_user",
+                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       font_size=12
+                       )
+
+    # flatten, save, and commit pdf to DB
+    doc.bake()
+
+    pdf_bytes = doc.write(deflate=True, clean=True, garbage=4)
+    waiver.pdf_bytes = pdf_bytes
+    db.session.commit()
+
+    doc.close()
+
+    # Send email, unless send_email is false
+    if not send_email:
+        return
+
+    pdf_file = EmailFile(
+        file_bytes=pdf_bytes,
+        filename=f"{member.name.title()} - {trail.name.title()} {hike.hike_date.strftime('%m-%d-%Y')}",
+        maintype="application",
+        subtype="pdf",
+    )
+
+    files = [pdf_file.to_dict()]  # place in list and serialize for entry as celery task
+
+    # Call email send task
+    send_email.delay("waiver_confirmation", member.id, hike.id, files=files)

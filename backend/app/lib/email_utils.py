@@ -1,5 +1,16 @@
+import base64
+import mimetypes
+from dataclasses import dataclass
+from pathlib import Path
+
 from ..models import Member, MagicLink, Signup, Hike, Vote
 from flask import current_app
+
+endpoint_dict = {
+    "voting": "vote",
+    "signup": "signup",
+    "waiver": "waiver"
+}
 
 
 def flatten_num(x: float or int) -> float or int:
@@ -27,24 +38,29 @@ def get_personalization(email_type, hike: Hike, member: Member):
         "name": member.name,
     }
 
+    base_url = current_app.config.get("BASE_URL", "").rstrip("/")
+
     # Transactional Emails
     if email_type == "waiver_confirmation":
-        raise NotImplementedError()
+        # re-use old (consumed) magic-url for cancellations
+        ml = (MagicLink.query.filter_by
+              (member_id=member.id,
+               hike_id=hike.id,
+               type="waiver")
+              .first())
 
-    # Access-Protected Emails (Needs Magic Link)
+        personalization["magic_url"] = f"{base_url}/{endpoint_dict['waiver']}?token={ml.token}"
 
-    # First check for existing ML. Clear it and associated data if found.
-    _remove_magic_link(member.id, hike.hike_id, email_type)
+        return personalization
 
+    # Access-Protected Emails (Needs new magic link)
+
+    # First check for existing ML. Clear it if found.
+    _remove_magic_link(member.id, hike.id, email_type)
+
+    # Then, generate new ML.
     mlm = current_app.extensions.get("magic_link_manager")
     token = mlm.generate(member_id=member.id, hike_id=hike.id, type=email_type)
-
-    base_url = current_app.config.get("BASE_URL", "").rstrip("/")
-    endpoint_dict = {
-        "voting": "vote",
-        "signup": "signup",
-        "waiver": "waiver"
-    }
 
     personalization["magic_url"] = f"{base_url}/{endpoint_dict[email_type]}?token={token}"
 
@@ -60,3 +76,53 @@ def get_personalization(email_type, hike: Hike, member: Member):
 
     else:
         raise Exception(f"Unknown email type: {email_type}")
+
+
+@dataclass
+class EmailFile:
+    filename: str
+    file_bytes: bytes
+    maintype: str = "application"
+    subtype: str = "octet-stream"
+    disposition: str = "inline"   # or "attachment"
+    cid: str | None = None        # for inline images, e.g. Content-ID
+
+    def to_dict(self) -> dict:
+        return {
+            "filename": self.filename,
+            "maintype": self.maintype,
+            "subtype": self.subtype,
+            "disposition": self.disposition,
+            "cid": self.cid,
+            # JSON-safe: bytes -> base64 string
+            "file_b64": base64.b64encode(self.file_bytes).decode("ascii"),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "EmailFile":
+        return cls(
+            filename=data["filename"],
+            file_bytes=base64.b64decode(data["file_b64"]),
+            maintype=data.get("maintype", "application"),
+            subtype=data.get("subtype", "octet-stream"),
+            disposition=data.get("disposition", "inline"),
+            cid=data.get("cid"),
+        )
+
+    @classmethod
+    def from_path(cls, path: str | Path, *, disposition: str = "attachment", cid: str | None = None) -> "EmailFile":
+        path = Path(path)
+        file_bytes = path.read_bytes()
+        mime, _ = mimetypes.guess_type(str(path))
+        if mime:
+            maintype, subtype = mime.split("/", 1)
+        else:
+            maintype, subtype = "application", "octet-stream"
+        return cls(
+            filename=path.name,
+            file_bytes=file_bytes,
+            maintype=maintype,
+            subtype=subtype,
+            disposition=disposition,
+            cid=cid,
+        )
