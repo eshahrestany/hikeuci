@@ -31,16 +31,16 @@ from app.models import (
 def clear_db():
     """Delete in child→parent order to satisfy FKs."""
     for model in (
-        EmailTask,
-        EmailCampaign,
-        MagicLink,
-        Signup,
-        Vote,
-        Waiver,
-        Vehicle,
-        Hike,
-        Trail,
-        Member,
+            EmailTask,
+            EmailCampaign,
+            MagicLink,
+            Signup,
+            Vote,
+            Waiver,
+            Vehicle,
+            Hike,
+            Trail,
+            Member,
     ):
         db.session.query(model).delete()
     db.session.commit()
@@ -91,18 +91,17 @@ def seed_voting():
     print("Seeded 'voting' scenario.")
 
 
-
 def seed_email_vote():
     clear_db()
 
     # 3 candidate trails
     trails = [
         Trail(
-            name=f"Trail {i+1}",
+            name=f"Trail {i + 1}",
             location="Trail location",
             length_mi=round(random.uniform(3, 10), 1),
-            estimated_time_hr=random.randint(2, 8)/2.0,
-            required_water_liters=random.randint(1, 4)/2.0,
+            estimated_time_hr=random.randint(2, 8) / 2.0,
+            required_water_liters=random.randint(1, 4) / 2.0,
             difficulty=random.randint(0, 3),
             is_active_vote_candidate=True,
         )
@@ -133,7 +132,6 @@ def seed_email_vote():
     db.session.commit()
 
     print("Seeded 'email vote campaign' scenario.")
-
 
 
 def seed_signup():
@@ -223,6 +221,7 @@ def seed_signup():
 
     print("Seeded 'signups' scenario.")
 
+
 def seed_email_signup():
     clear_db()
 
@@ -245,7 +244,7 @@ def seed_email_signup():
         status="active",
         phase="signup",
         voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now()+ timedelta(days=3),
+        signup_date=datetime.now() + timedelta(days=3),
         waiver_date=datetime.now() + timedelta(days=5),
         hike_date=datetime.now() + timedelta(days=7)
     )
@@ -456,7 +455,7 @@ def seed_email_waiver():
     signups = []
     i = 0
     for member in members:
-        transport_type = transports.pop(random.randint(0, len(transports)-1))
+        transport_type = transports.pop(random.randint(0, len(transports) - 1))
         if transport_type == "driver":
             new_vehicle = Vehicle(
                 member_id=member.id,
@@ -476,9 +475,9 @@ def seed_email_waiver():
             food_interest=random.choice([True, False]),
             status="confirmed",
             vehicle_id=
-                Vehicle.query.filter_by(member_id=member.id).first().id
-                if transport_type == "driver"
-                else None
+            Vehicle.query.filter_by(member_id=member.id).first().id
+            if transport_type == "driver"
+            else None
         ))
         i += 1
 

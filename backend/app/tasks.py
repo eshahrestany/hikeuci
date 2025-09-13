@@ -3,26 +3,16 @@ from datetime import datetime
 from typing import List
 from make_celery import celery_app
 from flask import current_app
-
 from . import db
 from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike
 from .lib.email_connection import EmailConnection
-from .lib.email_templates import render_phase_email
+from .lib.email_templates import render_email_batch
+from .lib.email_utils import get_personalization
 
-
-def flatten_num(x: float or int) -> float or int:
-    """
-    If x is a float and represents an integer value (e.g., 3.0), return it as an int.
-    Otherwise, return x unchanged.
-    This is useful for displaying numbers in emails without unnecessary decimal points.
-    """
-    if isinstance(x, float) and x.is_integer():
-        return int(x)
-    return x
 
 def start_email_campaign(hike_id: int) -> int:
     """
-    Create a new email campaign based on the provided hike's phase,
+    Create a new email campaign based on the provided hike's email_type,
     clear & repopulate EmailTask with one row per member,
     clear previous MagicLinks, and pre-generate a MagicLink for each member.
     Finally, enqueue the Celery batch sender.
@@ -31,12 +21,12 @@ def start_email_campaign(hike_id: int) -> int:
     hike = Hike.query.get(hike_id)
     if hike.status != "active":
         raise RuntimeError("Can only start email campaigns for active hikes")
-    phase = hike.phase
+    email_type = hike.phase
     if hike.email_campaign_completed:
-        raise RuntimeError(f"{phase} phase email campaign already completed for this hike")
+        raise RuntimeError(f"{email_type} phase email campaign already completed for this hike")
 
     # 1) Create campaign
-    campaign = EmailCampaign(hike_id=hike_id, type=phase, date_created=datetime.now())
+    campaign = EmailCampaign(hike_id=hike_id, type=email_type, date_created=datetime.now())
     db.session.add(campaign)
     db.session.commit()
 
@@ -49,9 +39,8 @@ def start_email_campaign(hike_id: int) -> int:
     db.session.commit()
 
     # 4) Populate tasks from all members
-    mlm = current_app.extensions.get("magic_link_manager")
 
-    if phase in ("voting", "signup"):
+    if email_type in ("voting", "signup"):
         members: List[Member] = Member.query.all()
     else:
         # send waivers only to confirmed hikers
@@ -80,10 +69,6 @@ def start_email_campaign(hike_id: int) -> int:
             )
         )
 
-        mlm.generate(member_id=m.id, hike_id=hike_id, type=phase)
-        if phase == "waiver":
-            mlm.generate(member_id=m.id, hike_id=hike_id, type="modify")
-
     if tasks:
         db.session.add_all(tasks)
         db.session.commit()
@@ -91,7 +76,6 @@ def start_email_campaign(hike_id: int) -> int:
     # 4) Kick off Celery
     batch_send_emails.delay(campaign_id=campaign.id, hike_id=hike_id)
     return campaign.id
-
 
 
 @celery_app.task(name="app.tasks.batch_send_emails")
@@ -109,15 +93,12 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     batch_pause_sec = float(cfg.get("MAIL_BATCH_PAUSE_SEC", 0.0))
 
     camp = EmailCampaign.query.get(campaign_id)
-    phase = camp.type
+    email_type = camp.type
     hike = Hike.query.get(hike_id)
-    trail = Trail.query.get(hike.trail_id) if phase != "voting" else None
 
-    if phase == "voting":
-        trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
-        trails = [{"name": t.name,
-                   "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
-                  for t in trail_options]
+    # modularize email template w/ static batch data
+    subj, text_body_mod, html_body_mod, batch = render_email_batch(email_type, hike)
+
     sent_total = failed_total = 0
     conn = EmailConnection()
 
@@ -141,65 +122,12 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                     db.session.commit()
                     break
 
-                ml = MagicLink.query.filter_by(member_id=member.id, hike_id=hike_id, type=phase).first()
-                if not ml:
-                    email_task.status = "failed"
-                    db.session.commit()
-                    break
-
-                name = getattr(member, "name", None)
                 to_email = getattr(member, "email", None)
-                base_url = current_app.config.get("BASE_URL", "").rstrip("/")
-                endpoint_dict = {
-                    "voting": "vote",
-                    "signup": "signup",
-                    "waiver": "waiver"
-                }
-                magic_url = f"{base_url}/{endpoint_dict[phase]}?token={ml.token}"
-                if phase == "waiver":
-                    signup = Signup.query.filter_by(hike_id=hike_id, member_id=member.id).first()
 
-                # Render the correct phase template with the necessary context
-                if phase == "voting":
-                    subj, text_body, html_body = render_phase_email(
-                        phase,
-                        member_name=name,
-                        magic_url=magic_url,
-                        trails=trails,
-                    )
-                elif phase == "signup":
-                    subj, text_body, html_body = render_phase_email(
-                        phase,
-                        member_name=name,
-                        magic_url=magic_url,
-                        hike_day=hike.hike_date.strftime("%A %-m/%-d"),
-                        hike_time=hike.hike_date.strftime("%-I:%M %p"),
-                        hike_trail_name=trail.name,
-                        hike_town_name=trail.location,
-                        hike_length_mi=flatten_num(trail.length_mi),
-                        hike_estimated_time_hr=flatten_num(trail.estimated_time_hr),
-                        hike_difficulty=current_app.config["DIFFICULTY_INDEX"][trail.difficulty],
-                        num_liters=flatten_num(trail.required_water_liters),
-                        description=trail.description,
-                    )
-                elif phase == "waiver":
-                    subj, text_body, html_body = render_phase_email(
-                        phase,
-                        member_name=name,
-                        transport_type=signup.transport_type,
-                        magic_url=magic_url,
-                        hike_trail_gmap_link=trail.trailhead_gmaps_endpoint,
-                        hike_trail_amap_link=trail.trailhead_amaps_endpoint,
-                        hike_day=hike.hike_date.strftime("%A %-m/%-d"),
-                        hike_time=hike.hike_date.strftime("%-I:%M %p"),
-                        hike_trail_name=trail.name,
-                        hike_town_name=trail.location,
-                        hike_length_mi=flatten_num(trail.length_mi),
-                        hike_estimated_time_hr=flatten_num(trail.estimated_time_hr),
-                        hike_difficulty=current_app.config["DIFFICULTY_INDEX"][trail.difficulty],
-                        num_liters=flatten_num(trail.required_water_liters),
-                        description=trail.description,
-                    )
+                # Render modules to personalized emails
+                personalization = get_personalization(email_type, hike, member)
+                text_body = text_body_mod.email(personalization, batch)
+                html_body = html_body_mod.email(personalization, batch)
 
                 # send the email
                 result = conn.send(to_email, subj, text_body, html_body)
@@ -216,7 +144,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                     db.session.commit()
                     failed_total += 1
                     current_app.logger.exception(
-                        f"{phase} email send failed for member_id=%s (attempt %s/%s)",
+                        f"{email_type} email send failed for member_id=%s (attempt %s/%s)",
                         member.id, email_task.attempts, max_attempts
                     )
 
@@ -228,3 +156,42 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     db.session.commit()
 
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}
+
+
+@celery_app.task(name="app.tasks.send_email")
+def send_email(email_type: str, member_id: int, hike_id, repeat=False):
+    """
+    Task to send a singular email. Much of the code is re-used from the batch send function.
+    I've abstracted a number of these out to lib/email_helpers.py but haven't done the same 4 batches.
+
+    we're in a time crunch tho :(
+
+    -GD
+    """
+    hike = Hike.query.get(hike_id)
+    member = Member.query.get(member_id)
+    if not hike:
+        raise ValueError("invalid hike_id")
+    if not member:
+        raise ValueError("invalid member_id")
+
+    # modularize email template w/ static batch data
+    subj, text_body_mod, html_body_mod, batch = render_email_batch(email_type, hike)
+
+    # render modules
+    personalization = get_personalization(email_type, hike, member)
+    text_body = text_body_mod.email(personalization, batch)
+    html_body = html_body_mod.email(personalization, batch)
+
+    conn = EmailConnection()
+
+    with conn.connect() as server:
+        to_email = getattr(member, "email", None)
+
+        res = conn.send(to_email, subj, text_body, html_body)
+
+        if not res:
+            current_app.logger.exception(
+                f"{email_type} email send failed for member_id=%s (attempt 1/1)",
+                member.id
+            )
