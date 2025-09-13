@@ -1,0 +1,27 @@
+{% macro email(personalization, batch) -%}
+Hello {{ personalization.name }}!
+
+Thank you for filling out your waiver for the upcoming hike on {{ batch.hike_day }} at {{ batch.hike_trail_name }}.
+A copy of your waiver has been attached to this email. Please keep it for your records.
+
+If you can no longer make it, please cancel using your personal link below so that someone on the waitlist can take your spot.
+Your personal waiver link (do not share this with anyone!):
+{{ personalization.magic_url }}
+
+Google maps link to the trailhead:
+{{ batch.hike_trail_gmap_link }}
+Apple maps link to the trailhead:
+{{ batch.hike_trail_amap_link }}
+
+A couple of reminders before the hike:
+-Recommended items: water, light snack, sunscreen, hat, sunglasses, and comfortable athletic shoes to wear on the hike.
+
+See you {{ batch.hike_day }} and have a great rest of the week!
+Best,
+Hiking Club at UCI Officers
+Official UCI Campus Page: Hiking Club at UCI Campus Orgs
+Email: hikingclub@uci.edu
+Linktree: linktr.ee/hikingclubatuci
+Instagram: @hikingclubatucirvine
+Discord: discord.gg/tGwU6HeBYv
+{%- endmacro %}

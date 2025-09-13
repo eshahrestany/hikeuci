@@ -1,3 +1,4 @@
+{% macro email(personalization, batch) -%}
 <!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#f6f7f9;">
@@ -8,24 +9,24 @@
                  style="width:600px;max-width:100%;background:#ffffff;border-radius:8px;
                         padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Apple Color Emoji','Segoe UI Emoji';color:#111827;">
             <tr><td>
-              <p style="margin:0 0 12px;">Hi {{ member_name }},</p>
+              <p style="margin:0 0 12px;">Hi {{ personalization.name }},</p>
 
               <p style="margin:0 0 12px;">
-                This {{ hike_day }} at {{ hike_time }} we’ll be hiking <strong>{{ hike_trail_name }}</strong> in <strong>{{ hike_town_name }}</strong>.
-                The route is approximately <strong>{{ hike_length_mi }}</strong> miles and should take about
-                <strong>{{ hike_estimated_time_hr }}</strong> hours to complete. This hike is classified as
-                <strong>{{ hike_difficulty }}</strong>.
+                This {{ batch.hike_day }} at {{ batch.hike_time }} we’ll be hiking <strong>{{ batch.hike_trail_name }}</strong> in <strong>{{ batch.hike_town_name }}</strong>.
+                The route is approximately <strong>{{ batch.hike_length_mi }}</strong> miles and should take about
+                <strong>{{ batch.hike_estimated_time_hr }}</strong> hours to complete. This hike is classified as
+                <strong>{{ batch.hike_difficulty }}</strong>.
               </p>
-              {% if description %}
+              {% if batch.description %}
                   <p style="margin:0 0 12px;">
-                      <strong>Important: </strong>{{ description }}
+                      <strong>Important: </strong>{{ batch.description }}
                   </p>
               {% endif %}
               <p style="margin:0 0 12px;">
                 Please bring enough water. A good rule of thumb is
                 ~1 liter every 2 hours. For this hike, we recommend bringing
-                <strong>{{ num_liters }}</strong>
-                {% if num_liters == 1 %}liter{% else %}liters{% endif %}.
+                <strong>{{ batch.num_liters }}</strong>
+                {% if batch.num_liters == 1 %}liter{% else %}liters{% endif %}.
                 We will check that you have water with you. If you do not, we’ll ask you to purchase some (e.g., at Target),
                 or you may not be allowed to join for safety reasons (heat/dehydration).
               </p>
@@ -48,7 +49,7 @@
               </p>
 
               <p style="margin:0 0 20px;">
-                <a href="{{ magic_url }}"
+                <a href="{{ personalization.magic_url }}"
                    style="display:inline-block;text-decoration:none;padding:12px 18px;border-radius:6px;
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Sign Up</a>
               </p>
@@ -104,3 +105,4 @@
     </table>
   </body>
 </html>
+{%- endmacro %}

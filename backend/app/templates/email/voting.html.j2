@@ -1,3 +1,4 @@
+{% macro email(personalization, batch) -%}
 <!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#f6f7f9;">
@@ -8,19 +9,19 @@
                  style="width:600px;max-width:100%;background:#ffffff;border-radius:8px;
                         padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Apple Color Emoji','Segoe UI Emoji';color:#111827;">
             <tr><td>
-              <p style="margin:0 0 12px;">Hi {{ member_name }},</p>
+              <p style="margin:0 0 12px;">Hi {{ personalization.name }},</p>
 
               <p style="margin:0 0 12px;">It’s time to <strong>vote for this week’s hike</strong>! Your single-use link is below:</p>
 
               <p style="margin:0 0 20px;">
-                <a href="{{ magic_url }}"
+                <a href="{{ personalization.magic_url }}"
                    style="display:inline-block;text-decoration:none;padding:12px 18px;border-radius:6px;
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Vote Here</a>
               </p>
 
               <p style="margin:0 0 8px;"><strong>Trail options</strong>:</p>
               <ul style="padding-left:20px;margin:0 0 16px;">
-                {% for t in trails %}
+                {% for t in batch.trails %}
                   <li style="margin:0 0 6px">{{ t.name }}{% if t.difficulty %} <span style="color:#6b7280">({{ t.difficulty }})</span>{% endif %}</li>
                 {% endfor %}
               </ul>
@@ -67,3 +68,4 @@
     </table>
   </body>
 </html>
+{%- endmacro %}
