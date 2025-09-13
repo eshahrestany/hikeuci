@@ -15,7 +15,7 @@ from .lib.pdftools import fill_signature, fill_text_rich
 
 def start_email_campaign(hike_id: int) -> int:
     """
-    Create a new email campaign based on the provided hike's email_type,
+    Create a new email campaign based on the provided hike's phase,
     clear & repopulate EmailTask with one row per member,
     clear previous MagicLinks, and pre-generate a MagicLink for each member.
     Finally, enqueue the Celery batch sender.
