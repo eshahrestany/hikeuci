@@ -7,3 +7,5 @@
 /frontend/.env
 /frontend/dist
 /backend/celerybeat-schedule.db
+/backend/app/templates/.j2cache/*
+!/backend/app/templates/.j2cache/readme.txt
