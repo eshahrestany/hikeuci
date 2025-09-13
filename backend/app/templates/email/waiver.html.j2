@@ -1,3 +1,4 @@
+{% macro email(personalization, batch) -%}
 <!doctype html>
 <html>
 <body style="margin:0;padding:0;background:#f6f7f9;">
@@ -10,31 +11,31 @@
                 <tr>
                     <td>
 
-                        <p style="margin:0 0 12px;">Hello {{ member_name }}!</p>
+                        <p style="margin:0 0 12px;">Hello {{ personalization.name }}!</p>
 
                         <p style="margin:0 0 12px;">
-                            You’re on our list for the upcoming hike on <strong>{{ hike_day }}</strong> at
-                            <strong>{{ hike_trail_name }}</strong>.
+                            You’re on our list for the upcoming hike on <strong>{{ batch.hike_day }}</strong> at
+                            <strong>{{ batch.hike_trail_name }}</strong>.
                         </p>
 
-                        {% if description %}
-                            <p style="margin:0 0 12px;"><strong>Important:</strong> {{ description }}</p>
+                        {% if batch.description %}
+                            <p style="margin:0 0 12px;"><strong>Important:</strong> {{ batch.description }}</p>
                         {% endif %}
 
-                        {% if transport_type == "passenger" %}
+                        {% if personalization.transport_type == "passenger" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as a <strong>passenger</strong>. Carpools will be arranged once everyone
                                 arrives at the
-                                Chick-fil-A/Chipotle area in UTC. We leave promptly at <strong>{{ hike_time }}</strong>,
+                                Chick-fil-A/Chipotle area in UTC. We leave promptly at <strong>{{ batch.hike_time }}</strong>,
                                 so please arrive
                                 <strong>15 minutes early</strong> to check in. Thanks for being punctual!
                             </p>
-                        {% elif transport_type == "driver" %}
+                        {% elif personalization.transport_type == "driver" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as a <strong>driver</strong>. Please arrive at the Chick-fil-A/Chipotle
                                 area in UTC
                                 <strong>15 minutes early</strong> to check in. We leave promptly at
-                                <strong>{{ hike_time }}</strong>.
+                                <strong>{{ batch.hike_time }}</strong>.
                             </p>
                             <p style="margin:0 0 12px;">
                                 As a driver, bring your vehicle with enough seats for your passengers and ensure you
@@ -43,11 +44,11 @@
                                 as soon as possible
                                 so we can arrange another driver if needed.
                             </p>
-                        {% elif transport_type == "self" %}
+                        {% elif personalization.transport_type == "self" %}
                             <p style="margin:0 0 12px;">
                                 You signed up as <strong>self-transport</strong>. Please arrive at the trailhead on
                                 time.
-                                We depart UTC at <strong>{{ hike_time }}</strong>; plan your drive so you arrive when
+                                We depart UTC at <strong>{{ batch.hike_time }}</strong>; plan your drive so you arrive when
                                 the group does.
                             </p>
                         {% endif %}
@@ -60,7 +61,7 @@
                         </p>
 
                         <p style="margin:0 0 20px;">
-                            <a href="{{ magic_url }}"
+                            <a href="{{ personalization.magic_url }}"
                                style="display:inline-block;text-decoration:none;padding:12px 18px;border-radius:6px;
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Sign Waiver</a>
                         </p>
@@ -68,21 +69,21 @@
                         <p style="margin:0 0 8px;"><strong>Trailhead maps</strong>:</p>
                         <ul style="padding-left:20px;margin:0 0 16px;">
                             <li style="margin:0 0 6px">
-                                Google Maps: <a href="{{ hike_trail_gmap_link }}"
+                                Google Maps: <a href="{{ batch.hike_trail_gmap_link }}"
                                                 style="color:#1d4ed8;text-decoration:underline;" target="_blank"
-                                                rel="noopener">{{ hike_trail_gmap_link }}</a>
+                                                rel="noopener">{{ batch.hike_trail_gmap_link }}</a>
                             </li>
                             <li style="margin:0 0 6px">
-                                Apple Maps: <a href="{{ hike_trail_amap_link }}"
+                                Apple Maps: <a href="{{ batch.hike_trail_amap_link }}"
                                                style="color:#1d4ed8;text-decoration:underline;" target="_blank"
-                                               rel="noopener">{{ hike_trail_amap_link }}</a>
+                                               rel="noopener">{{ batch.hike_trail_amap_link }}</a>
                             </li>
                         </ul>
 
                         <p style="margin:0 0 8px;"><strong>Reminders before the hike</strong>:</p>
                         <ul style="padding-left:20px;margin:0 0 16px;">
                             <li style="margin:0 0 6px">Submit your waiver by
-                                <strong>{{ hike_day }} {{ hike_time }}</strong>.
+                                <strong>{{ batch.hike_day }} {{ batch.hike_time }}</strong>.
                             </li>
                             <li style="margin:0 0 6px">Recommended items: water, light snack, sunscreen, hat,
                                 sunglasses, and comfortable athletic shoes.
@@ -90,7 +91,7 @@
                         </ul>
 
                         <p style="margin:0 0 16px;">
-                            See you {{ hike_day }}—have a great rest of the week!
+                            See you {{ batch.hike_day }}—have a great rest of the week!
                         </p>
 
                         <p style="margin:0 0 4px;">Best,</p>
@@ -141,3 +142,4 @@
 </table>
 </body>
 </html>
+{%- endmacro %}

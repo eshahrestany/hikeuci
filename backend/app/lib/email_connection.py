@@ -3,8 +3,8 @@ import ssl
 from contextlib import contextmanager
 from email.message import EmailMessage
 from typing import Optional
-
 from flask import current_app
+from .email_utils import EmailFile
 
 
 class EmailConnection:
@@ -17,7 +17,7 @@ class EmailConnection:
         cfg = current_app.config
         if cfg.get("DUMMY_EMAIL_MODE"):
             yield None
-            return # no-op in dummy mode
+            return  # no-op in dummy mode
         host = cfg.get("MAIL_SMTP_HOST")
         if not host:
             raise RuntimeError("MAIL_SMTP_HOST must be set")
@@ -44,11 +44,14 @@ class EmailConnection:
                     server.close()
                 except Exception:
                     pass
-    def send(self, to, subject, text_body, html_body) -> bool:
+
+    def send(self, to, subject, text_body, html_body, files: list[EmailFile] = None) -> bool:
         """
         Send a multipart/alternative email with plain text + HTML.
         Returns True/False.
         """
+        if files is None:
+            files = []
         try:
             msg = EmailMessage()
             cfg = current_app.config
@@ -64,6 +67,11 @@ class EmailConnection:
             # parts
             msg.set_content(text_body)
             msg.add_alternative(html_body, subtype="html")
+
+            if files:
+                for file in files:
+                    msg.add_attachment(file.file_bytes, maintype=file.maintype, subtype=file.subtype,
+                                       filename=file.filename, disposition=file.disposition)
 
             # Send via SMTP
             if cfg.get("DUMMY_EMAIL_MODE"):
