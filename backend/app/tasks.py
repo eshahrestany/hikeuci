@@ -304,22 +304,22 @@ def check_and_update_phase():
             if ah.voting_date is not None:  # will this hike have a vote?
                 if now >= ah.voting_date:
                     phases.initiate_vote_phase(ah)
-                    #start_email_campaign(ah.id)
+                    start_email_campaign(ah.id)
 
             else:  # no vote, skip to signup phase
                 if now >= ah.signup_date:
                     phases.initiate_signup_phase(ah)
-                    #start_email_campaign(ah.id)
+                    start_email_campaign(ah.id)
 
         case "voting":
             if now >= ah.signup_date:
                 phases.initiate_signup_phase(ah)
-                #start_email_campaign(ah.id)
+                start_email_campaign(ah.id)
 
         case "signup":
             if now >= ah.waiver_date:
                 phases.initiate_waiver_phase(ah)
-                #start_email_campaign(ah.id)
+                start_email_campaign(ah.id)
 
         case "waiver":
             if now >= ah.hike_date + timedelta(hours=current_app.config.get("HIKE_RESET_TIME_HR")):
