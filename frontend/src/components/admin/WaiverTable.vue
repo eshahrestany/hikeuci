@@ -1,7 +1,7 @@
 <script setup>
 
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
-import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable} from "@tanstack/vue-table";
+import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
 import {Check, Edit, MailPlus, PlusCircle, Trash} from "lucide-vue-next";
 import {Input} from "@/components/ui/input/index.js";
 import {Button} from "@/components/ui/button/index.js";
@@ -270,6 +270,13 @@ const table = useVueTable({
   columns,
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  initialState: {
+    pagination: {
+      pageIndex: 0,
+      pageSize: 10,
+    }
+  }
 })
 
 </script>
@@ -321,6 +328,27 @@ const table = useVueTable({
         </TableRow>
       </TableBody>
     </Table>
+    <div class="flex items-center py-1 mx-2 space-x-2">
+      <Button
+          variant="outline"
+          size="sm"
+          :disabled="!table.getCanPreviousPage()"
+          @click="table.previousPage()"
+          >
+          Previous
+        </Button>
+        <Button
+            variant="outline"
+            size="sm"
+            :disabled="!table.getCanNextPage()"
+            @click="table.nextPage()"
+          >
+          Next
+        </Button>
+        <span class="ml-auto text-sm text-muted-foreground">
+          Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
+        </span>
+      </div>
   </div>
 
   <ModifyUserModal
