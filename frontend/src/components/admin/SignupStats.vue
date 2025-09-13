@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-4 mb-4">
-    <p>Total Signups: {{ numSignups }}</p>
-    <p>Passengers: {{ numPassengers }}</p>
-    <p>Drivers: {{ numDrivers }}</p>
-    <p>Self-transports: {{ numSelf }}</p>
-    <p>Passenger Capacity: {{ passengerCapacity }}</p>
+    <p>Signups: <strong>{{ numCheckedInSignups }}</strong> checked in / <strong>{{ numSignups }}</strong> total</p>
+    <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong> checked in / <strong>{{ numPassengers }}</strong> total</p>
+    <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong> checked in / <strong>{{ numDrivers }}</strong> total</p>
+    <p>Self-transports: <strong>{{ numCheckedInSelf }}</strong> checked in / <strong>{{ numSelf }}</strong> total</p>
+    <p>Passenger Capacity: <strong>{{ passengerCapacity }}</strong> </p>
 
     <!-- Capacity Indicator -->
     <div class="flex items-center space-x-3">
@@ -14,7 +14,7 @@
         : '[&_[data-slot=progress-indicator]]:bg-primary'"/>
       <span class="text-sm font-medium">{{ percentCapacity }}%</span>
     </div>
-    <p v-if="overCapacity">Waitlisted Passengers: {{ waitlistedPassengers }}</p>
+    <p v-if="overCapacity">Waitlisted Passengers: <strong>{{ waitlistedPassengers }}</strong> </p>
   </div>
 </template>
 
@@ -28,14 +28,26 @@ const props = defineProps({
 })
 
 const numSignups = computed(() => props.users.length)
+const numCheckedInSignups = computed(() =>
+    props.users.filter(u => u.is_checked_in === true).length
+)
 const numPassengers = computed(() =>
-  props.users.filter(u => u.transport_type === 'passenger').length
+    props.users.filter(u => u.transport_type === 'passenger').length
+)
+const numCheckedInPassengers = computed(() =>
+    props.users.filter(u => (u.transport_type === 'passenger' && u.is_checked_in === true)).length
 )
 const numDrivers = computed(() =>
-  props.users.filter(u => u.transport_type === 'driver').length
+    props.users.filter(u => u.transport_type === 'driver').length
+)
+const numCheckedInDrivers = computed(() =>
+    props.users.filter(u => (u.transport_type === 'driver' && u.is_checked_in === true)).length
 )
 const numSelf = computed(() =>
-  props.users.filter(u => u.transport_type === 'self').length
+    props.users.filter(u => u.transport_type === 'self').length
+)
+const numCheckedInSelf = computed(() =>
+    props.users.filter(u => (u.transport_type === 'self' && u.is_checked_in === true)).length
 )
 
 let percentCapacity = 0
