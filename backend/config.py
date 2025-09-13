@@ -58,3 +58,5 @@ class Config:
         2: "Difficult",
         3: "Very Difficult"
     }
+
+    SERVER_TIMEZONE = os.getenv("SERVER_TIMEZONE", "America/Los_Angeles")

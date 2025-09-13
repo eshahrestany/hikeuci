@@ -1,5 +1,6 @@
 from datetime import datetime
 from .extensions import db
+import pytz
 
 
 class Member(db.Model):
@@ -46,7 +47,23 @@ class Hike(db.Model):
     signup_date = db.Column(db.DateTime, nullable=False)
     waiver_date = db.Column(db.DateTime, nullable=False)
     hike_date = db.Column(db.DateTime, nullable=False, index=True)
+    # future proofing for far-flung adventures // probably won't ever be needed
+    tz = db.Column(db.String(64), nullable=False, default="America/Los_Angeles")
 
+    def get_localized_time(self, date_var):
+        dt = getattr(self, date_var, None)
+        if type(dt) is not datetime:
+            raise ValueError(f"{date_var} is not a valid date field on Hike")
+
+        # localize
+
+        tz = pytz.timezone(self.tz)
+        if dt.tzinfo is None:  # naive datetime
+            dt = tz.localize(dt)
+        else:  # already timezone-aware
+            dt = dt.astimezone(tz)
+
+        return dt
 
 
 class Signup(db.Model):

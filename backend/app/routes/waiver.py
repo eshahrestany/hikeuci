@@ -36,7 +36,7 @@ def hike_waiver_page():
 
     if request.method == "GET":
         content = render_template("waiver_content.html.j2", event_description=trail.name,
-                                  event_date=hike.hike_date.strftime("%A, %B %d, %Y"))
+                                  event_date=hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y"))
         return jsonify({"status": "ready", "content": content}), 200
     elif request.method == "POST":
         form_data = request.json
