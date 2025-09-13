@@ -1,6 +1,9 @@
 import os
 from dotenv import load_dotenv
 
+if not os.path.exists('.env'):
+    raise Exception(".env not found!")
+
 load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))

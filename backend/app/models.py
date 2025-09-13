@@ -38,7 +38,7 @@ class Hike(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     trail_id  = db.Column(db.Integer, db.ForeignKey('trails.id'), default=None, nullable=True)
     status    = db.Column(db.String(20), nullable=False, index=True, default='scheduled')
-    phase     = db.Column(db.String(20), nullable=True, default='pre-hike')  #  for status=active: 'voting', 'signups', 'waiver'
+    phase     = db.Column(db.String(20), nullable=True)  #  for status=active: 'voting', 'signups', 'waiver'
     email_campaign_completed = db.Column(db.Boolean, nullable=False, default=False)
     # dates
     created_date   = db.Column(db.DateTime, nullable=False, default=datetime.now)
@@ -46,7 +46,6 @@ class Hike(db.Model):
     signup_date = db.Column(db.DateTime, nullable=False)
     waiver_date = db.Column(db.DateTime, nullable=False)
     hike_date = db.Column(db.DateTime, nullable=False, index=True)
-
 
 
 class Signup(db.Model):

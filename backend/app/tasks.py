@@ -233,31 +233,31 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
 @celery_app.task(name="app.tasks.check_and_update_phase")
 def check_and_update_phase():
-    ah = Hike.query.filter_by(status="active")
+    ah = Hike.query.filter_by(status="active").first()
     if not ah: return
 
     now = datetime.now()
 
-    if ah.phase is None: # hike has just been created
-        if ah.voting_date is not None: # will this hike have a vote?
+    if ah.phase is None:  # hike has just been created
+        if ah.voting_date is not None:  # will this hike have a vote?
             if now >= ah.voting_date:
                 phases.initiate_vote_phase(ah)
-                start_email_campaign(ah.id)
+                #start_email_campaign(ah.id)
 
-        else: # no vote, skip to signup phase
+        else:  # no vote, skip to signup phase
             if now >= ah.signup_date:
                 phases.initiate_signup_phase(ah)
-                start_email_campaign(ah.id)
+                #start_email_campaign(ah.id)
 
     elif ah.phase == "voting":
         if now >= ah.signup_date:
             phases.initiate_signup_phase(ah)
-            start_email_campaign(ah.id)
+            #start_email_campaign(ah.id)
 
     elif ah.phase == "signup":
         if now >= ah.waiver_date:
             phases.initiate_waiver_phase(ah)
-            start_email_campaign(ah.id)
+            #start_email_campaign(ah.id)
 
     elif ah.phase == "waiver":
         if now >= ah.hike_date + current_app.config.get("HIKE_RESET_TIME_HR"):

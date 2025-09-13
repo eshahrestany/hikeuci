@@ -26,7 +26,7 @@ def hike_vote_page():
         if existing_vote: existing_vote = existing_vote.trail_id
 
         trail_opts = Trail.query.filter_by(is_active_vote_candidate=True)
-        counts = {t.id: Vote.query.filter_by(trail_id=t.id).count() for t in trail_opts}
+        counts = {t.id: Vote.query.filter_by(hike_id=hike.id, trail_id=t.id).count() for t in trail_opts}
         trails = []
         for trail in trail_opts:
             trails.append({
