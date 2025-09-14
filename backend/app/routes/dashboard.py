@@ -412,12 +412,15 @@ def add_user():
         hike_id=hike.id,
         member_id=member_id,
         transport_type=transport_type,
+        food_interest=False,
         vehicle_id=vehicle_id if transport_type == "driver" else None,
         is_checked_in=False,
-        status="pending",
+        status="confirmed",
     )
     db.session.add(signup)
     db.session.commit()
+
+    current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
 
     m = Member.query.get(member_id)
     user_obj = {
