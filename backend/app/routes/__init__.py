@@ -6,6 +6,7 @@ from .signup import hike_signup
 from .waiver import hike_waiver
 from .vehicles import vehicles
 from .members import members
+from .mail import mail
 
 
 def register_routes(app):
@@ -17,3 +18,4 @@ def register_routes(app):
     app.register_blueprint(hike_waiver, url_prefix="/api/hike-waiver")
     app.register_blueprint(vehicles, url_prefix="/api/vehicles")
     app.register_blueprint(members, url_prefix="/api/members")
+    app.register_blueprint(mail, url_prefix="/api/mail")

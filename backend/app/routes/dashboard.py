@@ -1,26 +1,19 @@
 from flask import Blueprint, jsonify, request
-from sqlalchemy import and_, func
+from sqlalchemy import and_
 
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
-from ..models import Hike, Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink
+from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink
+from ..lib.model_utils import current_active_hike
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
-
-
-def _current_active_hike() -> Hike | None:
-    return (
-        Hike.query
-        .filter_by(status="active")
-        .first()
-    )
 
 
 @dashboard.route('/upcoming', methods=['GET'])
 @admin_required
 def get_active_hike_info():
     # Determine current active hike + phase
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if hike is None:
         return jsonify(status=None), 200
 
@@ -114,7 +107,7 @@ def get_active_hike_info():
 @admin_required
 @waiver_phase_required
 def get_waitlist():
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike:
         return jsonify(error="No active hike"), 400
 
@@ -141,7 +134,7 @@ def get_waitlist():
 @dashboard.route("/list-emails-not-in-hike", methods=["GET"])
 @admin_required
 def list_emails_not_in_hike():
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike:
         return jsonify([]), 200
 
@@ -181,7 +174,7 @@ def check_in():
     if user_id is None:
         return jsonify(error="Missing 'user_id'"), 400
 
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike:
         return jsonify(error="No active hike"), 400
 
@@ -216,7 +209,7 @@ def modify_user():
     if None in (user_id, name, transport_type):
         return jsonify(error="Missing fields"), 400
 
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike or (hike.phase or "").lower() != "waiver":
         return jsonify(error="Not in waiver phase"), 400
 
@@ -260,7 +253,7 @@ def remove_user():
     if user_id is None:
         return jsonify(error="Missing 'user_id'"), 400
 
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike or (hike.phase or "").lower() != 'waiver':
         return jsonify(error="Not in waiver phase"), 400
 
@@ -287,7 +280,7 @@ def add_user():
     if None in (member_id, transport_type):
         return jsonify(error="member_id and transport_type required"), 400
 
-    hike = _current_active_hike()
+    hike = current_active_hike()
     if not hike or (hike.phase or "").lower() != "waiver":
         return jsonify(error="Hike not in waiver phase"), 400
 
