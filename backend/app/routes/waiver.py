@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app, render_template
 from ..models import Member, Hike, Trail, MagicLink, Waiver, Signup
 from .. import db
@@ -72,7 +71,7 @@ def hike_waiver_page():
             age=age,
             signature_1_b64=signature_1_b64,
             signature_2_b64=signature_2_b64,
-            signed_on=datetime.now(),
+            signed_on=datetime.now(timezone.utc),
         )
         db.session.add(waiver)
         db.session.commit()

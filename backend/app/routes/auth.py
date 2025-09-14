@@ -1,6 +1,6 @@
 import requests
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, Response, current_app
 from typing import Optional, Dict, Any
 from ..models import AdminUser
@@ -35,7 +35,7 @@ def google_login() -> tuple[Response, int]:
         return jsonify({"error": "Not an admin user"}), 403
 
     # 4) Prepare JWT to send to client
-    now: datetime = datetime.utcnow()
+    now: datetime = datetime.now(timezone.utc)
     exp: datetime = now + timedelta(hours=int(current_app.config.get("JWT_EXP_HOURS")))
     payload: Dict[str, Any] = {
         "sub": str(admin.id),

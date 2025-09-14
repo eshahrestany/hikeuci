@@ -11,7 +11,7 @@ Usage:
   python devtools.py waiver
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.extensions import db
 from app.models import (
@@ -70,10 +70,10 @@ def seed_voting():
     hike = Hike(
         status="active",
         phase="voting",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -115,10 +115,10 @@ def seed_email_vote():
     hike = Hike(
         status="active",
         phase="voting",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -167,34 +167,34 @@ def seed_signup():
         trail_id=trails[0].id,
         status="past",
         phase=None,
-        voting_date=datetime.now() - timedelta(weeks=3, days=-1),
-        signup_date=datetime.now() - timedelta(weeks=3, days=-3),
-        waiver_date=datetime.now() - timedelta(weeks=3, days=-5),
-        hike_date=datetime.now() - timedelta(weeks=3, days=-7)
+        voting_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-1),
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-3),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-5),
+        hike_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-7)
     ), Hike(
         trail_id=trails[1].id,
         status="past",
         phase=None,
-        voting_date=datetime.now() - timedelta(weeks=2, days=-1),
-        signup_date=datetime.now() - timedelta(weeks=2, days=-3),
-        waiver_date=datetime.now() - timedelta(weeks=2, days=-5),
-        hike_date=datetime.now() - timedelta(weeks=2, days=-7)
+        voting_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-1),
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-3),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-5),
+        hike_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-7)
     ), Hike(
         trail_id=trails[0].id,
         status="past",
         phase=None,
-        voting_date=datetime.now() - timedelta(weeks=1, days=-1),
-        signup_date=datetime.now() - timedelta(weeks=1, days=-3),
-        waiver_date=datetime.now() - timedelta(weeks=1, days=-5),
-        hike_date=datetime.now() - timedelta(weeks=1, days=-6)
+        voting_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-1),
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-3),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-5),
+        hike_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-6)
     ), Hike(
         trail_id=trails[1].id,
         status="active",
         phase="signup",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )]
     db.session.add_all(hikes)
     db.session.commit()
@@ -320,10 +320,10 @@ def seed_email_signup():
         trail_id=trail.id,
         status="active",
         phase="signup",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now()+ timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc)+ timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -365,10 +365,10 @@ def seed_waiver():
         trail_id=trail.id,
         status="active",
         phase="waiver",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -475,7 +475,7 @@ def seed_waiver():
         Waiver(
             member_id=mid,
             hike_id=hike.id,
-            signed_on=datetime.now() - timedelta(days=random.randint(0, 2)),
+            signed_on=datetime.now(timezone.utc) - timedelta(days=random.randint(0, 2)),
             print_name="",
             is_minor=False,
             signature_1_b64="",
@@ -510,10 +510,10 @@ def seed_email_waiver():
         trail_id=trail.id,
         status="active",
         phase="waiver",
-        voting_date=datetime.now() + timedelta(days=1),
-        signup_date=datetime.now() + timedelta(days=3),
-        waiver_date=datetime.now() + timedelta(days=5),
-        hike_date=datetime.now() + timedelta(days=7)
+        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
+        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
     )
     db.session.add(hike)
     db.session.commit()
@@ -547,7 +547,7 @@ def seed_email_waiver():
         signups.append(Signup(
             member_id=member.id,
             hike_id=hike.id,
-            signup_date=datetime.now() + timedelta(minutes=i),
+            signup_date=datetime.now(timezone.utc) + timedelta(minutes=i),
             transport_type=transport_type,
             food_interest=random.choice([True, False]),
             status="confirmed",

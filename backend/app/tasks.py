@@ -2,6 +2,8 @@ import time
 from datetime import datetime, timedelta
 from typing import List
 import pymupdf
+from datetime import datetime, timezone
+from typing import List
 from make_celery import celery_app
 from flask import current_app
 from . import db
@@ -11,7 +13,7 @@ from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, 
 from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
-import pytz
+from zoneinfo import ZoneInfo
 
 def start_email_campaign(hike_id: int) -> int:
     """
@@ -29,7 +31,7 @@ def start_email_campaign(hike_id: int) -> int:
         raise RuntimeError(f"{email_type} phase email campaign already completed for this hike")
 
     # 1) Create campaign
-    campaign = EmailCampaign(hike_id=hike_id, type=email_type, date_created=datetime.now())
+    campaign = EmailCampaign(hike_id=hike_id, type=email_type, date_created=datetime.now(timezone.utc))
     db.session.add(campaign)
     db.session.commit()
 
@@ -138,7 +140,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
                 if result:
                     email_task.status = "sent"
-                    email_task.sent_at = datetime.now()
+                    email_task.sent_at = datetime.now(timezone.utc)
                     db.session.commit()
                     sent_total += 1
                 else:
@@ -154,7 +156,7 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
         if batch_pause_sec > 0:
             time.sleep(batch_pause_sec)
 
-    camp.date_completed = datetime.now()
+    camp.date_completed = datetime.now(timezone.utc)
     hike.email_campaign_completed = True
     db.session.commit()
 
@@ -236,8 +238,8 @@ def generate_waiver_pdf(waiver_id, email_user=True):
                    )
 
     # localize waiver-signed dates to server timezone (probably America/Los_Angeles).
-    tz = pytz.timezone(current_app.config["SERVER_TIMEZONE"])
-    signed_on_localized = tz.localize(waiver.signed_on)
+    tz = ZoneInfo(current_app.config["SERVER_TIMEZONE"])
+    signed_on_localized = waiver.signed_on.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
 
     if waiver.is_minor:
         fill_signature(doc, "sig1_minor", waiver.signature_1_b64.split(",")[1])
