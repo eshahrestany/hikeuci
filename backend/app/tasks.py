@@ -1,6 +1,5 @@
 import time
 import pymupdf
-import pytz
 from datetime import datetime, timezone
 from typing import List
 from make_celery import celery_app
@@ -11,6 +10,7 @@ from .lib.email_connection import EmailConnection
 from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
+from zoneinfo import ZoneInfo
 
 def start_email_campaign(hike_id: int) -> int:
     """
@@ -237,8 +237,9 @@ def generate_waiver_pdf(waiver_id, email_user=True):
                    )
 
     # localize waiver-signed dates to server timezone (probably America/Los_Angeles).
-    tz = pytz.timezone(current_app.config["SERVER_TIMEZONE"])
-    signed_on_localized = tz.localize(waiver.signed_on)
+    tz = ZoneInfo(current_app.config["SERVER_TIMEZONE"])
+    signed_on_localized = waiver.signed_on.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+
     if waiver.is_minor:
         fill_signature(doc, "sig1_minor", waiver.signature_1_b64.split(",")[1])
         fill_signature(doc, "sig2_minor", waiver.signature_2_b64.split(",")[1])

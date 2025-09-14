@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from .extensions import db
-import pytz
 
 
 class Member(db.Model):
@@ -55,13 +55,7 @@ class Hike(db.Model):
         if type(dt) is not datetime:
             raise ValueError(f"{date_var} is not a valid date field on Hike")
 
-        # localize
-        tz = pytz.timezone(self.tz)
-
-        if dt.tzinfo is None:  # naive datetime
-            dt = tz.localize(dt)
-        else:  # already timezone-aware
-            dt = dt.astimezone(tz)
+        dt = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo(self.tz))
 
         return dt
 
