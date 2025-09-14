@@ -9,3 +9,4 @@ flask_cors~=6.0.1
 Celery~=5.5.3
 pymupdf~=1.26.4
 pillow~=11.3.0
+pytz~=2025.2
