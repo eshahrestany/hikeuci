@@ -56,9 +56,12 @@ class Hike(db.Model):
             raise ValueError(f"{date_var} is not a valid date field on Hike")
 
         # localize
-
         tz = pytz.timezone(self.tz)
-        dt = dt.astimezone(tz)
+
+        if dt.tzinfo is None:  # naive datetime
+            dt = tz.localize(dt)
+        else:  # already timezone-aware
+            dt = dt.astimezone(tz)
 
         return dt
 
