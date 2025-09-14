@@ -6,17 +6,9 @@ from .. import db
 from . import selection_algorithm
 
 
-def initiate_vote_phase(ah: Hike):
-    if ah.phase is not None:
-        raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot start vote phase")
-
-    ah.phase = "voting"
-    ah.email_campaign_completed = False
-    db.session.commit()
-    print("vote phase initiated")
-
-
-def initiate_signup_phase(ah: Hike):
+def initiate_signup_phase(hike_id: int):
+    ah = Hike.query.get(hike_id)
+    if not ah: raise Exception("Invalid hike ID")
     if ah.phase not in [None, "voting"]:
         raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot start signup phase")
 
@@ -37,7 +29,9 @@ def initiate_signup_phase(ah: Hike):
     db.session.commit()
 
 
-def initiate_waiver_phase(ah):
+def initiate_waiver_phase(hike_id: int):
+    ah = Hike.query.get(hike_id)
+    if not ah: raise Exception("Invalid hike ID")
     if ah.phase != "signup":
         raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot start waiver phase")
 
@@ -57,7 +51,9 @@ def initiate_waiver_phase(ah):
     db.session.commit()
 
 
-def complete_hike(ah):
+def complete_hike(hike_id: int):
+    ah = Hike.query.get(hike_id)
+    if not ah: raise Exception("Invalid hike ID")
     if ah.phase != "waiver":
         raise Exception(f"Hike {ah.id} has improper phase of {ah.phase}, cannot mark hike as completed")
 

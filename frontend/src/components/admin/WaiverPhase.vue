@@ -1,10 +1,9 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <p class="font-semibold text-xl">
-        Current Phase: <Badge class="text-md">Waiver</Badge>
-      </p>
-    </div>
+    <p class="flex justify-center items-center font-semibold text-xl mb-6">
+      Current Phase:
+      <Badge class="text-md ml-2">Waiver</Badge>
+    </p>
 
     <CardHeader class="flex items-start">
       <div class="basis-1/2">

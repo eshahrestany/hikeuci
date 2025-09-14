@@ -53,8 +53,8 @@ def render_email_batch(email_type, hike: Hike):
 
     elif email_type in ["waiver", "waiver_confirmation"]:
         # added data
-        batch["hike_trail_gmap_link"] = trail.trailhead_gmaps_endpoint
-        batch["hike_trail_amap_link"] = trail.trailhead_amaps_endpoint
+        batch["hike_trail_gmap_link"] = trail.trailhead_gmaps_url
+        batch["hike_trail_amap_link"] = trail.trailhead_amaps_url
 
         return _render_email_batch(email_type, batch)
 

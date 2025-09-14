@@ -1,6 +1,5 @@
 import time
-from datetime import datetime, timedelta
-from typing import List
+from datetime import timedelta
 import pymupdf
 from datetime import datetime, timezone
 from typing import List
@@ -15,6 +14,7 @@ from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
 from zoneinfo import ZoneInfo
 
+@celery_app.task(name="app.tasks.start_email_campaign")
 def start_email_campaign(hike_id: int) -> int:
     """
     Create a new email campaign based on the provided hike's phase,
@@ -304,25 +304,14 @@ def check_and_update_phase():
     now = datetime.now()
 
     match ah.phase:
-        case None:  # hike has just been created
-            if ah.voting_date is not None:  # will this hike have a vote?
-                if now >= ah.voting_date:
-                    phases.initiate_vote_phase(ah)
-                    start_email_campaign(ah.id)
-
-            else:  # no vote, skip to signup phase
-                if now >= ah.signup_date:
-                    phases.initiate_signup_phase(ah)
-                    start_email_campaign(ah.id)
-
         case "voting":
             if now >= ah.signup_date:
-                phases.initiate_signup_phase(ah)
+                phases.initiate_signup_phase(ah.id)
                 start_email_campaign(ah.id)
 
         case "signup":
             if now >= ah.waiver_date:
-                phases.initiate_waiver_phase(ah)
+                phases.initiate_waiver_phase(ah.id)
                 start_email_campaign(ah.id)
 
         case "waiver":

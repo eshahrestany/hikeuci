@@ -1,7 +1,8 @@
 <template>
   <div>
-    <p class="font-semibold text-xl mb-2">
-      Current Phase: <Badge class="text-md">Voting</Badge>
+    <p class="flex justify-center items-center font-semibold text-xl mb-2">
+      Current Phase:
+      <Badge class="text-md ml-2">Voting</Badge>
     </p>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="trail in votingData.trails" :key="trail.trail_id">

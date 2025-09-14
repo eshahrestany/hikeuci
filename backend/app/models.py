@@ -24,9 +24,9 @@ class Trail(db.Model):
     required_water_liters    = db.Column(db.Float, nullable=False)
     difficulty               = db.Column(db.Integer, nullable=False)  # 0=e,1=m,2=d,3=vd
     added_on                 = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
-    alltrails_endpoint       = db.Column(db.String(300), nullable=True)
-    trailhead_gmaps_endpoint = db.Column(db.String(300), nullable=True)
-    trailhead_amaps_endpoint = db.Column(db.String(300), nullable=True)
+    alltrails_url       = db.Column(db.String(300), nullable=True)
+    trailhead_gmaps_url = db.Column(db.String(300), nullable=True)
+    trailhead_amaps_url = db.Column(db.String(300), nullable=True)
     description              = db.Column(db.Text, nullable=True)
 
 
@@ -41,9 +41,9 @@ class Hike(db.Model):
     status    = db.Column(db.String(20), nullable=False, index=True, default='active')  # 'active' or 'past'
     phase     = db.Column(db.String(20), nullable=True)  #  for status=active: None [pending vote start], 'voting', 'signups', 'waiver'
     email_campaign_completed = db.Column(db.Boolean, nullable=False, default=False)
+    has_vote = db.Column(db.Boolean, nullable=False, default=True)
     # dates
     created_date   = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
-    voting_date = db.Column(db.DateTime, nullable=False) # when votes are sent
     signup_date = db.Column(db.DateTime, nullable=False)
     waiver_date = db.Column(db.DateTime, nullable=False)
     hike_date = db.Column(db.DateTime, nullable=False, index=True)
