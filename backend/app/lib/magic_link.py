@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..models import MagicLink, Hike
 
@@ -43,7 +43,7 @@ class MagicLinkManager:
             return {'status': 'expired', 'user': magic_link.member_id}
 
         if not magic_link.first_used:
-            magic_link.first_use = datetime.now()
+            magic_link.first_use = datetime.now(timezone.utc)
         magic_link.used_count += 1
 
         return {'status': 'valid', 'magic_link': magic_link}
