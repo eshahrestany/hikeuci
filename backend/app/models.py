@@ -58,10 +58,7 @@ class Hike(db.Model):
         # localize
 
         tz = pytz.timezone(self.tz)
-        if dt.tzinfo is None:  # naive datetime
-            dt = tz.localize(dt)
-        else:  # already timezone-aware
-            dt = dt.astimezone(tz)
+        dt = dt.astimezone(tz)
 
         return dt
 

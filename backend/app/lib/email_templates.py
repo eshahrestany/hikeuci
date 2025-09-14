@@ -1,4 +1,5 @@
-from typing import Tuple, Any
+from datetime import timedelta
+from typing import Tuple
 from jinja2 import Environment, FileSystemLoader, FileSystemBytecodeCache
 from .email_utils import flatten_num
 from ..models import Trail, Hike
@@ -47,7 +48,7 @@ def render_email_batch(email_type, hike: Hike):
     batch["description"] = trail.description
 
     if email_type == "signup":
-        # good to go
+        batch["signup_expiry_date"] = (hike.get_localized_time("waiver_date") - timedelta(minutes=1)).strftime("%A at %-I:%M %p")
         return _render_email_batch(email_type, batch)
 
     elif email_type in ["waiver", "waiver_confirmation"]:
