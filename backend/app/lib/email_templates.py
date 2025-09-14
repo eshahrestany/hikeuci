@@ -1,8 +1,7 @@
-from typing import Tuple, Any
-from flask import render_template
+from datetime import timedelta
+from typing import Tuple
 from jinja2 import Environment, FileSystemLoader, FileSystemBytecodeCache
 from .email_utils import flatten_num
-from .. import db
 from ..models import Trail, Hike
 from flask import current_app
 
@@ -38,8 +37,8 @@ def render_email_batch(email_type, hike: Hike):
     # Common data for signup / waiver email types
     trail = Trail.query.get(hike.trail_id)
 
-    batch["hike_day"] = hike.hike_date.strftime("%A %-m/%-d")
-    batch["hike_time"] = hike.hike_date.strftime("%-I:%M %p")
+    batch["hike_day"] = hike.get_localized_time("hike_date").strftime("%A %-m/%-d")
+    batch["hike_time"] = hike.get_localized_time("hike_date").strftime("%-I:%M %p")
     batch["hike_trail_name"] = trail.name
     batch["hike_town_name"] = trail.location
     batch["hike_length_mi"] = flatten_num(trail.length_mi)
@@ -49,7 +48,7 @@ def render_email_batch(email_type, hike: Hike):
     batch["description"] = trail.description
 
     if email_type == "signup":
-        # good to go
+        batch["signup_expiry_date"] = (hike.get_localized_time("waiver_date") - timedelta(minutes=1)).strftime("%A at %-I:%M %p")
         return _render_email_batch(email_type, batch)
 
     elif email_type in ["waiver", "waiver_confirmation"]:

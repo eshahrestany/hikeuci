@@ -11,7 +11,7 @@ from .lib.email_connection import EmailConnection
 from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
-
+import pytz
 
 def start_email_campaign(hike_id: int) -> int:
     """
@@ -234,20 +234,24 @@ def generate_waiver_pdf(waiver_id, email_user=True):
                    )
     fill_text_rich(page,
                    "event_date",
-                   f"SPORTING EVENT DATE: <b>{hike.hike_date.strftime('%A %B %d, %Y')}</b>"
+                   f"SPORTING EVENT DATE: <b>{hike.get_localized_time('hike_date').strftime('%A %B %d, %Y')}</b>"
                    )
+
+    # localize waiver-signed dates to server timezone (probably America/Los_Angeles).
+    tz = pytz.timezone(current_app.config["SERVER_TIMEZONE"])
+    signed_on_localized = tz.localize(waiver.signed_on)
 
     if waiver.is_minor:
         fill_signature(doc, "sig1_minor", waiver.signature_1_b64.split(",")[1])
         fill_signature(doc, "sig2_minor", waiver.signature_2_b64.split(",")[1])
         fill_text_rich(page,
                        "date1_minor",
-                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       signed_on_localized.strftime("%m/%d/%Y"),
                        font_size=12
                        )
         fill_text_rich(page,
                        "date2_minor",
-                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       signed_on_localized.strftime("%m/%d/%Y"),
                        font_size=12
                        )
         fill_text_rich(page,
@@ -259,12 +263,12 @@ def generate_waiver_pdf(waiver_id, email_user=True):
         fill_signature(doc, "sig2_user", waiver.signature_2_b64.split(",")[1])
         fill_text_rich(page,
                        "date1_user",
-                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       signed_on_localized.strftime("%m/%d/%Y"),
                        font_size=12
                        )
         fill_text_rich(page,
                        "date2_user",
-                       waiver.signed_on.strftime("%m/%d/%Y"),
+                       signed_on_localized.strftime("%m/%d/%Y"),
                        font_size=12
                        )
 
@@ -281,7 +285,7 @@ def generate_waiver_pdf(waiver_id, email_user=True):
 
     pdf_file = EmailFile(
         file_bytes=pdf_bytes,
-        filename=f"{member.name.title()} - {trail.name.title()} {hike.hike_date.strftime('%m-%d-%Y')}",
+        filename=f"{member.name.title()} - {trail.name.title()} {hike.get_localized_time('hike_date').strftime('%m-%d-%Y')}",
         maintype="application",
         subtype="pdf",
     )
