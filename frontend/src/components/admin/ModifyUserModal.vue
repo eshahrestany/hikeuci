@@ -157,7 +157,7 @@ async function onSave() {
         <!-- Driver-only block -->
         <div v-if="form.transport_type === 'driver'" class="col-span-full space-y-4">
           <div v-if="vehicles.length">
-            <Label for="vehicleSelect">Choose Vehicle</Label>
+            <Label for="vehicleSelect" class="mb-4">Choose Vehicle</Label>
             <Select v-model="form.vehicle_id">
               <SelectTrigger id="vehicleSelect">
                 <SelectValue placeholder="Select Vehicle…" />
@@ -174,7 +174,8 @@ async function onSave() {
             </Select>
           </div>
 
-          <div v-else class="space-y-2">
+          <div class="space-y-2">
+            <div v-if="vehicles.length" class="mb-2">Or add a new one below</div>
             <div class="grid grid-cols-2 items-center gap-4">
               <Label for="vehicleYear">Year</Label>
               <Input

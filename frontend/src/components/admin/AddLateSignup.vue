@@ -111,10 +111,11 @@ async function onSave() {
     <DialogContent class="sm:max-w-[450px]">
       <DialogHeader>
         <DialogTitle>Add Late Signup</DialogTitle>
-        <DialogDescription>Select member and details</DialogDescription>
+        <DialogDescription>Select member and transport type</DialogDescription>
       </DialogHeader>
 
       <!-- Email Combobox -->
+      <p class="text-sm">Adding a member here will automatically send them a waiver via email.</p>
       <Combobox by="email" v-model="selected">
         <ComboboxAnchor class="w-full">
           <div class="relative w-full items-center">

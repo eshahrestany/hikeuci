@@ -21,8 +21,8 @@ import {
 import {Skeleton} from '@/components/ui/skeleton'
 import {parsePhoneNumberFromString} from 'libphonenumber-js'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select/index.js";
-import { SPhoneInput } from "@/components/ui/phone-input";
-import { PlusCircle } from "lucide-vue-next";
+import {SPhoneInput} from "@/components/ui/phone-input";
+import {PlusCircle} from "lucide-vue-next";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip/index.js";
 
 const props = defineProps({
@@ -106,6 +106,7 @@ function startAddVehicle() {
   addingNewVehicle.value = true
   selectedVehicleId.value = null
 }
+
 function cancelAddVehicle() {
   addingNewVehicle.value = false
 }
@@ -142,8 +143,7 @@ onMounted(async () => {
 
     if (jsonResponse.status === "signed") {
       alreadySigned.value = true
-    }
-    else if (jsonResponse.status === "ready") {
+    } else if (jsonResponse.status === "ready") {
       const data = jsonResponse.formData
       name.value = data.name
       email.value = data.email
@@ -291,12 +291,14 @@ async function submitCancelRequest() {
           </div>
           <div v-else-if="signupSuccess" class="text-center text-stone-700">
             <p class="text-lg font-medium">You have succesfully signed up for this hike.</p>
-            <p class="text-sm text-stone-600 mt-2">You can return to this link before the signup deadline to cancel if needed.</p>
+            <p class="text-sm text-stone-600 mt-2">You can return to this link before the signup deadline to cancel if
+              needed.</p>
           </div>
           <div v-else-if="alreadySigned" class="text-center text-stone-700">
             <p v-if="cancelSuccess">Successfully canceled.</p>
             <p v-else class="text-lg font-medium">
-              You have already signed up for this event. If you need to cancel your signup, please click the button below.
+              You have already signed up for this event. If you need to cancel your signup, please click the button
+              below.
             </p>
             <p class="text-sm text-stone-600 mt-2">You can still re-sign up for the hike before the signup submission deadline.</p>
             <div v-if="!cancelSuccess" class="mt-6">
@@ -430,7 +432,8 @@ async function submitCancelRequest() {
                             </NumberField>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p class="text-sm">This number represents the number of passengers you can carry, not including yourself.</p>
+                            <p class="text-sm">This number represents the number of passengers you can carry, not
+                              including yourself.</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

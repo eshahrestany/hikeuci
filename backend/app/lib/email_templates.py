@@ -15,7 +15,8 @@ EMAIL_SUBJECTS = {
     "voting": "Vote for this week's hike",
     "signup": "Sign up for this week's hike",
     "waiver": "Complete your hike waiver",
-    "waiver_confirmation": "Completed: Your hike waiver"
+    "waiver_confirmation": "Completed: Your hike waiver",
+    "waitlist": "Waitlisted for this week's hike"
 }
 
 
@@ -26,7 +27,11 @@ def render_email_batch(email_type, hike: Hike):
 
     batch = {}
 
-    if email_type == "voting":
+    if email_type == "waitlist":
+        # nothing to batch render
+        return _render_email_batch(email_type, batch)
+
+    elif email_type == "voting":
         trail_options = Trail.query.filter_by(is_active_vote_candidate=True).all()
         batch["trails"] = [{"name": t.name,
                             "difficulty": current_app.config["DIFFICULTY_INDEX"][t.difficulty]}
@@ -53,8 +58,8 @@ def render_email_batch(email_type, hike: Hike):
 
     elif email_type in ["waiver", "waiver_confirmation"]:
         # added data
-        batch["hike_trail_gmap_link"] = trail.trailhead_gmaps_endpoint
-        batch["hike_trail_amap_link"] = trail.trailhead_amaps_endpoint
+        batch["hike_trail_gmap_link"] = trail.trailhead_gmaps_url
+        batch["hike_trail_amap_link"] = trail.trailhead_amaps_url
 
         return _render_email_batch(email_type, batch)
 
