@@ -14,7 +14,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog/index.js";
 import ModifyUserModal from "@/components/admin/ModifyUserModal.vue";
-import {ref, shallowRef, h} from "vue";
+import {ref, shallowRef, h, computed} from "vue";
 import {toast} from "vue-sonner";
 import {Badge} from "@/components/ui/badge/index.js";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
@@ -23,7 +23,7 @@ import {useAuth} from "@/lib/auth.js";
 const props = defineProps({trailsData: { type: Object, required: true }})
 const { postWithAuth } = useAuth()
 
-const data = shallowRef([...props.trailsData])
+const data = computed(() => props.trailsData)
 
 const columns = [
   {
@@ -36,72 +36,72 @@ const columns = [
   },
   {
     id: 'location',
-    header: 'location',
-    accessorFn: row => `${row.name}`,
+    header: 'Location',
+    accessorFn: row => `${row.location}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'length_mi',
-    header: 'length_mi',
-    accessorFn: row => `${row.name}`,
+    header: 'Length (mi)',
+    accessorFn: row => `${row.length_mi}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'estimated_time_hr',
-    header: 'estimated_time_hr',
-    accessorFn: row => `${row.name}`,
+    header: 'Estimated Time (hrs)',
+    accessorFn: row => `${row.estimated_time_hr}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'required_water_liters',
-    header: 'required_water_liters',
-    accessorFn: row => `${row.name}`,
+    header: 'Required Water (l)',
+    accessorFn: row => `${row.required_water_liters}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'difficulty',
-    header: 'difficulty',
-    accessorFn: row => `${row.name}`,
+    header: 'Difficulty',
+    accessorFn: row => `${row.difficulty}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
-    id: 'alltrails_endpoint',
-    header: 'alltrails_endpoint',
-    accessorFn: row => `${row.name}`,
+    id: 'alltrails_url',
+    header: 'All trails',
+    accessorFn: row => `${row.alltrails_url}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
-    id: 'trailhead_gmaps_endpoint',
-    header: 'trailhead_gmaps_endpoint',
-    accessorFn: row => `${row.name}`,
+    id: 'trailhead_gmaps_url',
+    header: 'Google Maps',
+    accessorFn: row => `${row.trailhead_gmaps_url}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
-    id: 'trailhead_amaps_endpoint',
-    header: 'trailhead_amaps_endpoint',
-    accessorFn: row => `${row.name}`,
+    id: 'trailhead_amaps_url',
+    header: 'Apple Maps',
+    accessorFn: row => `${row.trailhead_amaps_url}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'description',
-    header: 'description',
-    accessorFn: row => `${row.name}`,
+    header: 'Description',
+    accessorFn: row => `${row.description}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())

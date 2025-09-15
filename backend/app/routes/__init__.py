@@ -7,11 +7,13 @@ from .waiver import hike_waiver
 from .vehicles import vehicles
 from .members import members
 from .mail import mail
+from .trails import trails
 
 
 def register_routes(app):
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(dashboard, url_prefix="/api/admin")
+    app.register_blueprint(trails, url_prefix="/api/admin/trails")
     app.register_blueprint(images, url_prefix="/api/images")
     app.register_blueprint(hike_vote, url_prefix="/api/hike-vote")
     app.register_blueprint(hike_signup, url_prefix="/api/hike-signup")
