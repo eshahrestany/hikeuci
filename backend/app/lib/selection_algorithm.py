@@ -1,5 +1,9 @@
 from typing import List
 from ..models import Hike, Signup, Vehicle
+from typing import List
+
+from ..models import Hike, Signup, Vehicle
+
 
 
 def calc_passenger_capacity(drivers: List[Signup]) -> int:
