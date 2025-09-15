@@ -1,0 +1,22 @@
+{% macro email(personalization, batch) -%}
+Hi {{ personalization.name }},
+
+It's time to vote for this week's hike! Your voting link is below:
+
+{{ personalization.magic_url }}
+
+Trail options:
+{% for t in batch.trails -%}
+- {{ t.name }}{% if t.difficulty %} ({{ t.difficulty }}){% endif %}
+{% endfor %}
+
+This link is personal to you and expires when voting ends. Please do not share it with others.
+
+Best,
+Hiking Club at UCI Officers
+Official UCI Campus Page: Hiking Club at UCI Campus Orgs
+Email: hikingclub@uci.edu
+Linktree: linktr.ee/hikingclubatuci
+Instagram: @hikingclubatucirvine
+Discord: discord.gg/tGwU6HeBYv
+{%- endmacro %}

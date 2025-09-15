@@ -6,7 +6,9 @@ import Footer from '../../components/public/Footer.vue'
 </script>
 
 <template>
-  <NavBar :overlay-navbar="false" />
-  <SignupForm/>
-  <Footer />
+  <div class="flex flex-col min-h-screen">
+    <NavBar :overlay-navbar="false" />
+    <SignupForm class="flex-grow place-content-center"/>
+    <Footer />
+  </div>
 </template> 

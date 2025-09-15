@@ -16,13 +16,14 @@
             <div v-if="loading">
               <Skeleton class="h-6 w-3/5 mb-4" />
               <Skeleton class="space-y-2">
-                <Skeleton class="h-4 w-full" />                <Skeleton class="h-4 w-4/5" />
+                <Skeleton class="h-4 w-full" />
+                <Skeleton class="h-4 w-4/5" />
                 <Skeleton class="h-4 w-2/3" />
               </Skeleton>
             </div>
 
             <!-- No Upcoming Hike -->
-            <div v-else-if="response.status === 'none'">
+            <div v-else-if="response.status === null">
               <p class="text-center text-sm text-gray-500 mb-4"> No upcoming hikes found. </p>
               <Button variant="outline" class="block mx-auto"> Set Next Hike </Button>
             </div>
@@ -41,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive, h } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 
@@ -59,12 +60,12 @@ const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
 
 const loading = ref(true)
-const response = ref({ status: 'none', candidates: [], users: [], trail_id: null, trail_name: '' })
+const response = ref({ status: null, candidates: [], users: [], trail_id: null, trail_name: '' })
 
 async function loadUpcoming() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/active-hike/upcoming')
+    const res = await fetchWithAuth('/admin/upcoming')
     response.value = await res.json()
     console.info(response.value)
   } catch {
