@@ -33,11 +33,12 @@ const sig1HasInk = ref(false)
 const sig2HasInk = ref(false)
 const signaturesTouched = computed(() => sig1HasInk.value && sig2HasInk.value)
 
-const allowSubmit = computed(() => signaturesTouched.value && !!printName.value)
+const allowSubmit = computed(() => signaturesTouched.value && !!printName.value && agreePolicy.value)
 
 const signature1 = ref(null)
 const signature2 = ref(null)
 const isMinor = ref(false)
+const agreePolicy = ref(false)
 const age = ref(17)
 const printName = ref(null)
 
@@ -83,7 +84,13 @@ function mountESignSlots() {
               onClick: this.handleClear
             }, 'Clear')
           ]),
-          h('p', {class: 'text-xs text-stone-600'}, 'Signature of User or Parent/Guardian if Minor')
+          h('p', {class: 'text-xs text-stone-600'},
+              ['Signature of User or Parent/Guardian if Minor',
+                      // Required Indicator
+                      h('span', {
+                        'aria-hidden': 'true',
+                        class: 'ml-2 text-xs font-medium text-rose-600'
+                      }, '* Required')]),
         ])
       }
     })
@@ -104,7 +111,7 @@ function mountESignSlots() {
       render() {
         return h(Input, {
           id: 'printName',
-          placeholder: 'Print Name',
+          placeholder: 'Print Name (required)',
           modelValue: this.printName,
           'onUpdate:modelValue': (n) => (this.printName = n),
         })
@@ -168,6 +175,52 @@ function mountESignSlots() {
                 )
               ])
               : null
+        ])
+      }
+    })
+    app.mount(mountPoint)
+  }
+
+  const policySlot = document.getElementById('policy-slot')
+  if (policySlot) {
+    const mountPoint = document.createElement('div')
+    policySlot.replaceWith(mountPoint)
+
+    const app = createApp({
+      setup() {
+        const toggle = (e) => {
+          const el = e.target
+          agreePolicy.value = !!el.checked
+        }
+        const onUpdate = (v) => (age.value = v)
+        return { agreePolicy, toggle, onUpdate }
+      },
+      render() {
+        return h('div', { class: 'flex items-center gap-4' }, [
+          // Checkbox: v-model="agreePolicy" (required)
+          h('label', { class: 'flex items-center gap-2 text-sm text-midnight' }, [
+            h('input', {
+              id: 'agree-policy',
+              type: 'checkbox',
+              checked: this.agreePolicy,
+              onChange: this.toggle,
+              class: 'h-4 w-4 rounded border-stone-300',
+              required: true,
+            }),
+            h('span', { class: 'flex items-center gap-1' }, [
+              "I have read and agree to the Hiking Club at UCI ",
+              h("a", { href: "/privacy-policy", target: "_blank" }, "Privacy Policy"),
+              " and ",
+              h("a", { href: "/esign-policy", target: "_blank" }, "Electronic Records and Signatures Policy."),
+              // Screen-reader hint
+              h('span', { id: 'agree-policy-required', class: 'sr-only' }, 'Required')
+            ]),
+            // Required indicator
+            h('span', {
+              'aria-hidden': 'true',
+              class: 'ml-2 text-xs font-medium text-rose-600'
+            }, '* Required')
+          ])
         ])
       }
     })
