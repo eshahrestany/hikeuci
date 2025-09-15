@@ -99,12 +99,14 @@ def cancel():
 
     hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
 
+
     existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if not existing_signup:
         return jsonify({"error": "User does not have a signup for this hike"}), 400
 
     # just delete the signup and magic link, don't delete waiver.
 
+    # Delete the signup and magic link. Do not delete waiver, even if it exists.
     db.session.delete(existing_signup)
     db.session.delete(magic_link)
     db.session.commit()
