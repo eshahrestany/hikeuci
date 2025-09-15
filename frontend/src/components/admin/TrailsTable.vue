@@ -1,29 +1,48 @@
 <script setup>
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
 import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable} from "@tanstack/vue-table";
-import {Check, Edit, MailPlus, PlusCircle, Trash} from "lucide-vue-next";
-import {Input} from "@/components/ui/input/index.js";
 import {Button} from "@/components/ui/button/index.js";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog/index.js";
-import ModifyUserModal from "@/components/admin/ModifyUserModal.vue";
-import {ref, shallowRef, h, computed} from "vue";
-import {toast} from "vue-sonner";
-import {Badge} from "@/components/ui/badge/index.js";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
+import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
+import TrailsForm from "@/components/admin/TrailsForm.vue";
+import {useRouter} from "vue-router";
 
-const props = defineProps({trailsData: { type: Object, required: true }})
-const { postWithAuth } = useAuth()
+const { state: signOut, fetchWithAuth } = useAuth()
+const router = useRouter()
 
-const data = computed(() => props.trailsData)
+const loading = ref(true)
+const response = ref([])
+const formIsOpen = ref(false);
+const editTrailData = ref({});
+
+const difficulties = [
+    'Easy', 'Moderate', 'Difficult', 'Very Difficult'
+]
+
+async function loadTrails() {
+  loading.value = true
+  try {
+    const res = await fetchWithAuth('/admin/trails')
+    response.value = await res.json()
+    console.info(response.value)
+  } catch {
+    response.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function openForm(trailData= null)
+{
+    editTrailData.value = trailData
+    formIsOpen.value = true;
+}
+function handleFormSuccess()
+{
+    loadTrails();
+}
+
+const data = computed(() => response.value )
 
 const columns = [
   {
@@ -69,7 +88,7 @@ const columns = [
   {
     id: 'difficulty',
     header: 'Difficulty',
-    accessorFn: row => `${row.difficulty}`,
+    accessorFn: row => `${difficulties[row.difficulty]}`,
     cell: info => info.getValue(),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
@@ -106,6 +125,16 @@ const columns = [
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
+  {
+    id: 'edit',
+    header: 'Modify',
+    cell: ({ row }) =>
+      h(Button, {
+        variant: 'outline',
+        size: 'sm',
+        onClick: () => openForm(row.original)
+      }, () => 'Edit'),
+  }
 ];
 
 const table = useVueTable({
@@ -114,9 +143,17 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
 })
+
+onMounted(loadTrails)
 </script>
 
 <template>
+<Button variant="outline" @click="openForm(null)">+ Add Trail</Button>
+<TrailsForm
+    v-model:isOpen="formIsOpen"
+    :trail-data="editTrailData"
+    @submitted="handleFormSuccess"
+/>
 <Table>
   <TableHeader>
     <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">

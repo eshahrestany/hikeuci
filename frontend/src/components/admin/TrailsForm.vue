@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch, computed } from 'vue'
+import { reactive, watch, computed, ref } from 'vue'
 import {
   Dialog,
   DialogContent,
@@ -41,7 +41,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen', 'submitted'])
 
-const { apiFetch } = useAuth()
+const { getAuthHeaders, fetchWithAuth} = useAuth()
 
 const difficultyOptions = [
   { value: 0, label: 'Easy' },
@@ -63,6 +63,7 @@ const defaultTrailState = {
   description: ''
 }
 
+
 const formData = reactive({ ...defaultTrailState })
 
 watch(() => props.trailData, (newTrail) => {
@@ -73,24 +74,57 @@ watch(() => props.trailData, (newTrail) => {
   }
 }, { immediate: true })
 
+
 const isEditing = computed(() => !!props.trailData)
 const dialogTitle = computed(() => isEditing.value ? 'Edit Trail' : 'Create New Trail')
 const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : 'Create Trail')
 
+const selectedFile = ref(null);
+function handleFileChange(event) {
+  const file = event.target.files[0];
+  if (file) {
+    selectedFile.value = file;
+  }
+}
+
+const uploadPhoto = async (trailId) => {
+  try {
+
+    const endpoint = `/api/images/uploads/${trailId}`;
+    const method = 'POST';
+    const uploadFormData = new FormData()
+    uploadFormData.append("file", selectedFile.value)
+
+    const headers = {
+       ...getAuthHeaders(),
+    }
+
+    const response = fetch(endpoint,
+      {
+        method: method,
+        headers,
+        body: uploadFormData,
+      });
+
+    toast.success(`Trail Photo successfully updated 🎉`)
+  } catch (error) {
+    console.error("Failed to submit trail photo:", error)
+    toast.error('Photo Submission Failed', { description: error.message })
+  }
+
+}
+
 const handleSubmit = async () => {
   try {
-    const endpoint = isEditing.value ? `/api/admin/trails/${props.trailData.id}` : '/api/admin/trails'
+    const endpoint = isEditing.value ? `/admin/trails/${props.trailData.id}` : '/admin/trails'
     const method = isEditing.value ? 'PUT' : 'POST'
 
-    const response = await apiFetch(endpoint, {
-      method: method,
-      body: JSON.stringify(formData)
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || 'An unknown error occurred.')
-    }
+    const response = await fetchWithAuth(endpoint,{method: method, body: JSON.stringify(formData)})
+    const body = await response.json()
+    const new_id = body.id;
+    console.log(body)
+  console.log(new_id)
+    await uploadPhoto(new_id);
 
     toast.success(`Trail successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
     emit('submitted')
@@ -99,6 +133,21 @@ const handleSubmit = async () => {
     console.error("Failed to submit trail form:", error)
     toast.error('Submission Failed', { description: error.message })
   }
+}
+
+const deleteTrail = async () => {
+    try {
+        const endpoint = `/admin/trails/${props.trailData.id}`
+        const method = "DELETE"
+
+        const response = await fetchWithAuth(endpoint, {method: method})
+        toast.success(`Trail successfully Deleted`)
+
+        emit('submitted')
+        emit('update:isOpen', false)
+    } catch (error) {
+        toast.error('Submission Failed', { description: error.message })
+    }
 }
 
 const handleClose = (openState) => {
@@ -118,6 +167,8 @@ const handleClose = (openState) => {
 
       <form id="trail-form" @submit.prevent="handleSubmit" class="py-4 overflow-y-auto pr-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
           <div class="space-y-2">
             <Label for="name">Trail Name</Label>
             <Input id="name" v-model="formData.name" required />
@@ -177,20 +228,24 @@ const handleClose = (openState) => {
               </SelectContent>
             </Select>
           </div>
+          <div class="space-y-2">
+            <Label for="picture">Picture</Label>
+            <Input id="picture" type="file" @change="handleFileChange" />
+          </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="alltrails_url">AllTrails URL</Label>
-            <Input id="alltrails_url" type="url" v-model="formData.alltrails_url" placeholder="https://www.alltrails.com/..." required />
+            <Input id="alltrails_url" type="url" v-model="formData.alltrails_url" placeholder="https://www.alltrails.com/..."  />
           </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="trailhead_gmaps_url">Google Maps Trailhead URL</Label>
-            <Input id="trailhead_gmaps_url" type="url" v-model="formData.trailhead_gmaps_url" placeholder="https://maps.app.goo.gl/..." required />
+            <Input id="trailhead_gmaps_url" type="url" v-model="formData.trailhead_gmaps_url" placeholder="https://maps.app.goo.gl/..."  />
           </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="trailhead_amaps_url">Apple Maps Trailhead URL</Label>
-            <Input id="trailhead_amaps_url" type="url" v-model="formData.trailhead_amaps_url" placeholder="https://maps.apple.com/..." required />
+            <Input id="trailhead_amaps_url" type="url" v-model="formData.trailhead_amaps_url" placeholder="https://maps.apple.com/..."  />
           </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">
@@ -200,9 +255,10 @@ const handleClose = (openState) => {
         </div>
       </form>
 
-      <DialogFooter>
+      <DialogFooter class="w-full flex justify-between items-center gap-4">
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
-        <Button type="submit" form="trail-form">{{ submitButtonText }}</Button>
+        <Button type="submit" variant="default" form="trail-form">{{ submitButtonText }}</Button>
+        <Button v-if="isEditing" type="button" variant="destructive" @click="deleteTrail()">Delete</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

@@ -80,5 +80,5 @@ export function useAuth() {
     return res;
   }
 
-  return { state, setUser, signOut, fetchWithAuth, postWithAuth }
+  return { state, setUser, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }
 }
