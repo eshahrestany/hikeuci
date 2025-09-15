@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
+import type { CSSProperties } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
 /* -------------------------------------------------------------
@@ -86,6 +87,7 @@ const props = defineProps({
 /* -------------------------------------------------------------
  * Import **only image files** from assets so CSS / audio / etc. are ignored.
  * -----------------------------------------------------------*/
+// @ts-ignore - Vite provides import.meta.glob at runtime; tsconfig may not know
 const importedImages = import.meta.glob(
   '../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg}',
   { eager: true, import: 'default' },
@@ -157,22 +159,16 @@ onMounted(() => {
   measureNaturalWidths();
 
   // Handle seamless looping once the slide transition completes
-  slidesRef.value?.addEventListener('transitionend', () => {
-    const originalLength = displayedOfficers.value.length;
-    if (currentIndex.value >= originalLength) {
-      transitionEnabled.value = false; // temporarily disable animation
-      currentIndex.value = currentIndex.value - originalLength;
-      nextTick(() => {
-        // Force reflow so the browser registers the style change
-        void slidesRef.value?.offsetWidth;
-        transitionEnabled.value = true; // re-enable animation
-      });
-    }
-  });
+  slidesRef.value?.addEventListener('transitionend', onTransitionEnd);
+
+  // If fonts load after mount, re-measure once they're ready
+  // This helps ensure initial card widths are correct on first paint
+  // and avoids a case where text wrapping changes widths later.
+  (document as any).fonts?.ready?.then?.(() => measureNaturalWidths());
 });
 
 onUnmounted(() => {
-  slidesRef.value?.removeEventListener('transitionend', () => {});
+  slidesRef.value?.removeEventListener('transitionend', onTransitionEnd);
 });
 
 // ResizeObserver – updates container width & cards-per-view reactively
@@ -184,10 +180,13 @@ useResizeObserver(wrapperRef, (entries) => {
 });
 
 /* -------------------------------------------------------------
- * Carousel translate logic – shift by exactly one visible card each tick
+ * Carousel translate logic – pixel-based shifting for consistent steps
  * -----------------------------------------------------------*/
 const currentIndex = ref(0);
-const translate = computed(() => `translateX(-${currentIndex.value * (100 / cardsPerView.value)}%)`);
+const translate = computed(() => {
+  const stepPx = columnWidth.value || 0;
+  return `translateX(-${currentIndex.value * stepPx}px)`;
+});
 
 // Interval with pause/resume
 const { pause, resume } = useIntervalFn(() => {
@@ -236,8 +235,10 @@ const cardWidth = computed(() => {
   return Math.min(maxCardNaturalWidth.value, columnWidth.value);
 });
 
-const containerStyle = computed(() => ({
-  flex: `0 0 ${100 / cardsPerView.value}%`,
+const containerStyle = computed((): CSSProperties => ({
+  flex: '0 0 auto',
+  width: `${columnWidth.value}px`,
+  boxSizing: 'border-box',
 }));
 const cardStyle = computed(() => (cardWidth.value ? { width: `${cardWidth.value}px` } : {}));
 
@@ -249,12 +250,29 @@ const transitionEnabled = ref(true);
 const slidesStyle = computed(() => ({
   transform: translate.value,
   transition: transitionEnabled.value ? 'transform 0.7s ease-in-out' : 'none',
+  willChange: 'transform',
 }));
 
 /* -------------------------------------------------------------
  * Expose state for potential external controls / debugging
  * -----------------------------------------------------------*/
 defineExpose({ currentIndex });
+
+/* -------------------------------------------------------------
+ * Stable transitionend handler for seamless looping
+ * -----------------------------------------------------------*/
+function onTransitionEnd() {
+  const originalLength = displayedOfficers.value.length;
+  if (currentIndex.value >= originalLength) {
+    transitionEnabled.value = false; // temporarily disable animation
+    currentIndex.value = currentIndex.value - originalLength;
+    nextTick(() => {
+      // Force reflow so the browser registers the style change
+      void slidesRef.value?.offsetWidth;
+      transitionEnabled.value = true; // re-enable animation
+    });
+  }
+}
 </script>
 
 <style scoped>

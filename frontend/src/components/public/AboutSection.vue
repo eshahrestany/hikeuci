@@ -24,33 +24,14 @@
         </p>
 
         <p class="text-lg leading-relaxed text-midnight/90">
-          Our mission is simple: <span class="italic">“Make the outdoors accessible, safe, and enjoyable for everyone.”</span> We believe exploring nature builds resilience, cultivates stewardship, and strengthens friendships. Whether you’re looking to decompress with a sunset stroll or challenge yourself on a multi‑day trek, we’ve got you covered.
+          Hiking club explores trails all across Orange County, and add new ones to our schedule every year. Whether you are looking to enjoy the scenery, challenge your hiking skills, or simply make new friends, we would love for you to join us.
         </p>
 
         <p class="text-lg leading-relaxed text-midnight/90">
-          Today, we host <span class="font-semibold">weekly local hikes</span>, <span class="font-semibold">quarterly retreats</span>, stewardship events with park partners, and skills workshops on everything from navigation to Leave No Trace ethics. Come hike with us—and discover what adventure means to you!
+          Today, we host <span class="font-semibold">weekly local hikes</span> every Saturday morning, lead by our Hike Leaders, and finish off with an optional group lunch. To learn more, find us on Instagram at @hikingclubatucirvine.
         </p>
 
-        <!-- Keeping the button emit for now; swap to <router-link> when routing is ready -->
-        <button
-          @click="$emit('join-click')"
-          class="self-start mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-lg font-semibold text-white bg-forest hover:bg-forest/80 transition duration-200"
-          type="button"
-        >
-          Join a Hike
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            class="w-5 h-5"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M12.293 5.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 11-1.414-1.414L16.586 13H4a1 1 0 110-2h12.586l-4.293-4.293a1 1 0 010-1.414z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </button>
+        
       </div>
     </div>
   </section>

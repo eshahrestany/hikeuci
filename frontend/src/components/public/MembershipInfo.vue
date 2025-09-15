@@ -1,0 +1,67 @@
+<template>
+  <section id="membership" class="bg-midnight text-white py-16">
+    <div class="max-w-5xl mx-auto px-6">
+      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat mb-8">
+        Join today!
+      </h2>
+      <div class="relative bg-uci-blue rounded-3xl shadow-xl p-8 sm:p-10">
+        <!-- Combined banner placed at the top inside the box -->
+        <div class="mb-6 select-none">
+          <div class="bg-uci-gold text-midnight rounded-xl px-4 sm:px-6 py-2 sm:py-3 shadow-md font-montserrat text-center">
+            <span class="block font-extrabold tracking-wide leading-none text-lg sm:text-xl lg:text-2xl">
+              MEMBERSHIP COMES WITH A FREE T-SHIRT!
+            </span>
+          </div>
+        </div>
+
+        <!-- Payment options -->
+        <div class="mt-8 sm:mt-10 grid gap-6 md:grid-cols-[1fr_auto_1fr] items-stretch">
+          <!-- Venmo card -->
+          <div class="bg-white text-midnight rounded-2xl p-6 sm:p-8 flex flex-col justify-center">
+            <p class="text-lg font-extrabold uppercase tracking-wide font-montserrat">Venmo $12 to</p>
+            <p class="mt-1 text-2xl font-extrabold text-uci-blue font-montserrat">@hikingclubatuci</p>
+            <div class="mt-4">
+              <p class="font-semibold">Include your:</p>
+              <ul class="mt-1 space-y-1 font-bold">
+                <li>Full name and</li>
+                <li>School email (Open to all college students!)</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- OR -->
+          <div class="flex items-center justify-center">
+            <span class="text-uci-gold text-4xl font-extrabold font-montserrat">OR</span>
+          </div>
+
+          <!-- Alternative payment card -->
+          <div class="bg-white text-midnight rounded-2xl p-6 sm:p-8 flex flex-col justify-center">
+            <p class="text-lg font-extrabold uppercase tracking-wide font-montserrat">Don't have Venmo?</p>
+            <p class="mt-3 text-base leading-relaxed">
+              DM <span class="font-extrabold underline">@Sophia S</span> on Discord for
+              Zelle or PayPal.
+            </p>
+          </div>
+        </div>
+
+        <!-- Signup timing -->
+        <p class="mt-10 text-center text-2xl sm:text-3xl font-extrabold font-montserrat">
+          Hike sign-ups come out Tuesday evening, so check your inbox then!
+        </p>
+
+        <!-- Help text -->
+        <p class="mt-6 text-center text-uci-gold italic font-semibold">
+          Any questions? Didn't receive an email?
+          DM any officer on Discord and we will help you out!
+        </p>
+      </div>
+    </div>
+  </section>
+  
+</template>
+
+<script setup>
+// Presentational component; no props required for now
+</script>
+
+
