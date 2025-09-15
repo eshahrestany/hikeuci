@@ -24,6 +24,15 @@ def flatten_num(x: float or int) -> float or int:
     return x
 
 
+def ordinal(n: int) -> str:
+    """Returns an ordinal string based on the given int, e.g. 1 -> 1st, 2 -> 2nd, 20 -> 20th"""
+    if 10 <= n % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
 def _remove_magic_link(member_id: int, hike_id: int, email_type: str):
     ml = MagicLink.query.filter_by(member_id=member_id, hike_id=hike_id, type=email_type)
     if not ml:
@@ -53,6 +62,10 @@ def get_personalization(email_type, hike: Hike, member: Member):
 
         return personalization
 
+    elif email_type == "waitlist":
+        personalization["waitlist_ordinal"] = ordinal(Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first().waitlist_pos)
+        return personalization
+
     # Access-Protected Emails (Needs new magic link)
 
     # First check for existing ML. Clear it if found.
@@ -66,16 +79,17 @@ def get_personalization(email_type, hike: Hike, member: Member):
 
     if email_type in ["voting", "signup"]:
         # good to go (member_name, magic_url)
-        return personalization
+        pass
 
     elif email_type == "waiver":
         # Add signup transport data to waivers
         signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
         personalization["transport_type"] = signup.transport_type
-        return personalization
 
     else:
         raise Exception(f"Unknown email type: {email_type}")
+
+    return personalization
 
 
 @dataclass

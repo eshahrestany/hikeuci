@@ -50,7 +50,6 @@
 
 <script setup>
 import { h, shallowRef, ref, onMounted } from 'vue'
-import { useAuth } from '@/lib/auth.js'
 import {
   useVueTable,
   getCoreRowModel,
@@ -68,18 +67,8 @@ import { Button } from '@/components/ui/button'
 import { Edit } from 'lucide-vue-next'
 import ModifyUserModal from '@/components/admin/ModifyUserModal.vue'
 
-const { fetchWithAuth } = useAuth()
-const data = shallowRef([])
-
-async function loadWaitlist() {
-  const res = await fetchWithAuth('/admin/waitlist')
-  if (!res.ok) return
-  const users = await res.json()
-  data.value = users.sort((a, b) => a.waitlist_pos - b.waitlist_pos)
-}
-
-onMounted(loadWaitlist)
-
+const props = defineProps({waitlistData: {type: Object, required: true}})
+const data = shallowRef([...props.waitlistData])
 const editUser = ref(null)
 
 function modifyRow(user) {

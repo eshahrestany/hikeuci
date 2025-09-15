@@ -70,10 +70,10 @@ def seed_voting():
     hike = Hike(
         status="active",
         phase="voting",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) + timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )
     db.session.add(hike)
     db.session.commit()
@@ -115,10 +115,10 @@ def seed_email_vote():
     hike = Hike(
         status="active",
         phase="voting",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) + timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )
     db.session.add(hike)
     db.session.commit()
@@ -126,8 +126,8 @@ def seed_email_vote():
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
                Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
                Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
-               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
-               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               Member(name="Example 1", email="example1@example.com"),
+               Member(name="Example 1", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
@@ -167,34 +167,34 @@ def seed_signup():
         trail_id=trails[0].id,
         status="past",
         phase=None,
-        voting_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-1),
-        signup_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-3),
-        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-5),
-        hike_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-2),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-4),
+        hike_date=datetime.now(timezone.utc) - timedelta(weeks=3, days=-6)
     ), Hike(
         trail_id=trails[1].id,
         status="past",
         phase=None,
-        voting_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-1),
-        signup_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-3),
-        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-5),
-        hike_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-2),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-4),
+        hike_date=datetime.now(timezone.utc) - timedelta(weeks=2, days=-6)
     ), Hike(
         trail_id=trails[0].id,
         status="past",
         phase=None,
-        voting_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-1),
-        signup_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-3),
-        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-5),
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-2),
+        waiver_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-4),
         hike_date=datetime.now(timezone.utc) - timedelta(weeks=1, days=-6)
     ), Hike(
         trail_id=trails[1].id,
         status="active",
         phase="signup",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) + timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )]
     db.session.add_all(hikes)
     db.session.commit()
@@ -257,6 +257,7 @@ def seed_signup():
                     Signup(
                         member_id=m.id,
                         hike_id=h.id,
+                        food_interest=random.choice([True, False]),
                         status="attended",          # counted by your priority logic
                         transport_type=transport_type,
                         vehicle_id=vehicle_id
@@ -319,10 +320,10 @@ def seed_email_signup():
         trail_id=trail.id,
         status="active",
         phase="signup",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc)+ timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc)+ timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )
     db.session.add(hike)
     db.session.commit()
@@ -330,8 +331,8 @@ def seed_email_signup():
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
                Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
                Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
-               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
-               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               Member(name="Example 1", email="example1@example.com"),
+               Member(name="Example 1", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
@@ -364,10 +365,10 @@ def seed_waiver():
         trail_id=trail.id,
         status="active",
         phase="waiver",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) + timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )
     db.session.add(hike)
     db.session.commit()
@@ -509,10 +510,10 @@ def seed_email_waiver():
         trail_id=trail.id,
         status="active",
         phase="waiver",
-        voting_date=datetime.now(timezone.utc) + timedelta(days=1),
-        signup_date=datetime.now(timezone.utc) + timedelta(days=3),
-        waiver_date=datetime.now(timezone.utc) + timedelta(days=5),
-        hike_date=datetime.now(timezone.utc) + timedelta(days=7)
+        has_vote=True,
+        signup_date=datetime.now(timezone.utc) + timedelta(days=2),
+        waiver_date=datetime.now(timezone.utc) + timedelta(days=4),
+        hike_date=datetime.now(timezone.utc) + timedelta(days=6)
     )
     db.session.add(hike)
     db.session.commit()
@@ -520,8 +521,8 @@ def seed_email_waiver():
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
                Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
                Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
-               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
-               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               Member(name="Example 1", email="example1@example.com"),
+               Member(name="Example 1", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()

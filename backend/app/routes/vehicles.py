@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app, Response, request
+from flask import Blueprint, jsonify, request
 from .. import db
 from ..decorators import admin_required
 from ..models import Vehicle

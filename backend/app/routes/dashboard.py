@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import and_
+from datetime import datetime, timezone, timedelta
 
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
-from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink
-from ..lib.model_utils import current_active_hike
+from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
+from ..lib.model_utils import current_active_hike, bump_waitlist
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -17,8 +18,34 @@ def get_active_hike_info():
     if hike is None:
         return jsonify(status=None), 200
 
-    phase = (hike.phase or "").lower()
-    return_data = {"status": phase}
+    return_data = {}
+    phase = hike.phase.lower()
+    if not phase:
+        return_data["status"] = 'awaiting_vote_start'
+        return_data["vote_start"] = hike.voting_date.get_localized_time("voting_date").strftime("%c")
+    else:
+        return_data["status"] = phase
+
+
+    # timeline block
+    # add timeline metadata
+    return_data["has_vote"] = bool(getattr(hike, "has_vote", False))
+    return_data["phase"] = phase
+
+    # Build timeline datetimes: frontend expects array length 3 (skipped vote) or 4 (has_vote)
+    if return_data["has_vote"]:
+        return_data["timeline"] = {
+            "vote_date": hike.get_localized_time('created_date').isoformat() if hike.signup_date else None,
+            "signup_date": hike.get_localized_time('signup_date').isoformat() if hike.signup_date else None,
+            "waiver_date": hike.get_localized_time('waiver_date').isoformat() if hike.waiver_date else None,
+            "hike_date": hike.get_localized_time('hike_date').isoformat() if hike.hike_date else None,
+        }
+    else:
+        return_data["timeline"] = {
+            "signup_date": hike.get_localized_time('signup_date').isoformat() if hike.signup_date else None,
+            "waiver_date": hike.get_localized_time('waiver_date').isoformat() if hike.waiver_date else None,
+            "hike_date": hike.get_localized_time('hike_date').isoformat() if hike.hike_date else None,
+        }
 
     # VOTING: summarize candidate trails + voters (from Vote rows)
     if phase == "voting":
@@ -63,6 +90,7 @@ def get_active_hike_info():
         rows = (
             db.session.query(
                 Member,
+                Signup.status,
                 Signup.transport_type,
                 Signup.is_checked_in,
                 Signup.vehicle_id,
@@ -75,13 +103,13 @@ def get_active_hike_info():
                 Waiver,
                 and_(Waiver.member_id == Member.id, Waiver.hike_id == hike.id),
             )
-            .filter(Signup.hike_id == hike.id)
+            .filter(Signup.hike_id == hike.id, Signup.status != "waitlisted")
             .all()
         )
 
         users = []
         total_capacity = 0
-        for member, transport_type, is_checked_in, vehicle_id, seats, waiver_id in rows:
+        for member, signup_status, transport_type, is_checked_in, vehicle_id, seats, waiver_id in rows:
             user_obj = {
                 "member_id": member.id,
                 "name": member.name,
@@ -101,6 +129,78 @@ def get_active_hike_info():
 
     # Any other phase → just return the phase for now
     return jsonify(return_data), 200
+
+
+@dashboard.route('/set-hike', methods=['POST'])
+@admin_required
+def set_next_hike():
+    data = request.get_json()
+    flow = data.get("flow")
+    if not flow: return jsonify(error="missing flow param"), 400
+
+    vote_trail_ids = []
+    if flow == "vote":
+        signup_date = data.get("signup_date")
+        if not signup_date: return jsonify(error="missing signup_date"), 400
+
+        vote_trail_ids = data.get("vote_trail_ids")
+        if not vote_trail_ids: return jsonify(error="missing vote_trail_ids")
+
+        if len(vote_trail_ids) == 0:
+            return jsonify(error="invalid vote_trail_ids")
+
+        for tid in vote_trail_ids:
+            t = Trail.query.get(tid)
+            if not t:
+                return jsonify(error=f"invalid vote_trail_id {tid}")
+
+    else:
+        trail_id = data.get("trail_id")
+        if not trail_id: return jsonify(error="Missing trail_id")
+        trail = Trail.query.get(trail_id)
+        if not trail: return jsonify(error=f"Invalid trail_id {trail_id}")
+
+    waiver_date = data.get("waiver_date")
+    if not waiver_date: return jsonify(error="missing waiver_date"), 400
+
+    hike_date = data.get("hike_date")
+    if not hike_date: return jsonify(error="missing hike_date"), 400
+
+    try:
+        if flow == "vote":
+            signup_date = datetime.fromisoformat(signup_date).astimezone(timezone.utc)
+
+        waiver_date = datetime.fromisoformat(waiver_date).astimezone(timezone.utc)
+        hike_date = datetime.fromisoformat(hike_date).astimezone(timezone.utc)
+
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+
+    if flow == "vote" and signup_date + timedelta(hours=1) > waiver_date:
+        return jsonify(error="waiver_date is not at least 1 hour after signup_date"), 400
+
+    if waiver_date + timedelta(hours=1) > hike_date:
+        return jsonify(error="hike_date is not at least 1 hour after waiver_date"), 400
+
+    new_hike = Hike(
+        status="active",
+        phase="voting" if flow == "vote" else "signup",
+        trail_id=trail_id if flow == "signup" else None,
+        has_vote=flow == "vote",
+        signup_date=signup_date if flow == "vote" else datetime.now(timezone.utc),
+        waiver_date=waiver_date,
+        hike_date=hike_date
+    )
+
+    db.session.add(new_hike)
+    for tid in vote_trail_ids:  # empty list if not vote flow
+        t = Trail.query.get(tid)
+        t.is_active_vote_candidate = True
+    db.session.commit()
+
+    current_app.extensions["celery"].send_task("app.tasks.start_email_campaign", args=[new_hike.id])
+
+    return jsonify(success=True), 200
 
 
 @dashboard.route('/waitlist', methods=['GET'])
@@ -241,7 +341,18 @@ def modify_user():
     member.name = name
     signup.transport_type = transport_type
 
+    if signup.status == "waitlisted":
+        signup.status = "confirmed"
+        signup.waitlist_pos = None
+        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+
     db.session.commit()
+
+    if signup.transport_type == "driver":
+        capacity = Vehicle.query.get(signup.vehicle_id).passenger_seats
+        bump_waitlist(hike.id, num_passengers=capacity)
+
+
     return jsonify(success=True), 200
 
 
@@ -300,12 +411,15 @@ def add_user():
         hike_id=hike.id,
         member_id=member_id,
         transport_type=transport_type,
+        food_interest=False,
         vehicle_id=vehicle_id if transport_type == "driver" else None,
         is_checked_in=False,
-        status="pending",
+        status="confirmed",
     )
     db.session.add(signup)
     db.session.commit()
+
+    current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
 
     m = Member.query.get(member_id)
     user_obj = {

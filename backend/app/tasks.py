@@ -1,19 +1,23 @@
 import time
+from datetime import timedelta
 import pymupdf
 from datetime import datetime, timezone
 from typing import List
 from make_celery import celery_app
 from flask import current_app
 from . import db
-from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike, Waiver
+from .lib import phases
 from .lib.email_connection import EmailConnection
+from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike, Waiver
 from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
 from zoneinfo import ZoneInfo
 
-def start_email_campaign(hike_id: int) -> int:
+@celery_app.task(name="app.tasks.start_email_campaign")
+def start_email_campaign(hike_id: int, waitlist=False) -> int:
     """
+    The waitlist flag is available for hikes in the waiver phase only-- if set to True, will send waitlist emails to waitlisted signups instead of waivers.
     Create a new email campaign based on the provided hike's phase,
     clear & repopulate EmailTask with one row per member,
     clear previous MagicLinks, and pre-generate a MagicLink for each member.
@@ -28,31 +32,43 @@ def start_email_campaign(hike_id: int) -> int:
         raise RuntimeError(f"{email_type} phase email campaign already completed for this hike")
 
     # 1) Create campaign
-    campaign = EmailCampaign(hike_id=hike_id, type=email_type, date_created=datetime.now(timezone.utc))
+    campaign = EmailCampaign(
+        hike_id=hike_id,
+        type=email_type if not waitlist else "waitlist",
+        date_created=datetime.now(timezone.utc)
+    )
     db.session.add(campaign)
     db.session.commit()
 
-    # 2) Clear prior tasks
-    EmailTask.query.delete()
-    db.session.commit()
-
-    # 3) Clear prior magic links for this hike
+    # 2) Clear prior magic links for this hike
     MagicLink.query.filter_by(hike_id=hike_id).delete()
     db.session.commit()
 
-    # 4) Populate tasks from all members
+    # 3) Populate tasks from all members
 
     if email_type in ("voting", "signup"):
         members: List[Member] = Member.query.all()
     else:
-        # send waivers only to confirmed hikers
-        members: List[Member] = (
-            Member.query
-            .join(Signup, Signup.member_id == Member.id)
-            .filter(Signup.hike_id == hike_id, Signup.status == "confirmed")
-            .distinct()
-            .all()
-        )
+        if waitlist:
+            # send waitlist email only to waitlisted hikers
+            members: List[Member] = (
+                Member.query
+                .join(Signup, Signup.member_id == Member.id)
+                .filter(Signup.hike_id == hike_id, Signup.status == "waitlisted")
+                .distinct()
+                .all()
+            )
+            if len(members) == 0:
+                return -1
+        else:
+            # send waivers only to confirmed hikers
+            members: List[Member] = (
+                Member.query
+                .join(Signup, Signup.member_id == Member.id)
+                .filter(Signup.hike_id == hike_id, Signup.status == "confirmed")
+                .distinct()
+                .all()
+            )
 
     tasks: List[EmailTask] = []
 
@@ -291,3 +307,27 @@ def generate_waiver_pdf(waiver_id, email_user=True):
 
     # Call email send task
     send_email.delay("waiver_confirmation", member.id, hike.id, files=files)
+
+
+@celery_app.task(name="app.tasks.check_and_update_phase")
+def check_and_update_phase():
+    ah = Hike.query.filter_by(status="active").first()
+    if not ah: return
+
+    now = datetime.now()
+
+    match ah.phase:
+        case "voting":
+            if now >= ah.signup_date:
+                phases.initiate_signup_phase(ah.id)
+                start_email_campaign(ah.id)
+
+        case "signup":
+            if now >= ah.waiver_date:
+                phases.initiate_waiver_phase(ah.id)
+                start_email_campaign(ah.id)
+                start_email_campaign(ah.id, waitlist=True)
+
+        case "waiver":
+            if now >= ah.hike_date + timedelta(hours=current_app.config.get("HIKE_RESET_TIME_HR")):
+                phases.complete_hike(ah.id)

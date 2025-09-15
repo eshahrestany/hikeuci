@@ -1,7 +1,8 @@
 <template>
   <div>
-    <p class="font-semibold text-xl mb-2">
-      Current Phase: <Badge class="text-md">Voting</Badge>
+    <p class="flex justify-center items-center font-semibold text-xl mb-2">
+      Current Phase:
+      <Badge class="text-md ml-2">Voting</Badge>
     </p>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="trail in votingData.trails" :key="trail.trail_id">
@@ -19,7 +20,7 @@
             {{ trail.trail_num_votes }}
             ({{ votePercentage(trail) }}%)
           </p>
-          <Progress :value="parseFloat(votePercentage(trail))" class="mb-2" />
+          <Progress :v-model="votePercentsRef[trail]" class="mb-2" />
           <Button
             variant="outline"
             class="mb-2 p-0"
@@ -51,7 +52,7 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,11 @@ const showVoters = reactive({})
 const totalVotes = computed(() =>
   props.votingData.trails.reduce((sum, c) => sum + c.trail_num_votes, 0)
 )
+
+const votePercentsRef = ref({})
+props.votingData.trails.forEach((trail) => {
+  votePercentsRef.value[trail] = votePercentage(trail)
+})
 
 function votePercentage(trail) {
   if (totalVotes.value === 0) return 0
