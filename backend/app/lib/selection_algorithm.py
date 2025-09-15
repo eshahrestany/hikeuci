@@ -1,6 +1,6 @@
-import random
 from typing import List
 from ..models import Hike, Signup, Vehicle
+
 
 def calc_passenger_capacity(drivers: List[Signup]) -> int:
     """Returns a list of signup ids to set as confirmed, and a list of signup ids to set as waitlisted in order
