@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
-from ..lib.model_utils import current_active_hike
+from ..lib.model_utils import current_active_hike, bump_waitlist
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -343,18 +343,16 @@ def modify_user():
 
     if signup.status == "waitlisted":
         signup.status = "confirmed"
+        signup.waitlist_pos = None
         current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+
+    db.session.commit()
 
     if signup.transport_type == "driver":
         capacity = Vehicle.query.get(signup.vehicle_id).passenger_seats
-        waitlist = list(Signup.query.with_entities(Signup.id).filter_by(hike_id=hike.id, status="waitlisted"))
-        while capacity > 0 and len(waitlist) > 0:
-            s = Signup.query.get(waitlist.pop(0))
-            s.status = "confirmed"
-            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", s.member_id, hike.id])
-            capacity -= 1
+        bump_waitlist(hike.id, num_passengers=capacity)
 
-    db.session.commit()
+
     return jsonify(success=True), 200
 
 

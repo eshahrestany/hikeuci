@@ -1,0 +1,17 @@
+{% macro email(personalization, batch) -%}
+Hi {{ personalization.name }}
+You have been placed on the waitlist for this week's hike. Unfortunately, we don't have enough drivers at the moment to bring all those who signed up as passengers.
+You are currently {{ personalization.waitlist_ordinal }} on the waitlist. There are a few ways you can be bumped off the waitlist:
+1. If enough passengers cancel, you can take their spot.
+2. If any passengers step up as drivers, or new drivers reach out to our officers for a late signup, we'll bump as many people off the waitlist as the new drivers can carry.
+3. (Recommended) If you can step up as a driver OR arrange for your own transport to the trailhead, in which case you should contact an officer via discord or email us ASAP.
+If you make it off the waitlist, you will automatically receive an email with an electronic waiver and more information about the hike.
+
+Best,
+Hiking Club at UCI Officers
+Official UCI Campus Page: Hiking Club at UCI Campus Orgs
+Email: hikingclub@uci.edu
+Linktree: linktr.ee/hikingclubatuci
+Instagram: @hikingclubatucirvine
+Discord: discord.gg/tGwU6HeBYv
+{%- endmacro %}

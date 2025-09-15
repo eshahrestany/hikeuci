@@ -20,7 +20,11 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
 
     pending_drivers = Signup.query.filter_by(hike_id=hike_id, status="pending", transport_type="driver").all()
     pending_selfs = Signup.query.filter_by(hike_id=hike_id, status="pending", transport_type="self").all()
-    pending_passengers = Signup.query.filter_by(hike_id=hike_id, status="pending", transport_type="passenger").all()
+    pending_passengers = (Signup.query
+                          .filter_by(hike_id=hike_id, status="pending", transport_type="passenger")
+                          .order_by(Signup.signup_date.asc())
+                          .all()
+                          )
 
     past_hikes = (Hike.query
                   .filter(Hike.hike_date < current_hike.hike_date)
@@ -42,9 +46,9 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
     else:
         # determine who goes on the waitlist
         if len(past_hikes) == 0:
-            # no past hike data available, randomly assign to waitlist
+            # no past hike data available, assign by signup time
             while len(pending_passengers) > 0:
-                chosen_passenger = pending_passengers.pop(random.randrange(len(pending_passengers)))
+                chosen_passenger = pending_passengers.pop(0)
                 if passenger_capacity > 0:
                     confirmed.append(chosen_passenger.id)
                     passenger_capacity -= 1
@@ -65,10 +69,6 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
                     did_last.append(p)
                 else:
                     never_last.append(p)
-
-            # Randomize within priority groups
-            random.shuffle(never_last)
-            random.shuffle(did_last)
 
             # Priority: never_last -> did_last
             ordered = never_last + did_last
@@ -104,11 +104,6 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
                     missed_last_attended_two_ago.append(p)
                 else:
                     attended_last.append(p)
-
-            # Randomize within priorities
-            random.shuffle(missed_both)
-            random.shuffle(missed_last_attended_two_ago)
-            random.shuffle(attended_last)
 
             ordered = missed_both + missed_last_attended_two_ago + attended_last
 

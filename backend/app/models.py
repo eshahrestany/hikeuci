@@ -9,7 +9,7 @@ class Member(db.Model):
     name       = db.Column(db.String(100), nullable=False)
     email      = db.Column(db.String(120), unique=True, nullable=False)
     tel        = db.Column(db.String(15), nullable=True)
-    joined_on  = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    joined_on  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
 
@@ -23,7 +23,7 @@ class Trail(db.Model):
     estimated_time_hr        = db.Column(db.Float, nullable=False)
     required_water_liters    = db.Column(db.Float, nullable=False)
     difficulty               = db.Column(db.Integer, nullable=False)  # 0=e,1=m,2=d,3=vd
-    added_on                 = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    added_on                 = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     alltrails_url       = db.Column(db.String(300), nullable=True)
     trailhead_gmaps_url = db.Column(db.String(300), nullable=True)
     trailhead_amaps_url = db.Column(db.String(300), nullable=True)
@@ -43,7 +43,7 @@ class Hike(db.Model):
     email_campaign_completed = db.Column(db.Boolean, nullable=False, default=False)
     has_vote = db.Column(db.Boolean, nullable=False, default=True)
     # dates
-    created_date   = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+    created_date   = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     signup_date = db.Column(db.DateTime, nullable=False)
     waiver_date = db.Column(db.DateTime, nullable=False)
     hike_date = db.Column(db.DateTime, nullable=False, index=True)
@@ -64,7 +64,7 @@ class Signup(db.Model):
     id             = db.Column(db.Integer, primary_key=True)
     member_id      = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
-    signup_date    = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    signup_date    = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     transport_type = db.Column(db.String(20), nullable=False)  # 'passenger','driver','self'
     food_interest  = db.Column(db.Boolean, nullable=False)
     is_checked_in  = db.Column(db.Boolean, nullable=False, default=False)
@@ -83,7 +83,7 @@ class Waiver(db.Model):
     age       = db.Column(db.Integer, nullable=True)
     signature_1_b64 = db.Column(db.Text, nullable=False)
     signature_2_b64 = db.Column(db.Text, nullable=False)
-    signed_on = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    signed_on = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 
@@ -103,7 +103,7 @@ class AdminUser(db.Model):
     provider         = db.Column(db.String(50), nullable=False, default='google')
     provider_user_id = db.Column(db.String(255), unique=True, nullable=False)
     email            = db.Column(db.String(120), unique=True, nullable=False)
-    created_on       = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    created_on       = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class Vote(db.Model):
@@ -121,7 +121,7 @@ class MagicLink(db.Model):
     member_id  = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
     hike_id    = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
     type       = db.Column(db.String(20), nullable=False)  # 'voting', 'signups', 'waiver'
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     first_used = db.Column(db.DateTime, nullable=True)
     used_count = db.Column(db.Integer, nullable=False, default=0)
 
@@ -131,7 +131,7 @@ class EmailCampaign(db.Model):
     id             = db.Column(db.Integer, primary_key=True)
     hike_id        = db.Column(db.Integer, db.ForeignKey('hikes.id'), nullable=False)
     type           = db.Column(db.String(50), nullable=False)  # 'voting', 'signups', 'waiver'
-    date_created   = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=False)
+    date_created   = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     date_completed = db.Column(db.DateTime, nullable=True)
 
 
