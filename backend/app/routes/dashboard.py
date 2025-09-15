@@ -32,7 +32,7 @@ def get_active_hike_info():
     return_data["has_vote"] = bool(getattr(hike, "has_vote", False))
     return_data["phase"] = phase
 
-    # Build timeline datetimes: frontend expects array length 3 or 4
+    # Build timeline datetimes: frontend expects array length 3 (skipped vote) or 4 (has_vote)
     if return_data["has_vote"]:
         return_data["timeline"] = {
             "vote_date": hike.get_localized_time('created_date').isoformat() if hike.signup_date else None,
@@ -90,6 +90,7 @@ def get_active_hike_info():
         rows = (
             db.session.query(
                 Member,
+                Signup.status,
                 Signup.transport_type,
                 Signup.is_checked_in,
                 Signup.vehicle_id,
@@ -102,13 +103,13 @@ def get_active_hike_info():
                 Waiver,
                 and_(Waiver.member_id == Member.id, Waiver.hike_id == hike.id),
             )
-            .filter(Signup.hike_id == hike.id)
+            .filter(Signup.hike_id == hike.id, Signup.status != "waitlisted")
             .all()
         )
 
         users = []
         total_capacity = 0
-        for member, transport_type, is_checked_in, vehicle_id, seats, waiver_id in rows:
+        for member, signup_status, transport_type, is_checked_in, vehicle_id, seats, waiver_id in rows:
             user_obj = {
                 "member_id": member.id,
                 "name": member.name,

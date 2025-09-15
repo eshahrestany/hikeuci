@@ -20,7 +20,7 @@
             {{ trail.trail_num_votes }}
             ({{ votePercentage(trail) }}%)
           </p>
-          <Progress :value="parseFloat(votePercentage(trail))" class="mb-2" />
+          <Progress :v-model="votePercentsRef[trail]" class="mb-2" />
           <Button
             variant="outline"
             class="mb-2 p-0"
@@ -67,6 +67,11 @@ const showVoters = reactive({})
 const totalVotes = computed(() =>
   props.votingData.trails.reduce((sum, c) => sum + c.trail_num_votes, 0)
 )
+
+const votePercentsRef = ref({})
+props.votingData.trails.forEach((trail) => {
+  votePercentsRef.value[trail] = votePercentage(trail)
+})
 
 function votePercentage(trail) {
   if (totalVotes.value === 0) return 0

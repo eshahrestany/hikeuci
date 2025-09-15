@@ -521,8 +521,8 @@ def seed_email_waiver():
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
                Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
                Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
-               Member(name="Gabriel Dodge", email="gdodge@uci.edu"),
-               Member(name="Sterling Radisay", email="sradisay@uci.edu")
+               Member(name="Example 1", email="example1@example.com"),
+               Member(name="Example 1", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
