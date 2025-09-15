@@ -4,16 +4,16 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 import TrailsTable from "@/components/admin/TrailsTable.vue";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card/index.js";
-import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar/index.js";
-import AppSidebar from "@/components/admin/AppSidebar.vue";
 import {Skeleton} from "@/components/ui/skeleton/index.js";
 import TrailsForm from "@/components/admin/TrailsForm.vue";
+import {Button} from "@/components/ui/button/index.js";
 
 const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
 
 const loading = ref(true)
 const response = ref([])
+const formIsOpen = ref(false);
 
 async function loadTrails() {
   loading.value = true
@@ -28,6 +28,16 @@ async function loadTrails() {
     loading.value = false
   }
 }
+
+function openForm()
+{
+    formIsOpen.value = true;
+}
+function handleFormSuccess()
+{
+
+}
+
 
 onMounted(loadTrails)
 </script>
@@ -51,7 +61,11 @@ onMounted(loadTrails)
             <Skeleton class="h-4 w-2/3" />
           </Skeleton>
         </div>
-        <TrailsForm :is-open="false"/>
+        <Button variant="outline" @click="openForm()">+ Add Trail</Button>
+         <TrailsForm
+            v-model:isOpen="formIsOpen"
+            @submitted="handleFormSuccess"
+        />
         <TrailsTable :trails-data="response"/>
 
       </CardContent>

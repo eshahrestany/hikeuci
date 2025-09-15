@@ -201,7 +201,7 @@ const handleClose = (openState) => {
       </form>
 
       <DialogFooter>
-        <Button variant="outline" @click="handleClose(false)">Cancel</Button>
+        <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
         <Button type="submit" form="trail-form">{{ submitButtonText }}</Button>
       </DialogFooter>
     </DialogContent>
