@@ -265,7 +265,7 @@ def list_emails_not_in_hike():
     return jsonify([{"member_id": m.id, "email": m.email} for m in rows]), 200
 
 
-@dashboard.route('/check-in', methods=['POST'])
+@dashboard.route('/check-in', methods=['POST', 'DELETE'])
 @admin_required
 @waiver_phase_required
 def check_in():
@@ -282,21 +282,33 @@ def check_in():
     if not member:
         return jsonify(error="Member id not found"), 400
 
-    waiver = Waiver.query.filter_by(member_id=user_id, hike_id=hike.id).first()
-    if not waiver:
-        return jsonify(error="Waiver not on file for this member"), 400
-
     signup = Signup.query.filter_by(member_id=user_id, hike_id=hike.id).first()
     if not signup:
         return jsonify(error="Member is not signed up for this hike"), 400
 
-    if signup.is_checked_in:
-        return jsonify(already_checked_in=True), 208
+    # POST → check-in (requires waiver)
+    if request.method == 'POST':
+        waiver = Waiver.query.filter_by(member_id=user_id, hike_id=hike.id).first()
+        if not waiver:
+            return jsonify(error="Waiver not on file for this member"), 400
 
-    signup.is_checked_in = True
+        if signup.is_checked_in:
+            return jsonify(already_checked_in=True), 208
+
+        signup.is_checked_in = True
+        db.session.commit()
+        return jsonify(success=True), 200
+
+    # DELETE → undo check-in
+    if not signup.is_checked_in:
+        return jsonify(already_unchecked=True), 208
+
+    signup.is_checked_in = False
     db.session.commit()
     return jsonify(success=True), 200
 
+
+    
 
 @dashboard.route('/modify-user', methods=['POST'])
 @admin_required

@@ -1,10 +1,12 @@
 <template>
-  <div class="space-y-4 mb-4">
-    <p>Signups: <strong>{{ numCheckedInSignups }}</strong> checked in / <strong>{{ numSignups }}</strong> total</p>
-    <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong> checked in / <strong>{{ numPassengers }}</strong> total</p>
-    <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong> checked in / <strong>{{ numDrivers }}</strong> total</p>
-    <p>Self-transports: <strong>{{ numCheckedInSelf }}</strong> checked in / <strong>{{ numSelf }}</strong> total</p>
-    <p>Passenger Capacity: <strong>{{ passengerCapacity }}</strong> </p>
+  <div class="space-y-3 md:space-y-4 mb-3">
+    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:text-base">
+      <p>Signups: <strong>{{ numCheckedInSignups }}</strong>/<strong>{{ numSignups }}</strong></p>
+      <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong>/<strong>{{ numPassengers }}</strong></p>
+      <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong>/<strong>{{ numDrivers }}</strong></p>
+      <p>Self: <strong>{{ numCheckedInSelf }}</strong>/<strong>{{ numSelf }}</strong></p>
+      <p class="col-span-2 md:col-span-1">Capacity: <strong>{{ passengerCapacity }}</strong></p>
+    </div>
 
     <!-- Capacity Indicator -->
     <div class="flex items-center space-x-3">
@@ -12,10 +14,11 @@
             :class="overCapacity
         ? '[&_[data-slot=progress-indicator]]:bg-red-500'
         : '[&_[data-slot=progress-indicator]]:bg-primary'"/>
-      <span class="text-sm font-medium">{{ percentCapacity }}%</span>
+      <span class="text-xs md:text-sm font-medium">{{ percentCapacity }}%</span>
     </div>
-    <p v-if="overCapacity">Waitlisted Passengers: <strong>{{ waitlistedPassengers }}</strong> </p>
+    <p v-if="overCapacity" class="text-sm">Waitlisted: <strong>{{ waitlistedPassengers }}</strong></p>
   </div>
+  
 </template>
 
 <script setup>

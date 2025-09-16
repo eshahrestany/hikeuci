@@ -2,7 +2,7 @@
 
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
 import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
-import {Check, Edit, MailPlus, PlusCircle, Trash} from "lucide-vue-next";
+import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, RotateCcw, Undo2} from "lucide-vue-next";
 import {Input} from "@/components/ui/input/index.js";
 import {Button} from "@/components/ui/button/index.js";
 import AddLateSignup from "@/components/admin/AddLateSignup.vue";
@@ -19,6 +19,7 @@ import {ref, shallowRef, h} from "vue";
 import {toast} from "vue-sonner";
 import {Badge} from "@/components/ui/badge/index.js";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
 import {useAuth} from "@/lib/auth.js";
 
 const props = defineProps({waiverData: { type: Object, required: true }})
@@ -26,9 +27,11 @@ const props = defineProps({waiverData: { type: Object, required: true }})
 const editUser = ref(null)
 const confirmOpen = ref(false)
 const confirmUser = ref(null)
+const undoOpen = ref(false)
+const undoUser = ref(null)
 const showAddSignup = ref(false)
 
-const { postWithAuth } = useAuth()
+const { postWithAuth, fetchWithAuth } = useAuth()
 
 function handleAdded(newUser) {
   data.value.push(newUser)
@@ -51,6 +54,33 @@ async function checkInRow(user) {
     if (res.status === 208) toast.info(`${user.name} was already checked in.`)
   } catch {
     toast.error("Check-in Failed")
+  }
+}
+
+function promptUndo(user) {
+  undoUser.value = user
+  undoOpen.value = true
+}
+
+async function confirmedUndo() {
+  const user = undoUser.value
+  try {
+    const res = await fetchWithAuth('/api/admin/check-in', {
+      method: 'DELETE',
+      body: JSON.stringify({ user_id: user.member_id }),
+    })
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(errText || 'Unknown error')
+    }
+    user.is_checked_in = false
+    if (res.status === 200) toast.success(`${user.name} check-in undone.`)
+    if (res.status === 208) toast.info(`${user.name} was not checked in.`)
+  } catch {
+    toast.error('Undo failed')
+  } finally {
+    undoOpen.value = false
+    undoUser.value = null
   }
 }
 
@@ -110,19 +140,21 @@ const columns = [
     id: 'name',
     header: 'Name',
     accessorFn: row => `${row.name}`,
-    cell: info => info.getValue(),
+    cell: info => h('span', { class: 'break-words' }, info.getValue()),
     filterFn: (row, colId, filter) =>
       String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'type',
-    header: 'Type',
+    header: () => h('span', { class: 'hidden md:inline' }, 'Type'),
     cell: ({ row }) =>
-      row.original.transport_type === "passenger"
-        ? 'Passenger'
-        : row.original.transport_type === "driver"
-          ? `Driver (${row.original.vehicle_capacity} passengers)`
-          : 'Self-Transport',
+      h('span', { class: 'hidden md:inline break-words' },
+        row.original.transport_type === "passenger"
+          ? 'Passenger'
+          : row.original.transport_type === "driver"
+            ? `Driver (${row.original.vehicle_capacity} passengers)`
+            : 'Self-Transport'
+      ),
   },
   {
     id: 'waiver',
@@ -159,8 +191,8 @@ const columns = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) =>
-      h('div', { class: 'flex space-x-2' }, [
-        // Check-In
+      h('div', { class: 'flex items-center gap-2' }, [
+        // Mobile: quick Check-In / Undo icon
         h(
           Tooltip,
           null,
@@ -173,97 +205,158 @@ const columns = [
                   h(
                     Button,
                     {
+                      class: 'md:hidden',
                       size: 'icon',
-                      onClick: () => checkInRow(row.original),
-                      disabled:
-                        !row.original.has_waiver || row.original.is_checked_in,
+                      onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
+                      disabled: !row.original.has_waiver && !row.original.is_checked_in,
                     },
-                    () => h(Check, { class: 'h-4 w-4' }),
+                    () => row.original.is_checked_in ? h(Undo2, { class: 'h-4 w-4' }) : h(Check, { class: 'h-4 w-4' }),
                   ),
               ),
-              h(TooltipContent, null, () => 'Check In Hiker'),
+              h(TooltipContent, null, () => row.original.is_checked_in ? 'Undo Check-In' : 'Check In Hiker'),
             ],
           },
         ),
 
-        // Resend Waiver
-        h(
-          Tooltip,
-          null,
-          {
+        // Mobile: compact actions popover (ellipsis)
+        h('div', { class: 'md:hidden' }, [
+          h(Popover, null, {
             default: () => [
-              h(
-                TooltipTrigger,
-                { asChild: true },
-                () =>
-                  h(
-                    Button,
-                    {
-                      variant: 'outline',
-                      size: 'icon',
-                      disabled: row.original.has_waiver,
-                      onClick: () => resendEmail(row.original),
-                    },
-                    () => h(MailPlus, { class: 'h-4 w-4' }),
-                  ),
+              h(PopoverTrigger, { asChild: true }, () =>
+                h(Button, { variant: 'ghost', size: 'icon' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))
               ),
-              h(TooltipContent, null, () => 'Resend Waiver'),
+              h(PopoverContent, { class: 'w-64 p-3' }, () => [
+                h('div', { class: 'text-sm mb-3' }, `Type: ${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'driver' ? `Driver (${row.original.vehicle_capacity} passengers)` : 'Self-Transport'}`),
+                h('div', { class: 'flex flex-wrap gap-2' }, [
+                  !row.original.is_checked_in ? h(Button, {
+                    size: 'sm',
+                    onClick: () => checkInRow(row.original),
+                    disabled: !row.original.has_waiver,
+                  }, () => [h(Check, { class: 'h-4 w-4 mr-1' }), 'Check In']) : h(Button, {
+                    size: 'sm', variant: 'outline',
+                    onClick: () => promptUndo(row.original),
+                  }, () => [h(RotateCcw, { class: 'h-4 w-4 mr-1' }), 'Undo Check-In']),
+                  h(Button, {
+                    size: 'sm', variant: 'outline',
+                    disabled: row.original.has_waiver,
+                    onClick: () => resendEmail(row.original),
+                  }, () => [h(MailPlus, { class: 'h-4 w-4 mr-1' }), 'Resend Waiver']),
+                  h(Button, {
+                    size: 'sm', variant: 'outline',
+                    onClick: () => modifyRow(row.original),
+                  }, () => [h(Edit, { class: 'h-4 w-4 mr-1' }), 'Modify']),
+                  h(Button, {
+                    size: 'sm', variant: 'destructive',
+                    onClick: () => removeRow(row.original),
+                  }, () => [h(Trash, { class: 'h-4 w-4 mr-1' }), 'Remove']),
+                ]),
+              ]),
             ],
-          },
-        ),
+          }),
+        ]),
 
-        // Modify
-        h(
-          Tooltip,
-          null,
-          {
-            default: () => [
-              h(
-                TooltipTrigger,
-                { asChild: true },
-                () =>
-                  h(
-                    Button,
-                    {
-                      variant: 'outline',
-                      size: 'icon',
-                      onClick: () => modifyRow(row.original),
-                    },
-                    () => h(Edit, { class: 'h-4 w-4' }),
-                  ),
-              ),
-              h(TooltipContent, null, () => 'Modify Hiker'),
-            ],
-          },
-        ),
-
-
-        // Remove
-        h(
-          Tooltip,
-          null,
-          {
-            default: () => [
-              h(
-                TooltipTrigger,
-                { asChild: true },
-                () =>
-                  h(
-                    Button,
-                    {
-                      variant: 'destructive',
-                      size: 'icon',
-                      onClick: () => removeRow(row.original),
-                    },
-                    () => h(Trash, { class: 'h-4 w-4' }),
-                  ),
-              ),
-              h(TooltipContent, null, () => 'Remove Hiker'),
-            ],
-          },
-        ),
+        // Desktop: show individual action icons inline
+        h('div', { class: 'hidden md:flex space-x-2' }, [
+          // Check-In / Undo
+          h(
+            Tooltip,
+            null,
+            {
+              default: () => [
+                h(
+                  TooltipTrigger,
+                  { asChild: true },
+                  () =>
+                    h(
+                      Button,
+                      {
+                        size: 'icon',
+                        onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
+                        disabled: !row.original.has_waiver && !row.original.is_checked_in,
+                      },
+                      () => row.original.is_checked_in ? h(RotateCcw, { class: 'h-4 w-4' }) : h(Check, { class: 'h-4 w-4' }),
+                    ),
+                ),
+                h(TooltipContent, null, () => row.original.is_checked_in ? 'Undo Check-In' : 'Check In Hiker'),
+              ],
+            },
+          ),
+          // Resend Waiver
+          h(
+            Tooltip,
+            null,
+            {
+              default: () => [
+                h(
+                  TooltipTrigger,
+                  { asChild: true },
+                  () =>
+                    h(
+                      Button,
+                      {
+                        variant: 'outline',
+                        size: 'icon',
+                        disabled: row.original.has_waiver,
+                        onClick: () => resendEmail(row.original),
+                      },
+                      () => h(MailPlus, { class: 'h-4 w-4' }),
+                    ),
+                ),
+                h(TooltipContent, null, () => 'Resend Waiver'),
+              ],
+            },
+          ),
+          // Modify
+          h(
+            Tooltip,
+            null,
+            {
+              default: () => [
+                h(
+                  TooltipTrigger,
+                  { asChild: true },
+                  () =>
+                    h(
+                      Button,
+                      {
+                        variant: 'outline',
+                        size: 'icon',
+                        onClick: () => modifyRow(row.original),
+                      },
+                      () => h(Edit, { class: 'h-4 w-4' }),
+                    ),
+                ),
+                h(TooltipContent, null, () => 'Modify Hiker'),
+              ],
+            },
+          ),
+          // Remove
+          h(
+            Tooltip,
+            null,
+            {
+              default: () => [
+                h(
+                  TooltipTrigger,
+                  { asChild: true },
+                  () =>
+                    h(
+                      Button,
+                      {
+                        variant: 'destructive',
+                        size: 'icon',
+                        onClick: () => removeRow(row.original),
+                      },
+                      () => h(Trash, { class: 'h-4 w-4' }),
+                    ),
+                ),
+                h(TooltipContent, null, () => 'Remove Hiker'),
+              ],
+            },
+          ),
+        ]),
       ]),
-  }
+  },
 
 ]
 const table = useVueTable({
@@ -283,24 +376,24 @@ const table = useVueTable({
 </script>
 
 <template>
-  <div class="flex items-center justify-between py-2">
+  <div class="flex items-center py-2 flex-nowrap">
     <Input
-      class="max-w-sm"
+      class="max-w-[12rem] sm:max-w-sm mr-3"
       placeholder="Filter names..."
       :model-value="table.getColumn('name')?.getFilterValue()"
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
     />
-    <Button class="ml-auto" @click="showAddSignup = true">
+    <Button class="md:ml-auto shrink-0" @click="showAddSignup = true">
       <PlusCircle class="h-4 w-4" />Add Late Signup
     </Button>
   </div>
 
   <!-- Table of Users -->
-  <div class="rounded-md border">
+  <div class="rounded-md border overflow-x-auto w-full">
     <Table>
       <TableHeader>
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-          <TableHead v-for="h in hg.headers" :key="h.id">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="whitespace-normal">
             <FlexRender
               v-if="!h.isPlaceholder"
               :render="h.column.columnDef.header"
@@ -312,8 +405,8 @@ const table = useVueTable({
       <TableBody>
         <template v-if="table.getRowModel().rows.length">
           <template v-for="row in table.getRowModel().rows" :key="row.id">
-            <TableRow>
-              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
+            <TableRow class="align-top">
+              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" class="whitespace-normal break-words">
                 <FlexRender
                   :render="cell.column.columnDef.cell"
                   :props="cell.getContext()"
@@ -382,6 +475,26 @@ const table = useVueTable({
         </Button>
         <Button variant="destructive" @click="confirmedRemove">
           Remove
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="undoOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Undo Check-In?</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to undo check-in for
+          {{ undoUser?.name }}?
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="outline" @click="undoOpen = false">
+          Cancel
+        </Button>
+        <Button @click="confirmedUndo">
+          Undo Check-In
         </Button>
       </DialogFooter>
     </DialogContent>
