@@ -101,7 +101,7 @@ class AdminUser(db.Model):
     __tablename__ = 'admin_users'
     id               = db.Column(db.Integer, primary_key=True)
     provider         = db.Column(db.String(50), nullable=False, default='google')
-    provider_user_id = db.Column(db.String(255), unique=True, nullable=False)
+    provider_user_id = db.Column(db.String(255), unique=True, nullable=True)
     email            = db.Column(db.String(120), unique=True, nullable=False)
     created_on       = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
