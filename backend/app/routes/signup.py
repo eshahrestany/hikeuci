@@ -25,6 +25,8 @@ def signup() -> tuple[Response, int]:
         member = Member.query.get(magic_link.member_id)
 
         hike = Hike.query.get(magic_link.hike_id)
+        if hike.phase != "signup":
+            return jsonify({"error": "Hike not in signup phase"}), 400
 
         # check if already signed up
         existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()

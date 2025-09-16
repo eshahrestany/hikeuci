@@ -20,8 +20,11 @@ def hike_vote_page():
     if not member:
         return jsonify({"error": "Member not found"}), 404
 
+    hike = Hike.query.get(magic_link.hike_id)
+    if hike.phase != "voting":
+        return jsonify({"error": "Hike not in voting phase"}), 400
+
     if request.method == "GET":
-        hike = Hike.query.filter_by(id=magic_link.hike_id).first()
         existing_vote = Vote.query.filter_by(member_id=member.id, hike_id=hike.id).first()
         if existing_vote: existing_vote = existing_vote.trail_id
 
@@ -53,7 +56,6 @@ def hike_vote_page():
         if not trail:
             return jsonify({"error": "Trail not found"}), 404
 
-        hike = Hike.query.filter_by(id=magic_link.hike_id).first()
         existing_vote = Vote.query.filter_by(member_id=member.id, hike_id=hike.id).first()
         if existing_vote:
             existing_vote.trail_id = vote_trail_id
