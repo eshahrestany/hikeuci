@@ -60,7 +60,7 @@ const { postWithAuth, fetchWithAuth } = useAuth()
 
 async function loadVehicles() {
   try {
-    const res = await fetchWithAuth(`/vehicles?member_id=${props.user.member_id}`)
+    const res = await fetchWithAuth(`/api/vehicles?member_id=${props.user.member_id}`)
     if (!res.ok) throw new Error()
     vehicles.value = await res.json()
   } catch {
@@ -78,7 +78,7 @@ watch(() => form.transport_type, v => {
 // create a new vehicle, then re-load
 async function addVehicle() {
   try {
-    const res = await postWithAuth('/vehicles', {
+    const res = await postWithAuth('/api/vehicles', {
       member_id: props.user.member_id,
       make: newVehicle.make,
       model: newVehicle.model,
@@ -106,7 +106,7 @@ async function onSave() {
       payload.vehicle_id = form.vehicle_id
     }
 
-    const res = await postWithAuth('/admin/modify-user', payload)
+    const res = await postWithAuth('/api/admin/modify-user', payload)
     if (!res.ok) {
       const err = await res.text()
       throw new Error(err || 'Unknown error')
