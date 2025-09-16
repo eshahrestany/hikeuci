@@ -1,6 +1,6 @@
 # ---- Build stage: compile Vue into /app/dist
 FROM node:22-alpine AS build
-WORKDIR /app
+WORKDIR /frontend
 
 # Install deps (use npm ci for reproducible builds)
 COPY package*.json ./
@@ -17,7 +17,7 @@ RUN npm run build
 FROM nginx:1.27-alpine
 
 # Copy built static files into standard web root
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /frontend/dist /usr/share/nginx/html
 
 # Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
