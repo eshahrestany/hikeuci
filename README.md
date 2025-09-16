@@ -152,6 +152,16 @@ npm run dev     # Vite dev server at http://127.0.0.1:5001
 
 The dev server proxies all requests beginning with `/api` to `http://127.0.0.1:5000` (see `frontend/vite.config.ts`).
 
+#### Front-end environment
+
+Create `frontend/.env` and set:
+
+```env
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
+```
+
+This is consumed in the Sign-In view via `import.meta.env.VITE_GOOGLE_CLIENT_ID`.
+
 ---
 
 ## Useful Commands
