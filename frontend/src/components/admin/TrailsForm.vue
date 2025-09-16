@@ -123,12 +123,11 @@ const handleSubmit = async () => {
 
     const response = await fetchWithAuth(endpoint,{method: method, body: JSON.stringify(formData)})
     const body = await response.json()
-    const new_id = body.id;
-    console.log(body)
-  console.log(new_id)
-    await uploadPhoto(new_id);
+
+    await uploadPhoto(body.id);
 
     toast.success(`Trail successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
+    Object.assign(formData, defaultTrailState)
     emit('submitted')
     emit('update:isOpen', false)
   } catch (error) {

@@ -70,36 +70,36 @@ def create_trail():
     return jsonify(_serialize_trail(new_trail)), 201
 
 
-@trails.route("/<int:trail_id>", methods=["PUT", 'DELETE'])
+@trails.route("/<int:trail_id>", methods=["PUT"])
 @admin_required
 def update_trail(trail_id):
-    if request.method == "PUT":
-        trail = Trail.query.get_or_404(trail_id)
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Request must be JSON"}), 400
+    trail = Trail.query.get_or_404(trail_id)
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request must be JSON"}), 400
 
-        trail.name = data.get('name', trail.name)
-        trail.location = data.get('location', trail.location)
-        trail.length_mi = data.get('length_mi', trail.length_mi)
-        trail.estimated_time_hr = data.get('estimated_time_hr', trail.estimated_time_hr)
-        trail.required_water_liters = data.get('required_water_liters', trail.required_water_liters)
-        trail.difficulty = data.get('difficulty', trail.difficulty)
-        trail.alltrails_endpoint = data.get('alltrails_url', trail.alltrails_endpoint)
-        trail.trailhead_gmaps_endpoint = data.get('trailhead_gmaps_url', trail.trailhead_gmaps_endpoint)
-        trail.trailhead_amaps_endpoint = data.get('trailhead_amaps_url', trail.trailhead_amaps_endpoint)
-        trail.description = data.get('description', trail.description)
+    trail.name = data.get('name', trail.name)
+    trail.location = data.get('location', trail.location)
+    trail.length_mi = data.get('length_mi', trail.length_mi)
+    trail.estimated_time_hr = data.get('estimated_time_hr', trail.estimated_time_hr)
+    trail.required_water_liters = data.get('required_water_liters', trail.required_water_liters)
+    trail.difficulty = data.get('difficulty', trail.difficulty)
+    trail.alltrails_endpoint = data.get('alltrails_url', trail.alltrails_endpoint)
+    trail.trailhead_gmaps_endpoint = data.get('trailhead_gmaps_url', trail.trailhead_gmaps_endpoint)
+    trail.trailhead_amaps_endpoint = data.get('trailhead_amaps_url', trail.trailhead_amaps_endpoint)
+    trail.description = data.get('description', trail.description)
 
-        db.session.commit()
-        return jsonify(_serialize_trail(trail))
-    elif request.method == "DELETE":
-        trail = Trail.query.get_or_404(trail_id)
-        db.session.delete(trail)
-        db.session.commit()
-        return "Deleted Successfully", 200
-    return "Bad Request: Invalid request method", 400
+    db.session.commit()
+    return jsonify(_serialize_trail(trail))
 
 
+@trails.route("/<int:trail_id>", methods=["DELETE"])
+@admin_required
+def delete_trail(trail_id):
+    trail = Trail.query.get_or_404(trail_id)
+    db.session.delete(trail)
+    db.session.commit()
+    return "Deleted Successfully", 200
 
 
 
