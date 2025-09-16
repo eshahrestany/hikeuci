@@ -70,12 +70,11 @@ const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Aleksander Weihermuller', title: 'Co-President',   photo: '../assets/petr.png' },
-      { name: 'Anna Kapp',              title: 'Co-President',   photo: '../assets/petr.png' },
-      { name: 'Eric Miao',              title: 'Treasurer',      photo: '../assets/petr.png' },
-      { name: 'Zoe Glenn',              title: 'General Officer', photo: '../assets/petr.png' },
-      { name: 'Jake Gerber',            title: 'General Officer', photo: '../assets/petr.png' },
-      { name: 'Evan Shahrestany',       title: 'General Officer', photo: '../assets/petr.png' },
+      { name: 'Sophia Shao', title: 'President',   photo: '../src/assets/petr.png' },
+      { name: 'Maddie Nistl',              title: 'Treasurer',   photo: '../src/assets/petr.png' },
+      { name: 'Eric Miao',              title: 'Vice-President',      photo: '../src/assets/petr.png' },
+      { name: 'Zoe Glenn',              title: 'General Officer', photo: '../src/assets/petr.png' },
+      { name: 'Evan Shahrestany',            title: 'Digital Technology Officer', photo: '../src/assets/petr.png' },
     ],
   },
   intervalMs: {
