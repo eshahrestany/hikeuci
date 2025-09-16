@@ -22,7 +22,10 @@ def hike_waiver_page():
     if not member:
         return jsonify({"error": "Member not found"}), 404
 
-    hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
+    hike = Hike.query.get(magic_link.hike_id)
+    if hike.phase != "waiver":
+        return jsonify({"error": "Hike not in waiver phase"}), 400
+
     trail = Trail.query.get(hike.trail_id)
 
     signup = Signup.query.filter_by(member_id=member.id, hike_id=hike.id).first()
