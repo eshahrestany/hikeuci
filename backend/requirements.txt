@@ -11,3 +11,4 @@ pymupdf~=1.26.4
 pillow~=11.3.0
 gunicorn~=23.0.0
 gevent~=25.8.2
+redis~=4.3.4
