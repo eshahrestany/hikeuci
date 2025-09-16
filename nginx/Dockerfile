@@ -20,6 +20,7 @@ FROM nginx:1.27-alpine
 COPY --from=build /frontend/dist /usr/share/nginx/html
 
 # Nginx config
+WORKDIR ./nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Prepare mount for uWSGI Unix socket shared with backend
