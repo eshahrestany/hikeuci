@@ -8,10 +8,14 @@ If you can no longer make it, please cancel using your personal link below so th
 Your personal waiver link (do not share this with anyone!):
 {{ personalization.magic_url }}
 
+{% if batch.hike_trail_gmap_link %}
 Google maps link to the trailhead:
 {{ batch.hike_trail_gmap_link }}
+{% endif %}
+{% if batch.hike_trail_amap_link %}
 Apple maps link to the trailhead:
 {{ batch.hike_trail_amap_link }}
+{% endif %}
 
 A couple of reminders before the hike:
 -Recommended items: water, light snack, sunscreen, hat, sunglasses, and comfortable athletic shoes to wear on the hike.

@@ -18,10 +18,14 @@ Please click the link below to fill out and sign the waiver form or to modify yo
 Your personal waiver link (do not share this with anyone!):
 {{ personalization.magic_url }}
 
+{% if batch.hike_trail_gmap_link %}
 Google maps link to the trailhead:
 {{ batch.hike_trail_gmap_link }}
+{% endif %}
+{% if batch.hike_trail_amap_link %}
 Apple maps link to the trailhead:
 {{ batch.hike_trail_amap_link }}
+{% endif %}
 
 A couple of reminders before the hike:
 -Fill out your waiver by {{ batch.hike_day }} {{ batch.hike_time }}.
