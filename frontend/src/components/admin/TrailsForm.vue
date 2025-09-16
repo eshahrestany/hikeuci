@@ -79,6 +79,8 @@ const isEditing = computed(() => !!props.trailData)
 const dialogTitle = computed(() => isEditing.value ? 'Edit Trail' : 'Create New Trail')
 const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : 'Create Trail')
 
+
+
 const selectedFile = ref(null);
 function handleFileChange(event) {
   const file = event.target.files[0];
@@ -230,7 +232,8 @@ const handleClose = (openState) => {
           </div>
           <div class="space-y-2">
             <Label for="picture">Picture</Label>
-            <Input id="picture" type="file" @change="handleFileChange" />
+            <Input id="picture" type="file" @change="handleFileChange" required />
+            <a class="text-gray-400 hover:underline text-sm" v-if="isEditing" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
           </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">
