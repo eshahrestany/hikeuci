@@ -2,6 +2,7 @@
   <section class="relative bg-stone/50 text-midnight min-h-screen flex flex-col">
     <div class="max-w-6xl mx-auto w-full px-6 flex-1 flex items-center">
       <div class="w-full grid gap-6 text-center">
+        <img :src="petrImg" alt="Petr the coyote mascot" class="mx-auto w-40 sm:w-48 md:w-56 drop-shadow-md" />
         <div class="space-y-2">
           <h1 class="text-4xl sm:text-5xl font-bold font-montserrat text-uci-blue">Page not found</h1>
           <p class="text-midnight/80 text-lg">We couldn't find that page. It may have moved or no longer exists.</p>
@@ -36,6 +37,7 @@
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Undo2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import petrImg from '@/assets/petr.png'
 
 const router = useRouter()
 function goBack() {
