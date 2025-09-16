@@ -8,8 +8,8 @@ RUN npm ci
 
 # Copy the Vue source
 COPY frontend/ .
-ARG VITE_API_URL=/api
-ENV VITE_API_URL=${VITE_API_URL}
+ARG VITE_GOOGLE_CLIENT_ID=/api
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 RUN npm run build
 
 # ---- Runtime stage: Nginx serves the built assets and proxies /api to Flask
