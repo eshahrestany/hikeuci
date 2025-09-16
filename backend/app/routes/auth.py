@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, Response, current_app
 from typing import Optional, Dict, Any
 from ..models import AdminUser
+from .. import db
 
 auth: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -27,14 +28,22 @@ def google_login() -> tuple[Response, int]:
     if info.get("email_verified") != "true":
         return jsonify({"error": "Email not verified"}), 403
 
-    # 3) Lookup admin user by Google subject (sub)
-    sub: str = info["sub"]
-    current_app.logger.debug(f"Google user sub: {sub}")
-    admin: Optional[AdminUser] = AdminUser.query.filter_by(provider_user_id=sub).first()
+    # 3) Lookup admin user by email
+    email: str = info["email"]
+    admin: Optional[AdminUser] = AdminUser.query.filter_by(email=email).first()
     if not admin:
         return jsonify({"error": "Not an admin user"}), 403
 
-    # 4) Prepare JWT to send to client
+    # 4) Check if sub has been set (not set on first login), otherwise set it
+    sub: str = info["sub"]
+    if admin.provider_user_id:
+        if admin.provider_user_id != sub:
+            return jsonify({"error": "Not an admin user (email/sub mismatch)"}), 403
+    else:
+        admin.provider_user_id = sub
+        db.session.commit()
+
+    # 5) Prepare JWT to send to client
     now: datetime = datetime.now(timezone.utc)
     exp: datetime = now + timedelta(hours=int(current_app.config.get("JWT_EXP_HOURS")))
     payload: Dict[str, Any] = {
