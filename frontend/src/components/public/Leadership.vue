@@ -146,6 +146,7 @@ function getCardsPerView(width: number) {
 const wrapperRef = ref<HTMLElement | null>(null);
 const sectionRef = ref<HTMLElement | null>(null);
 const containerWidth = ref(0);
+const isInView = ref(false);
 
 // Capture initial dimensions right after mount so card sizing is available
 onMounted(() => {
@@ -164,10 +165,18 @@ onMounted(() => {
   // This helps ensure initial card widths are correct on first paint
   // and avoids a case where text wrapping changes widths later.
   (document as any).fonts?.ready?.then?.(() => measureNaturalWidths());
+
+  // Visibility/focus handling to prevent stale measurements when tab is hidden
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('focus', handleVisibilityChange);
+  window.addEventListener('blur', handleVisibilityChange);
 });
 
 onUnmounted(() => {
   slidesRef.value?.removeEventListener('transitionend', onTransitionEnd);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('focus', handleVisibilityChange);
+  window.removeEventListener('blur', handleVisibilityChange);
 });
 
 // ResizeObserver – updates container width & cards-per-view reactively
@@ -195,7 +204,8 @@ const { pause, resume } = useIntervalFn(() => {
 
 // Pause the carousel when the section scrolls out of view
 useIntersectionObserver(sectionRef, ([{ isIntersecting }]) => {
-  isIntersecting ? resume() : pause();
+  isInView.value = isIntersecting;
+  updatePlayback();
 });
 
 /* -------------------------------------------------------------
@@ -226,6 +236,8 @@ function measureNaturalWidths() {
 
 // Re-measure on officers change
 watch(() => props.officers, measureNaturalWidths, { deep: true, immediate: true });
+// Re-measure when container width changes (e.g., after tab visibility restore)
+watch(() => containerWidth.value, measureNaturalWidths);
 
 /* Width calculations */
 const columnWidth = computed(() => (containerWidth.value ? containerWidth.value / cardsPerView.value : 0));
@@ -271,6 +283,44 @@ function onTransitionEnd() {
       transitionEnabled.value = true; // re-enable animation
     });
   }
+}
+
+/* -------------------------------------------------------------
+ * Playback helpers for visibility/focus changes
+ * -----------------------------------------------------------*/
+function updatePlayback() {
+  if (document.visibilityState === 'hidden' || !isInView.value) {
+    pause();
+  } else {
+    resume();
+  }
+}
+
+function normalizeIndex() {
+  const originalLength = displayedOfficers.value.length;
+  if (!originalLength) return;
+  const normalized = ((currentIndex.value % originalLength) + originalLength) % originalLength;
+  currentIndex.value = normalized;
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    // While hidden, pause and avoid animating to stale positions
+    transitionEnabled.value = false;
+    pause();
+    return;
+  }
+  // On visible/focus: refresh layout measurements and normalize position
+  containerWidth.value = wrapperRef.value?.clientWidth ?? containerWidth.value;
+  cardsPerView.value = getCardsPerView(window.innerWidth);
+  measureNaturalWidths();
+  normalizeIndex();
+  nextTick(() => {
+    // Force reflow to commit transform without animation, then re-enable
+    void slidesRef.value?.offsetWidth;
+    transitionEnabled.value = true;
+    updatePlayback();
+  });
 }
 </script>
 
