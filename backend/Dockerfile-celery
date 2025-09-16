@@ -9,4 +9,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD ["celery", "-A", "app.celery", "worker", "-l", "info", "-c", "2"]
+CMD ["celery", "-A", "make_celery", "worker", "-l", "info", "-c", "2"]
