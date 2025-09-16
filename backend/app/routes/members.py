@@ -1,6 +1,7 @@
 import re
 
 from flask import Blueprint, request, jsonify
+from sqlalchemy.exc import IntegrityError
 
 from ..decorators import admin_required
 from ..extensions import db
@@ -58,6 +59,7 @@ def create_member():
     return  jsonify(_serialize_member(new_member)), 201
 
 @members.route("/<int:member_id>", methods=["PUT"])
+@admin_required
 def update_member(member_id):
     member = Member.query.get_or_404(member_id)
     data = request.get_json()
@@ -71,8 +73,74 @@ def update_member(member_id):
     return jsonify(_serialize_member(member))
 
 @members.route("/<int:member_id>", methods=["DELETE"])
+@admin_required
 def delete(member_id):
     member = Member.query.get_or_404(member_id)
     db.session.delete(member)
     db.session.commit()
     return "Deleted Successfully", 200
+
+
+@members.route("/batch", methods=["POST"])
+@admin_required
+def batch_add_members():
+    data = request.get_json()
+
+    if not isinstance(data, list):
+        return jsonify({"error": "Request body must be a list of member objects."}), 400
+
+    errors = []
+    members_to_create = []
+    seen_emails_in_batch = set()
+
+    for i, item in enumerate(data, 1):
+        name = item.get("name", "").strip()
+        email = _is_email_valid(item.get("email", "").strip().lower())
+
+        if not name or not email:
+            errors.append(f"Row {i}: Name and email are required.")
+            continue
+
+        if not email:
+            errors.append(f"Row {i}: Email '{email}' has an invalid format.")
+            continue
+
+        if email in seen_emails_in_batch:
+            errors.append(f"Row {i}: Email '{email}' is duplicated within your list.")
+            continue
+
+        seen_emails_in_batch.add(email)
+        members_to_create.append(Member(name=name, email=email))
+
+    if errors:
+        return jsonify({
+            "error": "Validation failed. No members were created.",
+            "details": errors
+        }), 400
+
+    if seen_emails_in_batch:
+        existing_emails = {
+            result[0] for result in db.session.query(Member.email)
+            .filter(Member.email.in_(seen_emails_in_batch)).all()
+        }
+
+        if existing_emails:
+            for email in existing_emails:
+                errors.append(f"Email '{email}' already exists in the database.")
+
+            return jsonify({
+                "error": "Validation failed. No members were created.",
+                "details": errors
+            }), 409
+
+
+    if members_to_create:
+        db.session.add_all(members_to_create)
+        db.session.commit()
+        return jsonify({
+            "success": f"{len(members_to_create)} members added successfully."
+        }), 201
+    else:
+        return jsonify({"message": "No new members to add."}), 200
+
+

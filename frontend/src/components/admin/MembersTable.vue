@@ -6,6 +6,7 @@ import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
 import {useRouter} from "vue-router";
+import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
 
 const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
@@ -13,6 +14,7 @@ const router = useRouter()
 const loading = ref(true)
 const response = ref([])
 const formIsOpen = ref(false);
+const bulkFormOpen = ref(false);
 const editMemberData = ref({});
 
 
@@ -97,7 +99,9 @@ onMounted(loadMembers)
 </script>
 
 <template>
+    <MembersBatchForm v-model:isOpen="bulkFormOpen" @submitted="handleFormSuccess"/>
 <Button variant="outline" @click="openForm(null)">+ Add Member</Button>
+<Button variant="outline" @click="bulkFormOpen=true">+ Bulk Add Members</Button>
 <MembersForm
     v-model:isOpen="formIsOpen"
     :member-data="editMemberData"
