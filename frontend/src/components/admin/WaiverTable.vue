@@ -39,7 +39,7 @@ function handleAdded(newUser) {
 // Row-level actions
 async function checkInRow(user) {
   try {
-    const res = await postWithAuth('/admin/check-in', {
+    const res = await postWithAuth('/api/admin/check-in', {
       user_id: user.member_id,
     })
     if (!res.ok) {
@@ -59,7 +59,7 @@ function modifyRow(user) {
 }
 
 function resendEmail(user) {
-  postWithAuth('/mail/resend', {
+  postWithAuth('/api/mail/resend', {
     email_type: "waiver",
     member_id: user.member_id
   })
@@ -80,7 +80,7 @@ function removeRow(user) {
 async function confirmedRemove() {
   const user = confirmUser.value
   try {
-    const res = await postWithAuth('/admin/remove-user', {
+    const res = await postWithAuth('/api/admin/remove-user', {
       user_id: user.member_id
     })
 

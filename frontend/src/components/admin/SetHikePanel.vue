@@ -91,7 +91,7 @@ async function fetchTrails() {
   trailsLoading.value = true
   trailsError.value = ''
   try {
-    const res = await fetchWithAuth('/trails')
+    const res = await fetchWithAuth('/api/trails')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     // keep only what we show, but retain id for form posting
@@ -190,7 +190,7 @@ async function submit() {
   const payload = buildPayload()
 
   try {
-    const res = await postWithAuth('/admin/set-hike', payload)
+    const res = await postWithAuth('/api/admin/set-hike', payload)
     if (res.ok) {
       window.location.reload()
     } else {
