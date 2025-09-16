@@ -11,7 +11,7 @@
                 <tr>
                     <td>
 
-                        <p style="margin:0 0 12px;">Hello {{ personalization.name }}!</p>
+                        <p style="margin:0 0 12px;">Hi {{ personalization.name }}!</p>
 
                         <p style="margin:0 0 12px;">
                             You’re on our list for the upcoming hike on <strong>{{ batch.hike_day }}</strong> at
@@ -28,8 +28,7 @@
                                 arrives at the
                                 Chick-fil-A/Chipotle area in UTC. We leave promptly at <strong>{{ batch.hike_time }}</strong>,
                                 so please arrive
-                                <strong>15 minutes early</strong> to check in. Thanks for being punctual—many folks have
-                                commitments after the hike.
+                                <strong>15 minutes early</strong> to check in. Thanks for being punctual!
                             </p>
                         {% elif personalization.transport_type == "driver" %}
                             <p style="margin:0 0 12px;">

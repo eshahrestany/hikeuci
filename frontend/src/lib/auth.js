@@ -1,8 +1,6 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
-
 // Simple auth store using the Composition API.
 const state = reactive({
   user: JSON.parse(localStorage.getItem('auth_user')) || null,
@@ -34,19 +32,17 @@ export function useAuth() {
 
   /**
    * Fetch wrapper that:
-   *  - prefixes API_URL
    *  - sets Content-Type: application/json
    *  - injects Authorization header if logged in
    *  - auto signs out on 401
    */
   async function fetchWithAuth(path, opts = {}) {
-    const url = `${API_URL}${path}`
     const headers = {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
       ...opts.headers,
     }
-    const res = await fetch(url, {
+    const res = await fetch(path, {
       ...opts,
       headers,
     })
@@ -58,14 +54,13 @@ export function useAuth() {
   }
 
   async function postWithAuth(path, data = {}, opts = {}) {
-    const url = `${API_URL}${path}`;
     const headers = {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
       ...opts.headers,
     };
 
-    const res = await fetch(url, {
+    const res = await fetch(path, {
       ...opts,               // allow overriding mode, credentials, etc.
       method: 'POST',        // force POST
       headers,

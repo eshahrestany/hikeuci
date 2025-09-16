@@ -18,6 +18,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@tanstack/vue-table": "^8.21.3",
     "@vitejs/plugin-vue": "^6.0.0",
+    "@vuepic/vue-datepicker": "^11.0.2",
     "@vueuse/core": "^10.11.1",
     "axios": "^1.10.0",
     "base-vue-phone-input": "^0.1.13",

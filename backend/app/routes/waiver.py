@@ -22,7 +22,10 @@ def hike_waiver_page():
     if not member:
         return jsonify({"error": "Member not found"}), 404
 
-    hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
+    hike = Hike.query.get(magic_link.hike_id)
+    if hike.phase != "waiver":
+        return jsonify({"error": "Hike not in waiver phase"}), 400
+
     trail = Trail.query.get(hike.trail_id)
 
     signup = Signup.query.filter_by(member_id=member.id, hike_id=hike.id).first()
@@ -98,14 +101,15 @@ def cancel():
         return jsonify({"error": "Member not found"}), 404
 
     hike = Hike.query.get(magic_link.hike_id) if magic_link.hike_id else None
-    trail = Trail.query.get(hike.trail_id)
 
-    existing_signup = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
+
+    existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if not existing_signup:
-        return jsonify({"error": "User does not have a signup for this hike"})
+        return jsonify({"error": "User does not have a signup for this hike"}), 400
 
     # just delete the signup and magic link, don't delete waiver.
 
+    # Delete the signup and magic link. Do not delete waiver, even if it exists.
     db.session.delete(existing_signup)
     db.session.delete(magic_link)
     db.session.commit()

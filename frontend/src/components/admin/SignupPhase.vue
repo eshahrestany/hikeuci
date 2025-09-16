@@ -37,9 +37,9 @@ const selfTransports = computed(() =>
 
 <template>
   <div>
-    <p class="font-semibold text-xl mb-2">
+    <p class="flex justify-center items-center font-semibold text-xl mb-2">
       Current Phase:
-      <Badge class="text-md">Signup</Badge>
+      <Badge class="text-md ml-2">Signup</Badge>
     </p>
     <Card>
       <CardHeader>

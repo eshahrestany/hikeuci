@@ -8,7 +8,12 @@
         <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
       </CardHeader>
       <CardContent>
-        <!-- Loading Skeleton -->
+        <ActiveHikeTimeline class="mb-6"
+          v-if="response.status ==='awaiting_vote_start' || response.status ==='voting' || response.status === 'signup' || response.status === 'waiver'"
+          :has-vote="response.has_vote"
+          :current-phase="response.phase"
+          :timestamps="response.timeline"
+        />
         <div v-if="loading">
           <Skeleton class="h-6 w-3/5 mb-4" />
           <Skeleton class="space-y-2">
@@ -17,19 +22,12 @@
             <Skeleton class="h-4 w-2/3" />
           </Skeleton>
         </div>
-
-        <!-- No Upcoming Hike -->
-        <div v-else-if="response.status === null">
-          <p class="text-center text-sm text-gray-500 mb-4"> No upcoming hikes found. </p>
-          <Button variant="outline" class="block mx-auto"> Set Next Hike </Button>
-        </div>
-
+        <div v-else-if="response.status === null"><SetHikePanel/></div>
+        <div v-else-if="response.status === 'awaiting_vote_start'" class="text-white">Hike set, awaiting vote start at {{ response.vote_start }}</div>
+        <div v-else-if="response.status === 'error'" class="text-red-500">Could not fetch hike data from the server</div>
         <VotingPhase v-else-if="response.status === 'voting'" :voting-data="response"/>
-
         <SignupPhase v-else-if="response.status === 'signup'" :signup-data="response"/>
-
         <WaiverPhase v-else-if="response.status === 'waiver'" :waiver-data="response"/>
-
       </CardContent>
     </Card>
   </section>
@@ -42,7 +40,8 @@ import { useAuth } from '@/lib/auth.js'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/index.js'
 import { Skeleton } from '@/components/ui/skeleton/index.js'
-import { Button } from '@/components/ui/button/index.js'
+import ActiveHikeTimeline from '@/components/admin/ActiveHikeTimeline.vue'
+import SetHikePanel from '@/components/admin/SetHikePanel.vue'
 import VotingPhase from "@/components/admin/VotingPhase.vue"
 import SignupPhase from "@/components/admin/SignupPhase.vue"
 import WaiverPhase from "@/components/admin/WaiverPhase.vue"
@@ -52,16 +51,15 @@ const { state: signOut, fetchWithAuth } = useAuth()
 const router = useRouter()
 
 const loading = ref(true)
-const response = ref({ status: null, candidates: [], users: [], trail_id: null, trail_name: '' })
+const response = ref({ status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' })
 
 async function loadUpcoming() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/admin/upcoming')
+    const res = await fetchWithAuth('/api/admin/upcoming')
     response.value = await res.json()
-    console.info(response.value)
   } catch {
-    response.value = { status: 'none', candidates: [], users: [], trail_id: null, trail_name: '' }
+    response.value = { status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' }
   } finally {
     loading.value = false
   }
@@ -72,6 +70,3 @@ onMounted(loadUpcoming)
 function signOutAndReturn() { signOut(); router.replace('/login') }
 
 </script>
-
-<style scoped>
-</style>

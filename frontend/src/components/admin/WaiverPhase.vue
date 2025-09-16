@@ -1,10 +1,9 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <p class="font-semibold text-xl">
-        Current Phase: <Badge class="text-md">Waiver</Badge>
-      </p>
-    </div>
+    <p class="flex justify-center items-center font-semibold text-xl mb-6">
+      Current Phase:
+      <Badge class="text-md ml-2">Waiver</Badge>
+    </p>
 
     <CardHeader class="flex items-start">
       <div class="basis-1/2">
@@ -35,7 +34,7 @@
         <WaiverTable :waiver-data="props.waiverData"/>
       </TabsContent>
       <TabsContent value="waitlisted">
-        <WaitlistTable/>
+        <WaitlistTable :waitlist-data="waitlist_data"/>
       </TabsContent>
     </Tabs>
   </div>
@@ -53,6 +52,21 @@ import {
 import SignupStats from "@/components/admin/SignupStats.vue";
 import WaiverTable from "@/components/admin/WaiverTable.vue";
 import WaitlistTable from "@/components/admin/WaitlistTable.vue";
+import {onMounted, ref} from "vue";
+import {useAuth} from "@/lib/auth.js";
 
-const props = defineProps({waiverData: { type: Object, required: true }})
+const { fetchWithAuth } = useAuth()
+
+const props = defineProps({waiverData: {type: Object, required: true}})
+const waitlist_data = ref([])
+
+async function loadWaitlist() {
+  const res = await fetchWithAuth('/api/admin/waitlist')
+  if (!res.ok) return
+  const users = await res.json()
+  waitlist_data.value = users.sort((a, b) => a.waitlist_pos - b.waitlist_pos)
+}
+
+onMounted(loadWaitlist)
+
 </script>

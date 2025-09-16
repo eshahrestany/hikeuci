@@ -37,7 +37,7 @@ const selected    = ref(null)          // whole option object
 
 onMounted(loadEmails)
 async function loadEmails() {
-  const res = await fetchWithAuth(`/admin/list-emails-not-in-hike`)
+  const res = await fetchWithAuth(`/api/admin/list-emails-not-in-hike`)
   const raw = res.ok ? await res.json() : []
 
   emailOptions.value = raw.map(o => ({
@@ -64,13 +64,13 @@ watch(() => form.transport_type, t => {
 async function loadVehicles() {
   vehicles.value = []
   if (!selected.value) return
-  const res = await fetchWithAuth(`/vehicles?member_id=${selected.value.member_id}`)
+  const res = await fetchWithAuth(`/api/vehicles?member_id=${selected.value.member_id}`)
   vehicles.value = res.ok ? await res.json() : []
 }
 
 async function addVehicle() {
   try {
-    const res  = await postWithAuth('/vehicles', {
+    const res  = await postWithAuth('/api/vehicles', {
       member_id: selected.value.member_id,
       year: newVehicle.year,
       make: newVehicle.make,
@@ -95,7 +95,7 @@ async function onSave() {
       transport_type: form.transport_type,
       vehicle_id: form.transport_type === 'driver' ? form.vehicle_id : null,
     }
-    const res = await postWithAuth('/admin/add-user', payload)
+    const res = await postWithAuth('/api/admin/add-user', payload)
     if (!res.ok) throw new Error(await res.text())
     const added = await res.json()   // backend returns new user object
     toast.success('Late signup added')
@@ -111,10 +111,11 @@ async function onSave() {
     <DialogContent class="sm:max-w-[450px]">
       <DialogHeader>
         <DialogTitle>Add Late Signup</DialogTitle>
-        <DialogDescription>Select member and details</DialogDescription>
+        <DialogDescription>Select member and transport type</DialogDescription>
       </DialogHeader>
 
       <!-- Email Combobox -->
+      <p class="text-sm">Adding a member here will automatically send them a waiver via email.</p>
       <Combobox by="email" v-model="selected">
         <ComboboxAnchor class="w-full">
           <div class="relative w-full items-center">

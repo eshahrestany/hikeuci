@@ -13,6 +13,16 @@ import {
 } from "@/components/ui/number-field/index.js";
 import {Button} from "@/components/ui/button/index.js";
 import {Input} from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog/index.js";
+import {Checkbox} from "@/components/ui/checkbox/index.js";
+import {Label} from "@/components/ui/label/index.js";
 
 const loading = ref(true)
 const error = ref(null)
@@ -23,17 +33,21 @@ const sig1HasInk = ref(false)
 const sig2HasInk = ref(false)
 const signaturesTouched = computed(() => sig1HasInk.value && sig2HasInk.value)
 
-const allowSubmit = computed(() => signaturesTouched.value && !!printName.value)
+const allowSubmit = computed(() => signaturesTouched.value && !!printName.value && agreePolicy.value)
 
 const signature1 = ref(null)
 const signature2 = ref(null)
 const isMinor = ref(false)
+const agreePolicy = ref(false)
 const age = ref(17)
 const printName = ref(null)
 
 const submitSuccess = ref(false)
 const alreadySigned = ref(false)
 const cancelSuccess = ref(false)
+
+const cancelDialogOpen = ref(false)
+const confirmCancelChecked = ref(false)
 
 function mountESignSlots() {
   // helper to replace a slot with a mounted VueSignaturePad + Clear button
@@ -70,7 +84,13 @@ function mountESignSlots() {
               onClick: this.handleClear
             }, 'Clear')
           ]),
-          h('p', {class: 'text-xs text-stone-600'}, 'Signature of User or Parent/Guardian if Minor')
+          h('p', {class: 'text-xs text-stone-600'},
+              ['Signature of User or Parent/Guardian if Minor',
+                      // Required Indicator
+                      h('span', {
+                        'aria-hidden': 'true',
+                        class: 'ml-2 text-xs font-medium text-rose-600'
+                      }, '* Required')]),
         ])
       }
     })
@@ -91,7 +111,7 @@ function mountESignSlots() {
       render() {
         return h(Input, {
           id: 'printName',
-          placeholder: 'Print Name',
+          placeholder: 'Print Name (required)',
           modelValue: this.printName,
           'onUpdate:modelValue': (n) => (this.printName = n),
         })
@@ -155,6 +175,52 @@ function mountESignSlots() {
                 )
               ])
               : null
+        ])
+      }
+    })
+    app.mount(mountPoint)
+  }
+
+  const policySlot = document.getElementById('policy-slot')
+  if (policySlot) {
+    const mountPoint = document.createElement('div')
+    policySlot.replaceWith(mountPoint)
+
+    const app = createApp({
+      setup() {
+        const toggle = (e) => {
+          const el = e.target
+          agreePolicy.value = !!el.checked
+        }
+        const onUpdate = (v) => (age.value = v)
+        return { agreePolicy, toggle, onUpdate }
+      },
+      render() {
+        return h('div', { class: 'flex items-center gap-4' }, [
+          // Checkbox: v-model="agreePolicy" (required)
+          h('label', { class: 'flex items-center gap-2 text-sm text-midnight' }, [
+            h('input', {
+              id: 'agree-policy',
+              type: 'checkbox',
+              checked: this.agreePolicy,
+              onChange: this.toggle,
+              class: 'h-4 w-4 rounded border-stone-300',
+              required: true,
+            }),
+            h('span', { class: 'flex items-center gap-1' }, [
+              "I have read and agree to the Hiking Club at UCI ",
+              h("a", { href: "/privacy-policy", target: "_blank" }, "Privacy Policy"),
+              " and ",
+              h("a", { href: "/esign-policy", target: "_blank" }, "Electronic Records and Signatures Policy."),
+              // Screen-reader hint
+              h('span', { id: 'agree-policy-required', class: 'sr-only' }, 'Required')
+            ]),
+            // Required indicator
+            h('span', {
+              'aria-hidden': 'true',
+              class: 'ml-2 text-xs font-medium text-rose-600'
+            }, '* Required')
+          ])
         ])
       }
     })
@@ -285,16 +351,38 @@ async function submitCancelRequest() {
   }
 }
 
+async function confirmCancelAction() {
+  await submitCancelRequest()
+  cancelDialogOpen.value = false
+  confirmCancelChecked.value = false
+}
+
+watch(cancelDialogOpen, (isOpen) => {
+  if (!isOpen) {
+    confirmCancelChecked.value = false
+  }
+})
+
 </script>
 
 <template>
   <section
-      class="relative bg-cover bg-center py-20 bg-fixed"
+      class="relative bg-cover bg-center py-20 bg-fixed flex-grow place-content-center"
       :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
     <div class="absolute inset-0"/>
     <div class="relative mx-auto w-fit min-w-2xl px-2">
-      <Card class="bg-white border">
+      <Card class="relative bg-white border">
+        <Button
+          v-if="waiverContent && !loading && !error && !submitSuccess && !cancelSuccess"
+          size="sm"
+          variant="outline"
+          class="absolute top-3 right-3 z-10 shadow-md border-red-500 text-red-600 hover:bg-red-50"
+          aria-label="Changed your mind? Open cancellation dialog"
+          @click="cancelDialogOpen = true"
+        >
+          Changed your mind?
+        </Button>
         <CardContent class="px-6 py-2">
           <div v-if="loading" class="space-y-4">
             <Skeleton class="h-4 w-full"/>
@@ -307,6 +395,9 @@ async function submitCancelRequest() {
           <div v-else-if="submitSuccess" class="text-center">
             Your waiver has been submitted successfully. See you there!
           </div>
+          <div v-else-if="cancelSuccess" class="text-center">
+            Successfully canceled.
+          </div>
           <div v-else-if="alreadySigned" class="text-center text-stone-700">
             <p v-if="cancelSuccess">Successfully canceled.</p>
             <p v-else class="text-lg font-medium">
@@ -314,7 +405,7 @@ async function submitCancelRequest() {
             </p>
             <p class="text-sm text-red-500 mt-2">By cancelling you will be forfeiting your spot and won't be able to sign back up!</p>
             <div v-if="!cancelSuccess" class="mt-6">
-              <Button type="button" variant="destructive" @click="submitCancelRequest">Cancel My Signup</Button>
+              <Button type="button" variant="destructive" @click="cancelDialogOpen = true">Cancel My Signup</Button>
             </div>
           </div>
           <div v-else class="space-y-6">
@@ -331,4 +422,29 @@ async function submitCancelRequest() {
       </Card>
     </div>
   </section>
+
+  <Dialog v-model:open="cancelDialogOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Cancel Signup?</DialogTitle>
+        <DialogDescription>
+          By cancelling you will be forfeiting your spot and won't be able to sign back up!
+        </DialogDescription>
+      </DialogHeader>
+      <div class="flex items-center gap-2 py-2">
+        <Checkbox id="confirm-cancel" v-model="confirmCancelChecked"/>
+        <Label for="confirm-cancel">I understand and still want to cancel my signup.</Label>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" @click="cancelDialogOpen = false">Nevermind</Button>
+        <Button
+          variant="destructive"
+          :disabled="!confirmCancelChecked || loading"
+          @click="confirmCancelAction"
+        >
+          Cancel my signup
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

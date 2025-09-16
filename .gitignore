@@ -1,9 +1,12 @@
 .venv
 .idea
 /backend/.env
+/backend/celerybeat-schedule
 /backend/app/static/uploads
 /frontend/node_modules/
 /frontend/.env
 /frontend/dist
-/backend/migrations/
+/backend/celerybeat-schedule.db
+/backend/app/templates/.j2cache/*
+!/backend/app/templates/.j2cache/readme.txt
 /backend/static/

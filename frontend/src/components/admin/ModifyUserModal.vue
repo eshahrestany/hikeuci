@@ -60,7 +60,7 @@ const { postWithAuth, fetchWithAuth } = useAuth()
 
 async function loadVehicles() {
   try {
-    const res = await fetchWithAuth(`/vehicles?member_id=${props.user.member_id}`)
+    const res = await fetchWithAuth(`/api/vehicles?member_id=${props.user.member_id}`)
     if (!res.ok) throw new Error()
     vehicles.value = await res.json()
   } catch {
@@ -78,7 +78,7 @@ watch(() => form.transport_type, v => {
 // create a new vehicle, then re-load
 async function addVehicle() {
   try {
-    const res = await postWithAuth('/vehicles', {
+    const res = await postWithAuth('/api/vehicles', {
       member_id: props.user.member_id,
       make: newVehicle.make,
       model: newVehicle.model,
@@ -106,7 +106,7 @@ async function onSave() {
       payload.vehicle_id = form.vehicle_id
     }
 
-    const res = await postWithAuth('/admin/modify-user', payload)
+    const res = await postWithAuth('/api/admin/modify-user', payload)
     if (!res.ok) {
       const err = await res.text()
       throw new Error(err || 'Unknown error')
@@ -157,7 +157,7 @@ async function onSave() {
         <!-- Driver-only block -->
         <div v-if="form.transport_type === 'driver'" class="col-span-full space-y-4">
           <div v-if="vehicles.length">
-            <Label for="vehicleSelect">Choose Vehicle</Label>
+            <Label for="vehicleSelect" class="mb-4">Choose Vehicle</Label>
             <Select v-model="form.vehicle_id">
               <SelectTrigger id="vehicleSelect">
                 <SelectValue placeholder="Select Vehicle…" />
@@ -174,7 +174,8 @@ async function onSave() {
             </Select>
           </div>
 
-          <div v-else class="space-y-2">
+          <div class="space-y-2">
+            <div v-if="vehicles.length" class="mb-2">Or add a new one below</div>
             <div class="grid grid-cols-2 items-center gap-4">
               <Label for="vehicleYear">Year</Label>
               <Input

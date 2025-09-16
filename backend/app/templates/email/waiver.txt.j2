@@ -1,5 +1,5 @@
 {% macro email(personalization, batch) -%}
-Hello {{ personalization.name }}!
+Hi {{ personalization.name }}!
 
 If you have received this email, it means you are on our list of hikers for the upcoming hike on {{ batch.hike_day }} at {{ batch.hike_trail_name }}.
 {% if batch.description %}
