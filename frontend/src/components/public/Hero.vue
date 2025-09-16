@@ -18,7 +18,7 @@
       </h1>
 
       <p class="max-w-md text-lg sm:text-xl font-medium text-stone">
-        Join the UCI Hiking Club to discover breathtaking trails, make lifelong
+        Join the Hiking Club at UCI to discover breathtaking trails, make lifelong
         friends, and engage with your local community.
       </p>
 
