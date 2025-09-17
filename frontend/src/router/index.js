@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Index from '../views/public/Index.vue'
+import NotFound from '../views/public/NotFound.vue'
 
 const routes = [
   {
@@ -63,6 +64,11 @@ const routes = [
         component: () => null,
       },
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
   },
 ]
 const router = createRouter({
