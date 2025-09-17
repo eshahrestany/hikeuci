@@ -52,14 +52,14 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
-import sophia  from '@/assets/sophia.png'
-import eric    from '@/assets/eric.png'
-import zoe     from '@/assets/zoe.png'
-import advaith from '@/assets/advaith.png'
-import shirley from '@/assets/shirley.png'
-import evan    from '@/assets/evan.png'
-import maddie  from '@/assets/petr.png'
-import jeremy  from '@/assets/jeremy.png'
+import sophia  from '@/assets/officers/sophia.png'
+import eric    from '@/assets/officers/eric.png'
+import zoe     from '@/assets/officers/zoe.png'
+import advaith from '@/assets/officers/advaith.png'
+import shirley from '@/assets/officers/shirley.png'
+import evan    from '@/assets/officers/evan.png'
+import maddie  from '@/assets/officers/maddie.png'
+import jeremy  from '@/assets/officers/jeremy.png'
 
 /* -------------------------------------------------------------
  * Types
