@@ -100,7 +100,7 @@ const uploadPhoto = async (trailId) => {
        ...getAuthHeaders(),
     }
 
-    const response = fetch(endpoint,
+    const response = await fetch(endpoint,
       {
         method: method,
         headers,
@@ -109,6 +109,7 @@ const uploadPhoto = async (trailId) => {
     if (!response.ok) {
       throw Error(response.status)
     }
+
 
     toast.success(`Trail Photo successfully updated 🎉`)
   } catch (error) {
@@ -241,7 +242,7 @@ const handleClose = (openState) => {
           <div class="space-y-2 col-span-2 grid grid-cols-2 gap-4">
             <div>
               <Label class="mb-2" for="picture">Picture</Label>
-              <Input id="picture" type="file" @change="handleFileChange" :required="!isEditing"/>
+              <Input id="picture" type="file" accept="image/png, image/jpeg" @change="handleFileChange" :required="!isEditing"/>
             </div>
             <div v-if="isEditing">
               <p class="text-sm text-gray-400">This trail has an existing image, view it with the link below or upload a new one to replace it.</p>

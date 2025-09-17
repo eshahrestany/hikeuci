@@ -9,7 +9,7 @@
       <div class="basis-1/2">
         <img
           class="w-1/2 object-cover rounded-md"
-          :src="`/api/images/uploads/${waiverData.trail_id}.png`"
+          :src="`/api/images/uploads/${waiverData.trail_id}`"
           :alt="waiverData.trail_name"
         />
       </div>

@@ -9,7 +9,7 @@
         <CardHeader>
           <img
             class="h-24 w-full object-cover rounded-md mb-2"
-            :src="`/api/images/uploads/${trail.trail_id}.png`"
+            :src="`/api/images/uploads/${trail.trail_id}`"
             :alt="trail.trail_name"
           />
           <CardTitle>{{ trail.trail_name }}</CardTitle>

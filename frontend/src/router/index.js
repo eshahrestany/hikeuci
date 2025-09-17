@@ -61,7 +61,7 @@ const routes = [
       {
         path: 'history',
         name: 'Dashboard History',
-        component: () => null,
+        component: () => import('../views/admin/HikeHistory.vue'),
       },
     ]
   },

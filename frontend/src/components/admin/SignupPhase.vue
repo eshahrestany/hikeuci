@@ -45,7 +45,7 @@ const selfTransports = computed(() =>
       <CardHeader>
         <img
           class="h-36 w-full object-cover rounded-md mb-2"
-          :src="`/api/images/uploads/${signupData.trail_id}.png`"
+          :src="`/api/images/uploads/${signupData.trail_id}`"
           :alt="signupData.trail_name"
         />
         <CardTitle>{{ signupData.trail_name }}</CardTitle>
