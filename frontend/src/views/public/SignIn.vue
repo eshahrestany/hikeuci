@@ -24,7 +24,7 @@
   import { useAuth } from '../../lib/auth.js'
   import NavBar from "../../components/public/Navbar.vue"
   import Footer from "../../components/public/Footer.vue"
-  import background from "../../assets/hiking_bg.jpg"
+  import background from "../../assets/bg_2.jpg"
 
   const router = useRouter()
   const { state, setUser } = useAuth()

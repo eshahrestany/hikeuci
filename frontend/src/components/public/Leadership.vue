@@ -1,6 +1,6 @@
 <template>
   <section
-    class="relative bg-stone/20 text-midnight py-20"
+    class="relative text-midnight py-20"
     id="leadership"
     ref="sectionRef"
   >
@@ -9,9 +9,7 @@
         Meet Our Leadership
       </h2>
 
-      <!-- Carousel wrapper -->
       <div ref="wrapperRef" class="relative w-full overflow-hidden pb-5">
-        <!-- Slides -->
         <div
           ref="slidesRef"
           class="flex"

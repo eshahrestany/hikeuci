@@ -1,26 +1,20 @@
-<!-- HeroSection.vue -->
 <template>
   <section
-    class="relative flex items-center justify-center text-center text-white min-h-screen bg-midnight overflow-hidden"
+    class="relative flex items-center justify-center text-center text-white min-h-screen overflow-hidden"
   >
-    <!-- Background image -->
-    <div class="absolute inset-0 bg-cover bg-center bg-kenburns" :style="{ backgroundImage: `url(${background})` }" aria-hidden="true"></div>
 
-    <!-- Overlay for readability -->
     <div
-      class="absolute inset-0 pointer-events-none bg-gradient-to-b from-uci-blue/50 via-black/40 to-black/80"
+      class="absolute inset-0 pointer-events-none"
       aria-hidden="true"
     ></div>
 
-    <!-- Content -->
     <div
       class="relative z-10 flex flex-col items-center justify-center px-6 py-24 gap-6"
     >
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-uci-gold drop-shadow-md">
-        Adventure Starts with UCI
-      </h1>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-uci-gold drop-shadow-xl">
+        Adventure Starts with UCI</h1>
 
-      <p class="max-w-md text-lg sm:text-xl font-medium text-stone">
+      <p class="max-w-md text-lg sm:text-xl font-medium text-sky-900">
         Join the Hiking Club at UCI to discover breathtaking trails, make lifelong
         friends, and engage with your local community. No experience required.
       </p>
@@ -105,7 +99,6 @@
 </template>
 
 <script setup>
-import background from "@/assets/hiking_bg.jpg";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 </script>
 

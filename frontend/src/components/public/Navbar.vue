@@ -1,15 +1,11 @@
 <template>
-  <nav :class="['text-stone shadow-md font-montserrat', overlayNavbar
-      ? 'bg-black/40 backdrop-blur-md backdrop-saturate-150 fixed inset-x-0 top-0 z-30'
-      : 'bg-midnight']">
-    <div class="max-w-7xl mx-auto px-4">
+  <nav :class="['text-stone shadow-md font-montserrat','bg-midnight']">
+    <div class="max-w-4xl mx-auto">
       <div class="flex justify-between h-16 items-center">
-        <!-- Site / brand name -->
         <router-link to="/" class="text-uci-gold font-semibold text-xl tracking-wide hover:text-uci-blue transition-colors">
           Hiking Club @ UCI
         </router-link>
 
-        <!-- Mobile menu toggle -->
         <button
           @click="open = !open"
           :aria-expanded="open"
@@ -28,7 +24,6 @@
           </svg>
         </button>
 
-        <!-- Desktop nav -->
         <ul class="hidden md:flex space-x-8">
           <li v-for="item in items" :key="item.name">
             <router-link
@@ -42,7 +37,6 @@
         </ul>
       </div>
 
-      <!-- Mobile nav -->
       <transition name="fade-slide">
         <ul
           v-if="open"
