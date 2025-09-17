@@ -76,7 +76,7 @@ const response = ref({ status: 'error', candidates: [], users: [], trail_id: nul
 async function loadUpcoming() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/admin/upcoming')
+    const res = await fetchWithAuth('/api/admin/upcoming')
     response.value = await res.json()
   } catch {
     response.value = { status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' }

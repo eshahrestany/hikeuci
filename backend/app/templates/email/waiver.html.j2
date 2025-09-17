@@ -66,18 +66,24 @@
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Sign Waiver</a>
                         </p>
 
+                        {% if batch.hike_trail_gmap_link or batch.hike_trail_amap_link %}
                         <p style="margin:0 0 8px;"><strong>Trailhead maps</strong>:</p>
+                        {% endif %}
                         <ul style="padding-left:20px;margin:0 0 16px;">
+                            {% if batch.hike_trail_gmap_link %}
                             <li style="margin:0 0 6px">
                                 Google Maps: <a href="{{ batch.hike_trail_gmap_link }}"
                                                 style="color:#1d4ed8;text-decoration:underline;" target="_blank"
                                                 rel="noopener">{{ batch.hike_trail_gmap_link }}</a>
                             </li>
+                            {% endif %}
+                            {% if batch.hike_trail_amap_link %}
                             <li style="margin:0 0 6px">
                                 Apple Maps: <a href="{{ batch.hike_trail_amap_link }}"
                                                style="color:#1d4ed8;text-decoration:underline;" target="_blank"
                                                rel="noopener">{{ batch.hike_trail_amap_link }}</a>
                             </li>
+                            {% endif %}
                         </ul>
 
                         <p style="margin:0 0 8px;"><strong>Reminders before the hike</strong>:</p>

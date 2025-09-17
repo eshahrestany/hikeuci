@@ -61,7 +61,7 @@ const props = defineProps({waiverData: {type: Object, required: true}})
 const waitlist_data = ref([])
 
 async function loadWaitlist() {
-  const res = await fetchWithAuth('/admin/waitlist')
+  const res = await fetchWithAuth('/api/admin/waitlist')
   if (!res.ok) return
   const users = await res.json()
   waitlist_data.value = users.sort((a, b) => a.waitlist_pos - b.waitlist_pos)
