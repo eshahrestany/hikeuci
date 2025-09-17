@@ -27,7 +27,7 @@ const steps = computed(() => {
     ]
   } else {
     return [
-      { key: 'signup', label: 'Hike Initiated', at: props.timestamps.signup_date },
+      { key: 'signup', label: 'Signup Opens', at: props.timestamps.signup_date },
       { key: 'waiver', label: 'Waiver Opens',   at: props.timestamps.waiver_date },
       { key: 'hike',   label: 'Hike Day',       at: props.timestamps.hike_date },
     ]

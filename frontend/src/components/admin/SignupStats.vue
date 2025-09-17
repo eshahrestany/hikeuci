@@ -1,13 +1,11 @@
 <template>
   <div class="space-y-3 md:space-y-4 mb-3">
-    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:text-base">
-      <p>Signups: <strong>{{ numCheckedInSignups }}</strong>/<strong>{{ numSignups }}</strong></p>
-      <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong>/<strong>{{ numPassengers }}</strong></p>
-      <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong>/<strong>{{ numDrivers }}</strong></p>
-      <p>Self: <strong>{{ numCheckedInSelf }}</strong>/<strong>{{ numSelf }}</strong></p>
-      <p class="col-span-2 md:col-span-1">Capacity: <strong>{{ passengerCapacity }}</strong></p>
-    </div>
-
+    <p class="text-sm text-stone">Signup Stats <strong>(Members checked in / Members signed up)</strong></p>
+    <p>Signups: <strong>{{ numCheckedInSignups }}</strong>/<strong>{{ numSignups }}</strong></p>
+    <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong>/<strong>{{ numPassengers }}</strong></p>
+    <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong>/<strong>{{ numDrivers }}</strong></p>
+    <p>Self: <strong>{{ numCheckedInSelf }}</strong>/<strong>{{ numSelf }}</strong></p>
+    <p class="col-span-2 md:col-span-1">Capacity: <strong>{{ passengerCapacity }}</strong></p>
     <!-- Capacity Indicator -->
     <div class="flex items-center space-x-3">
       <Progress v-model="barWidth" :max="100" class="flex-1 [&_[data-slot=progress]]:bg-gray-200"

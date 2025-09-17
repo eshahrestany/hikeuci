@@ -299,16 +299,17 @@ def check_in():
         db.session.commit()
         return jsonify(success=True), 200
 
-    # DELETE → undo check-in
-    if not signup.is_checked_in:
-        return jsonify(already_unchecked=True), 208
+    elif request.method == 'DELETE':
+        # DELETE → undo check-in
+        if not signup.is_checked_in:
+            return jsonify(already_unchecked=True), 208
 
-    signup.is_checked_in = False
-    db.session.commit()
-    return jsonify(success=True), 200
+        signup.is_checked_in = False
+        db.session.commit()
+        return jsonify(success=True), 200
 
+    return jsonify(error="Invalid request method"), 400
 
-    
 
 @dashboard.route('/modify-user', methods=['POST'])
 @admin_required
