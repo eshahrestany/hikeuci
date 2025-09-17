@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
+import {PlusCircle} from "lucide-vue-next";
 
 const props = defineProps({
   isOpen: {
@@ -67,11 +68,14 @@ const handleSubmit = async () => {
   }
 
   try {
-    const endpoint = '/admin/members/batch'
-    await fetchWithAuth(endpoint, {
+    const endpoint = '/api/admin/members/batch'
+    const response = await fetchWithAuth(endpoint, {
       method: 'POST',
       body: JSON.stringify(membersPayload)
     });
+    if (!response.ok) {
+      throw Error(response.status)
+    }
 
     toast.success(`${membersPayload.length} members successfully added! 🎉`);
     emit('submitted');
@@ -106,8 +110,8 @@ const handleClose = (openState) => {
             id="batch-data"
             v-model="pastedData"
             rows="10"
-            placeholder="Alice Wonderland  alice@example.com&#10;Bob Builder,bob@example.com"
-            class="font-mono"
+            placeholder="Peter Anteater  panteater@uci.edu&#10;John Pork,johnpork@gmail.com"
+            class="font-mono w-full"
           />
           <p v-if="errorMessage" class="text-sm text-red-500 mt-1">
             {{ errorMessage }}
@@ -117,7 +121,7 @@ const handleClose = (openState) => {
 
       <DialogFooter class="w-full flex justify-between items-center gap-4">
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
-        <Button type="submit" variant="default" form="member-batch-form">+ Add Members</Button>
+        <Button type="submit" variant="default" form="member-batch-form">Add Members<PlusCircle/></Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

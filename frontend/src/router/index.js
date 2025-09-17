@@ -60,7 +60,7 @@ const routes = [
       {
         path: 'history',
         name: 'Dashboard History',
-        component: () => import('../views/admin/DashboardMembers.vue'),
+        component: () => null,
       },
     ]
   },

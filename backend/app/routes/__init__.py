@@ -21,4 +21,3 @@ def register_routes(app):
     app.register_blueprint(hike_waiver, url_prefix="/api/hike-waiver")
     app.register_blueprint(vehicles, url_prefix="/api/vehicles")
     app.register_blueprint(mail, url_prefix="/api/mail")
-    app.register_blueprint(trails, url_prefix="/api/trails")

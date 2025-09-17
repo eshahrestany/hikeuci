@@ -5,26 +5,25 @@ import {Button} from "@/components/ui/button/index.js";
 import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import TrailsForm from "@/components/admin/TrailsForm.vue";
-import {useRouter} from "vue-router";
+import {difficulties} from "@/lib/common.js"
+import {PlusCircle} from "lucide-vue-next"
 
-const { state: signOut, fetchWithAuth } = useAuth()
-const router = useRouter()
+const { fetchWithAuth } = useAuth()
 
 const loading = ref(true)
 const response = ref([])
 const formIsOpen = ref(false);
 const editTrailData = ref({});
 
-const difficulties = [
-    'Easy', 'Moderate', 'Difficult', 'Very Difficult'
-]
 
 async function loadTrails() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/admin/trails')
+    const res = await fetchWithAuth('/api/admin/trails')
+    if (!res.ok) {
+      throw Error(res.status)
+    }
     response.value = await res.json()
-    console.info(response.value)
   } catch {
     response.value = []
   } finally {
@@ -94,38 +93,6 @@ const columns = [
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
-    id: 'alltrails_url',
-    header: 'All trails',
-    accessorFn: row => `${row.alltrails_url}`,
-    cell: info => info.getValue(),
-    filterFn: (row, colId, filter) =>
-        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
-  },
-  {
-    id: 'trailhead_gmaps_url',
-    header: 'Google Maps',
-    accessorFn: row => `${row.trailhead_gmaps_url}`,
-    cell: info => info.getValue(),
-    filterFn: (row, colId, filter) =>
-        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
-  },
-  {
-    id: 'trailhead_amaps_url',
-    header: 'Apple Maps',
-    accessorFn: row => `${row.trailhead_amaps_url}`,
-    cell: info => info.getValue(),
-    filterFn: (row, colId, filter) =>
-        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
-  },
-  {
-    id: 'description',
-    header: 'Description',
-    accessorFn: row => `${row.description}`,
-    cell: info => info.getValue(),
-    filterFn: (row, colId, filter) =>
-        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
-  },
-  {
     id: 'edit',
     header: 'Modify',
     cell: ({ row }) =>
@@ -148,7 +115,7 @@ onMounted(loadTrails)
 </script>
 
 <template>
-<Button variant="outline" @click="openForm(null)">+ Add Trail</Button>
+<Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Trail</Button>
 <TrailsForm
     v-model:isOpen="formIsOpen"
     :trail-data="editTrailData"

@@ -5,23 +5,23 @@ import {Button} from "@/components/ui/button/index.js";
 import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
-import {useRouter} from "vue-router";
 import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
+import {PlusCircle, ListPlus} from "lucide-vue-next"
 
-const { state: signOut, fetchWithAuth } = useAuth()
-const router = useRouter()
+
+const {fetchWithAuth } = useAuth()
 
 const loading = ref(true)
 const response = ref([])
 const formIsOpen = ref(false);
-const bulkFormOpen = ref(false);
+const batchFormOpen = ref(false);
 const editMemberData = ref({});
 
 
 async function loadMembers() {
   loading.value = true
   try {
-    const res = await fetchWithAuth('/admin/members')
+    const res = await fetchWithAuth('/api/admin/members')
     response.value = await res.json()
     console.info(response.value)
   } catch {
@@ -99,9 +99,9 @@ onMounted(loadMembers)
 </script>
 
 <template>
-    <MembersBatchForm v-model:isOpen="bulkFormOpen" @submitted="handleFormSuccess"/>
-<Button variant="outline" @click="openForm(null)">+ Add Member</Button>
-<Button variant="outline" @click="bulkFormOpen=true">+ Bulk Add Members</Button>
+    <MembersBatchForm v-model:isOpen="batchFormOpen" @submitted="handleFormSuccess"/>
+<Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Member</Button>
+<Button class="ml-2" variant="outline" @click="batchFormOpen=true"><ListPlus/>Batch Add Members</Button>
 <MembersForm
     v-model:isOpen="formIsOpen"
     :member-data="editMemberData"

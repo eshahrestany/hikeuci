@@ -14,18 +14,7 @@ import {Skeleton} from "@/components/ui/skeleton/index.js";
         <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
       </CardHeader>
       <CardContent>
-        <!-- Loading Skeleton -->
-        <div v-if="loading">
-          <Skeleton class="h-6 w-3/5 mb-4" />
-          <Skeleton class="space-y-2">
-            <Skeleton class="h-4 w-full" />
-            <Skeleton class="h-4 w-4/5" />
-            <Skeleton class="h-4 w-2/3" />
-          </Skeleton>
-        </div>
-
-        <MembersTable />
-
+        <MembersTable/>
       </CardContent>
     </Card>
   </section>

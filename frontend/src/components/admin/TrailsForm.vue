@@ -91,7 +91,6 @@ function handleFileChange(event) {
 
 const uploadPhoto = async (trailId) => {
   try {
-
     const endpoint = `/api/images/uploads/${trailId}`;
     const method = 'POST';
     const uploadFormData = new FormData()
@@ -107,6 +106,9 @@ const uploadPhoto = async (trailId) => {
         headers,
         body: uploadFormData,
       });
+    if (!response.ok) {
+      throw Error(response.status)
+    }
 
     toast.success(`Trail Photo successfully updated 🎉`)
   } catch (error) {
@@ -118,14 +120,18 @@ const uploadPhoto = async (trailId) => {
 
 const handleSubmit = async () => {
   try {
-    const endpoint = isEditing.value ? `/admin/trails/${props.trailData.id}` : '/admin/trails'
+    const endpoint = isEditing.value ? `/api/admin/trails/${props.trailData.id}` : '/api/admin/trails'
     const method = isEditing.value ? 'PUT' : 'POST'
 
     const response = await fetchWithAuth(endpoint,{method: method, body: JSON.stringify(formData)})
+    if (!response.ok) {
+      throw Error(response.status)
+    }
     const body = await response.json()
 
-    await uploadPhoto(body.id);
-
+    if (selectedFile.value) {
+      await uploadPhoto(body.id);
+    }
     toast.success(`Trail successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
     Object.assign(formData, defaultTrailState)
     emit('submitted')
@@ -138,12 +144,15 @@ const handleSubmit = async () => {
 
 const deleteTrail = async () => {
     try {
-        const endpoint = `/admin/trails/${props.trailData.id}`
+        const endpoint = `/api/admin/trails/${props.trailData.id}`
         const method = "DELETE"
 
         const response = await fetchWithAuth(endpoint, {method: method})
-        toast.success(`Trail successfully Deleted`)
+        if (!response.ok) {
+          throw Error(response.status)
+        }
 
+        toast.success(`Trail successfully Deleted`)
         emit('submitted')
         emit('update:isOpen', false)
     } catch (error) {
@@ -229,12 +238,16 @@ const handleClose = (openState) => {
               </SelectContent>
             </Select>
           </div>
-          <div class="space-y-2">
-            <Label for="picture">Picture</Label>
-            <Input id="picture" type="file" @change="handleFileChange" required />
-            <a class="text-gray-400 hover:underline text-sm" v-if="isEditing" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
+          <div class="space-y-2 col-span-2 grid grid-cols-2 gap-4">
+            <div>
+              <Label class="mb-2" for="picture">Picture</Label>
+              <Input id="picture" type="file" @change="handleFileChange" :required="!isEditing"/>
+            </div>
+            <div v-if="isEditing">
+              <p class="text-sm text-gray-400">This trail has an existing image, view it with the link below or upload a new one to replace it.</p>
+              <a class="text-blue-300 hover:underline text-sm" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
+            </div>
           </div>
-
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="alltrails_url">AllTrails URL</Label>
             <Input id="alltrails_url" type="url" v-model="formData.alltrails_url" placeholder="https://www.alltrails.com/..."  />
@@ -252,7 +265,7 @@ const handleClose = (openState) => {
 
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="description">Optional Trail Warning</Label>
-            <Input id="description" v-model="formData.description" placeholder="e.g., 'Parking lot closes at 5 PM sharp.'" />
+            <Input id="description" v-model="formData.description" placeholder="e.g., 'Expect to get wet on this trail! Bring waterproof shoes.'" />
           </div>
         </div>
       </form>

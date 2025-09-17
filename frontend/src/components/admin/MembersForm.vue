@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 import {Checkbox} from "@/components/ui/checkbox/index.js";
+import {PlusCircle, Save} from "lucide-vue-next"
 
 const props = defineProps({
   isOpen: {
@@ -28,7 +29,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen', 'submitted'])
 
-const { getAuthHeaders, fetchWithAuth} = useAuth()
+const {fetchWithAuth} = useAuth()
 
 const defaultMemberState = {
   name: '',
@@ -51,15 +52,18 @@ watch(() => props.memberData, (newMember) => {
 
 const isEditing = computed(() => !!props.memberData)
 const dialogTitle = computed(() => isEditing.value ? 'Edit Member' : 'Add new Member')
-const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : '+ Add Member')
+const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : 'Add Member')
 
 
 const handleSubmit = async () => {
   try {
-    const endpoint = isEditing.value ? `/admin/members/${props.memberData.id}` : '/admin/members'
+    const endpoint = isEditing.value ? `/api/admin/members/${props.memberData.id}` : '/api/admin/members'
     const method = isEditing.value ? 'PUT' : 'POST'
 
     const response = await fetchWithAuth(endpoint,{method: method, body: JSON.stringify(formData)})
+    if (!response.ok) {
+      throw Error(response.status)
+    }
 
     toast.success(`Member successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
     emit('submitted')
@@ -73,10 +77,13 @@ const handleSubmit = async () => {
 
 const deleteMember = async () => {
     try {
-        const endpoint = `/admin/members/${props.memberData.id}`
+        const endpoint = `/api/admin/members/${props.memberData.id}`
         const method = "DELETE"
 
         const response = await fetchWithAuth(endpoint, {method: method})
+        if (!response.ok) {
+          throw new Error(response.status)
+        }
         toast.success(`Member successfully Deleted`)
 
         emit('submitted')
@@ -97,7 +104,7 @@ const handleClose = (openState) => {
       <DialogHeader>
         <DialogTitle>{{ dialogTitle }}</DialogTitle>
         <DialogDescription>
-          Fill out the details for the member below. Name and Email are the only required fields
+          Fill out the details for the member below. Name and Email are the only required fields, phone number will be assigned once the user enters their phone while filling out a signup form.
         </DialogDescription>
       </DialogHeader>
 
@@ -105,12 +112,12 @@ const handleClose = (openState) => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <Label for="name">Member Name</Label>
-            <Input id="name" v-model="formData.name" placeholder="evan" required />
+            <Input id="name" v-model="formData.name" placeholder="Peter Anteater" required />
           </div>
 
           <div class="space-y-2">
             <Label for="email">Member Email</Label>
-            <Input id="email" type="email" v-model="formData.email" placeholder="evan@uci.edu" required />
+            <Input id="email" type="email" v-model="formData.email" placeholder="peteranteater@uci.edu" required />
           </div>
 
          <div class="space-y-2">
@@ -127,8 +134,12 @@ const handleClose = (openState) => {
       </form>
 
       <DialogFooter class="w-full flex justify-between items-center gap-4">
+        <Button class="items-center text-center" type="submit" variant="default" form="member-form">
+          {{ submitButtonText }}
+          <Save v-if="isEditing"/>
+          <PlusCircle v-else/>
+        </Button>
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
-        <Button type="submit" variant="default" form="member-form">{{ submitButtonText }}</Button>
         <Button v-if="isEditing" type="button" variant="destructive" @click="deleteMember()">Delete</Button>
       </DialogFooter>
     </DialogContent>
