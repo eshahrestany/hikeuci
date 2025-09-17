@@ -10,6 +10,8 @@ import { Table, TableHead, TableRow, TableHeader, TableCell, TableBody } from '@
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useAuth} from "@/lib/auth.js";
+import {difficulties} from "@/lib/common.js"
+
 const { postWithAuth, fetchWithAuth } = useAuth()
 
 const colorMode = useColorMode()
@@ -59,16 +61,18 @@ function nextWeekdayAt(from = new Date(), targetDow, h=0, m=0, s=0, ms=0) {
   return candidate
 }
 
-// Compute the defaults from "now" in the user's local tz
 function computeDefaultSchedule(now = new Date()) {
-  // For vote flow: signup = first upcoming Tuesday @ 00:00
-  const signupStart  = nextWeekdayAt(now, 2, 0, 0, 0, 0)  // Tue
+  // For vote flow: signup = first upcoming Tuesday @ 6pm
+  const signupStart = nextWeekdayAt(now, 2, 18, 0, 0, 0)  // Tue 18:00
 
-  // For signup flow: waiver = first upcoming Thursday @ 00:00
-  const waiverStart  = nextWeekdayAt(now, 4, 0, 0, 0, 0)  // Thu
+  // Following Thursday @ 18:00 (2 calendar days later
+  const waiverStart = new Date(signupStart);
+  waiverStart.setDate(waiverStart.getDate() + 2); // Thu 18:00
 
-  // Hike: first upcoming Saturday @ 08:00
-  const hikeDate     = nextWeekdayAt(now, 6, 8, 0, 0, 0)  // Sat 08:00
+  // Following Saturday @ 10:00 (4 calendar days later, adjust hour)
+  const hikeDate = new Date(signupStart);
+  hikeDate.setDate(hikeDate.getDate() + 4);       // Sat 18:00
+  hikeDate.setHours(10, 0, 0, 0);                  // Sat 10:00
 
   return { signupStart, waiverStart, hikeDate }
 }
@@ -86,20 +90,19 @@ const search = ref('')
 const selectedTrailIds = ref([]) // for 'vote' (max 3)
 const selectedTrailId = ref(null) // for 'signup'
 
-// fetch all trails from /api/trails
+// fetch all trails from /api/admin/trails
 async function fetchTrails() {
   trailsLoading.value = true
   trailsError.value = ''
   try {
-    const res = await fetchWithAuth('/api/trails')
+    const res = await fetchWithAuth('/api/admin/trails')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    // keep only what we show, but retain id for form posting
     trails.value = data.map((t) => ({
       id: t.id,
       name: t.name,
       location: t.location,
-      difficulty: t.difficulty
+      difficulty: difficulties[t.difficulty]
     }))
   } catch (e) {
     trailsError.value = e?.message ?? 'Failed to load trails'
@@ -303,7 +306,7 @@ watch(showSetNextHike, (open) => {
       </RadioGroup>
     </div>
 
-    <p class="text-sm">These time values will be submitted to the server as the timezone America/Los_Angeles</p>
+    <p class="text-sm text-stone">Your local timezone will be ignored and the server will interpret these times as PST (America/Los_Angeles)</p>
 
     <!-- Timestamps -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -39,9 +39,30 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'Dashboard',
-    component: () => import('../views/admin/Dashboard.vue'),
-    meta: {requiresAuth: true},
+    component: () => import('../views/admin/DashboardLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Dashboard',
+        component: () => import('../views/admin/Dashboard.vue'),
+      },
+      {
+        path: 'trails',
+        name: 'Dashboard Trails',
+        component: () => import('../views/admin/DashboardTrails.vue'),
+      },
+      {
+        path: 'members',
+        name: 'Dashboard Members',
+        component: () => import('../views/admin/DashboardMembers.vue'),
+      },
+      {
+        path: 'history',
+        name: 'Dashboard History',
+        component: () => null,
+      },
+    ]
   },
 ]
 const router = createRouter({
