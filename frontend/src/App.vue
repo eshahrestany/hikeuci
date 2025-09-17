@@ -4,7 +4,7 @@ import { Toaster } from "vue-sonner";
 
 <template>
   <div id="app">
-    <Toaster />
-    <router-view />
+    <Toaster/>
+    <router-view/>
   </div>
 </template>

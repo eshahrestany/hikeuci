@@ -13,29 +13,30 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import ThemeToggle from "@/components/admin/ThemeToggle.vue";
+import {useRouter} from 'vue-router';
+
 
 const props = defineProps<SidebarProps>()
-
-// This is sample data.
+const router = useRouter();
 const data = {
   navMain: [
     {
       items: [
         {
           title: 'Home',
-          url: '#',
+          route: {name: 'Dashboard'},
         },
         {
           title: 'Manage Members',
-          url: '#',
+          route: {name: 'Dashboard Members'},
         },
         {
           title: 'Manage Trails',
-          url: '#',
+          route: {name: 'Dashboard Trails'},
         },
         {
           title: 'Hike History',
-          url: '#',
+          route: {name: 'Dashboard History'},
         },
       ],
     },
@@ -54,7 +55,7 @@ const data = {
           <SidebarMenu>
             <SidebarMenuItem v-for="childItem in item.items" :key="childItem.title">
               <SidebarMenuButton as-child :is-active="childItem.isActive">
-                <a :href="childItem.url">{{ childItem.title }}</a>
+                <router-link :to="childItem.route">{{ childItem.title }}</router-link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
