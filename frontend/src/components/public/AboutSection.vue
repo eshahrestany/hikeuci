@@ -9,7 +9,7 @@
           <div class="w-full lg:w-1/2">
             <img
               :src="image"
-              alt="Group of hikers enjoying a summit view"
+              alt="Group of hikers"
               class="w-full rounded-2xl shadow-lg"
               loading="lazy"
               width="1200"

@@ -52,6 +52,15 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
+import sophia  from '@/assets/sophia.png'
+import eric    from '@/assets/eric.png'
+import zoe     from '@/assets/zoe.png'
+import advaith from '@/assets/advaith.png'
+import shirley from '@/assets/shirley.png'
+import evan    from '@/assets/evan.png'
+import maddie  from '@/assets/petr.png'
+import jeremy  from '@/assets/jeremy.png'
+
 /* -------------------------------------------------------------
  * Types
  * -----------------------------------------------------------*/
@@ -68,14 +77,14 @@ const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Sophia Shao', title: 'Co-President', photo: '../src/assets/sophia.png' },
-      { name: 'Eric Miao', title: 'Co-President', photo: '../src/assets/eric.png' },
-      { name: 'Zoe Glenn', title: 'Hike Leader', photo: '../src/assets/zoe.png' },
-      { name: 'Advaith Srinivas', title: 'Hike Leader', photo: '../src/assets/advaith.png' },
-      { name: 'Shirley Wu', title: 'Social Coordinator', photo: '../src/assets/shirley.png' },
-      { name: 'Evan Shahrestany', title: 'Tech Lead', photo: '../src/assets/evan.png' },
-      { name: 'Maddie Nistl', title: 'Treasurer', photo: '../src/assets/petr.png' },
-      { name: 'Jeremy Oliver', title: 'Photographer', photo: '../src/assets/jeremy.png' },
+      { name: 'Sophia Shao', title: 'Co-President', photo: sophia },
+      { name: 'Eric Miao', title: 'Co-President', photo: eric },
+      { name: 'Zoe Glenn', title: 'Hike Leader', photo: zoe},
+      { name: 'Advaith Srinivas', title: 'Hike Leader', photo: advaith},
+      { name: 'Shirley Wu', title: 'Social Coordinator', photo: shirley},
+      { name: 'Evan Shahrestany', title: 'Tech Lead', photo: evan},
+      { name: 'Maddie Nistl', title: 'Treasurer', photo: maddie},
+      { name: 'Jeremy Oliver', title: 'Photographer', photo: jeremy},
     ],
   },
   intervalMs: {
