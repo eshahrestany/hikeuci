@@ -11,12 +11,13 @@
     <div
       class="relative z-10 flex flex-col items-center justify-center px-6 py-24 gap-6"
     >
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-uci-gold drop-shadow-xl">
-        Adventure Starts with UCI</h1>
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-uci-gold drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+        Mountains > Midterms
+      </h1>
 
-      <p class="max-w-md text-lg sm:text-xl font-medium text-sky-900">
-        Join the Hiking Club at UCI to discover breathtaking trails, make lifelong
-        friends, and engage with your local community. No experience required.
+      <p class="max-w-md text-lg sm:text-xl font-medium text-white sm:text-midnight">
+        Join the Hiking Club at UCI to discover breathtaking trails, stay active, and make lifelong
+        friends. No experience required.
       </p>
 
       <!-- Social links -->

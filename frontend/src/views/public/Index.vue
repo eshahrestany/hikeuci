@@ -7,6 +7,8 @@ import About from '../../components/public/AboutSection.vue'
 import MembershipInfo from '../../components/public/MembershipInfo.vue'
 import Leadership from '../../components/public/Leadership.vue'
 import Footer from '../../components/public/Footer.vue'
+import {Button} from '@/components/ui/button'
+import { ChevronDown } from 'lucide-vue-next'
 
 import bg from '@/assets/bg.jpg'
 
@@ -15,9 +17,25 @@ const parallaxY = ref(0)
 // Tune this: more negative = stronger effect
 const PARALLAX_FACTOR = -0.18
 
+const showScrollHint = ref(true)
+
 function onScroll() {
   const y = window.scrollY || document.documentElement.scrollTop || 0
   parallaxY.value = y * PARALLAX_FACTOR
+  updateHintVisibility()
+}
+
+function updateHintVisibility() {
+  // show only when truly at the top
+  showScrollHint.value = (window.scrollY || document.documentElement.scrollTop || 0) <= 2
+}
+
+function scrollSlightly() {
+  window.scrollBy({
+    top: Math.round(window.innerHeight * 0.3),
+    left: 0,
+    behavior: 'smooth',
+  })
 }
 
 onMounted(() => {
@@ -51,7 +69,7 @@ onBeforeUnmount(() => {
 
     <!-- Content stays above background -->
     <div class="relative z-10">
-      <NavBar :overlay-navbar="true" />
+      <NavBar/>
       <Hero />
       <About />
       <MembershipInfo />
@@ -59,4 +77,15 @@ onBeforeUnmount(() => {
       <Footer />
     </div>
   </main>
+
+  <transition name="fade-down">
+    <Button
+        v-if="showScrollHint"
+        @click="scrollSlightly"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full
+           bg-white/50 backdrop-blur px-4 py-3 shadow-lg hover:bg-white active:scale-95 transition"
+    >
+      <ChevronDown class="w-6 h-6" />
+    </Button>
+  </transition>
 </template>

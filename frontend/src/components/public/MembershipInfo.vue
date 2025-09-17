@@ -1,7 +1,7 @@
 <template>
-  <section id="membership" class="text-white py-16">
+  <section id="membership" class="text-white py-8">
     <div class="max-w-5xl mx-auto px-6">
-      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat mb-8">
+      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)] font-montserrat mb-8">
         Join today!
       </h2>
       <div class="relative bg-uci-blue rounded-3xl shadow-xl p-8 sm:p-10">
@@ -33,7 +33,7 @@
           <div class="bg-white text-midnight rounded-2xl p-6 sm:p-8 flex flex-col justify-center">
             <p class="text-lg font-extrabold uppercase tracking-wide font-montserrat">Don't have Venmo?</p>
             <p class="mt-3 text-base leading-relaxed">
-              DM <span class="font-extrabold underline">@Sophia S</span> on Discord for
+              DM <span class="font-extrabold">@soap.p.suds</span> on Discord for
               Zelle or PayPal.
             </p>
           </div>

@@ -1,5 +1,5 @@
 <template>
-  <section class="relative bg-stone/50 text-midnight min-h-screen flex flex-col">
+  <section class="relative bg-stone-400 text-midnight min-h-screen flex flex-col">
     <div class="max-w-6xl mx-auto w-full px-6 flex-1 flex items-center">
       <div class="w-full grid gap-6 text-center">
         <img :src="petrImg" alt="Petr the anteater mascot" class="mx-auto w-40 sm:w-48 md:w-56 drop-shadow-md" />

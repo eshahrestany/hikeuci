@@ -1,11 +1,11 @@
 <template>
   <section
-    class="relative text-midnight py-20"
+    class="relative text-midnight py-8"
     id="leadership"
     ref="sectionRef"
   >
     <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-12">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-blue font-montserrat">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
         Meet Our Leadership
       </h2>
 
@@ -68,11 +68,14 @@ const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Sophia Shao', title: 'President',   photo: '../src/assets/petr.png' },
-      { name: 'Maddie Nistl',              title: 'Treasurer',   photo: '../src/assets/petr.png' },
-      { name: 'Eric Miao',              title: 'Vice-President',      photo: '../src/assets/petr.png' },
-      { name: 'Zoe Glenn',              title: 'General Officer', photo: '../src/assets/petr.png' },
-      { name: 'Evan Shahrestany',            title: 'Digital Technology Officer', photo: '../src/assets/petr.png' },
+      { name: 'Sophia Shao', title: 'Co-President', photo: '../src/assets/sophia.png' },
+      { name: 'Eric Miao', title: 'Co-President', photo: '../src/assets/eric.png' },
+      { name: 'Zoe Glenn', title: 'Hike Leader', photo: '../src/assets/zoe.png' },
+      { name: 'Advaith Srinivas', title: 'Hike Leader', photo: '../src/assets/advaith.png' },
+      { name: 'Shirley Wu', title: 'Social Coordinator', photo: '../src/assets/shirley.png' },
+      { name: 'Evan Shahrestany', title: 'Tech Lead', photo: '../src/assets/evan.png' },
+      { name: 'Maddie Nistl', title: 'Treasurer', photo: '../src/assets/petr.png' },
+      { name: 'Jeremy Oliver', title: 'Photographer', photo: '../src/assets/jeremy.png' },
     ],
   },
   intervalMs: {
