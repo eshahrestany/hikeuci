@@ -2,7 +2,7 @@
 
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
 import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
-import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, RotateCcw, Undo2} from "lucide-vue-next";
+import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, Undo2} from "lucide-vue-next";
 import {Input} from "@/components/ui/input/index.js";
 import {Button} from "@/components/ui/button/index.js";
 import AddLateSignup from "@/components/admin/AddLateSignup.vue";
@@ -235,7 +235,7 @@ const columns = [
                   }, () => [h(Check, { class: 'h-4 w-4 mr-1' }), 'Check In']) : h(Button, {
                     size: 'sm', variant: 'outline',
                     onClick: () => promptUndo(row.original),
-                  }, () => [h(RotateCcw, { class: 'h-4 w-4 mr-1' }), 'Undo Check-In']),
+                  }, () => [h(Undo2, { class: 'h-4 w-4 mr-1' }), 'Undo Check-In']),
                   h(Button, {
                     size: 'sm', variant: 'outline',
                     disabled: row.original.has_waiver,
