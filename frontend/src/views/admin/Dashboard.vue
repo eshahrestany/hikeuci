@@ -1,6 +1,6 @@
 <template>
-  <section class="p-6">
-    <h1 class="text-3xl text-white font-bold mb-3">HikeUCI Dashboard</h1>
+  <section class="px-3 py-4 sm:p-6 overflow-x-hidden">
+    <h1 class="text-3xl text-white font-bold">HikeUCI Dashboard</h1>
     <hr class="h-px mb-8 bg-gray-200 border-0 dark:bg-gray-700" />
     <Card class="max-w-4xl mx-auto space-y-6">
       <CardHeader>

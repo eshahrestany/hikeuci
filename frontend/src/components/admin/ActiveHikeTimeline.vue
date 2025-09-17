@@ -27,7 +27,7 @@ const steps = computed(() => {
     ]
   } else {
     return [
-      { key: 'signup', label: 'Hike Initiated', at: props.timestamps.signup_date },
+      { key: 'signup', label: 'Signup Opens', at: props.timestamps.signup_date },
       { key: 'waiver', label: 'Waiver Opens',   at: props.timestamps.waiver_date },
       { key: 'hike',   label: 'Hike Day',       at: props.timestamps.hike_date },
     ]
@@ -43,7 +43,7 @@ const indicatorIndex = computed(() => {
 
 <template>
   <div class="flex flex-col space-y-6">
-    <div class="flex items-center justify-between relative">
+    <div class="flex items-start justify-between relative gap-4 sm:gap-8">
       <!-- horizontal connector line -->
       <div class="absolute top-3 left-0 right-0 h-0.5 bg-gray-300"></div>
 
@@ -60,8 +60,8 @@ const indicatorIndex = computed(() => {
           {{ idx + 1 }}
         </div>
         <!-- Label + timestamp -->
-        <span class="mt-2 text-sm font-medium">{{ step.label }}</span>
-        <span class="text-xs text-gray-500">{{ formatDate(step.at) }}</span>
+        <span class="mt-3 text-sm font-medium text-center px-2">{{ step.label }}</span>
+        <span class="text-xs text-gray-500 text-center px-2">{{ formatDate(step.at) }}</span>
       </div>
     </div>
   </div>
