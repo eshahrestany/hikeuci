@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import SignupStats from "@/components/admin/SignupStats.vue"
 import {ChevronDown, ChevronRight} from "lucide-vue-next";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Info } from 'lucide-vue-next'
 
 const props = defineProps({
   signupData: { type: Object, required: true }
@@ -48,7 +50,21 @@ const selfTransports = computed(() =>
           :src="`/api/images/uploads/${signupData.trail_id}`"
           :alt="signupData.trail_name"
         />
-        <CardTitle>{{ signupData.trail_name }}</CardTitle>
+        <div class="flex items-center gap-2">
+          <CardTitle>{{ signupData.trail_name }}</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="icon" aria-label="Signup stats info" class="h-6 w-6 text-muted-foreground">
+                  <Info class="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p class="text-xs md:text-sm">Members checked in / Members signed up</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <!-- summary + bar -->

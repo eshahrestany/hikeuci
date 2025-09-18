@@ -14,7 +14,21 @@
         />
       </div>
       <div class="flex-1">
-        <CardTitle class="mb-4">{{ waiverData.trail_name }}</CardTitle>
+        <div class="flex items-center gap-2 mb-4">
+          <CardTitle>{{ waiverData.trail_name }}</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="ghost" size="icon" aria-label="Signup stats info" class="h-6 w-6 text-muted-foreground">
+                  <Info class="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p class="text-xs md:text-sm">Members checked in / Members signed up</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <SignupStats
           :users="waiverData.users"
           :passenger-capacity="waiverData.passenger_capacity"
@@ -54,6 +68,9 @@ import WaiverTable from "@/components/admin/WaiverTable.vue";
 import WaitlistTable from "@/components/admin/WaitlistTable.vue";
 import {onMounted, ref} from "vue";
 import {useAuth} from "@/lib/auth.js";
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Info } from 'lucide-vue-next'
 
 const { fetchWithAuth } = useAuth()
 
