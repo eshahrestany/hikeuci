@@ -14,7 +14,7 @@
         />
       </div>
       <div class="flex-1">
-        <CardTitle>{{ waiverData.trail_name }}</CardTitle>
+        <CardTitle class="mb-4">{{ waiverData.trail_name }}</CardTitle>
         <SignupStats
           :users="waiverData.users"
           :passenger-capacity="waiverData.passenger_capacity"

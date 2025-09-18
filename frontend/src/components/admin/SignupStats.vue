@@ -1,5 +1,11 @@
 <template>
   <div class="space-y-3 md:space-y-4 mb-3">
+    <p class="text-sm text-stone">Signup Stats <strong>(Members checked in / Members signed up)</strong></p>
+    <p>Signups: <strong>{{ numCheckedInSignups }}</strong>/<strong>{{ numSignups }}</strong></p>
+    <p>Passengers: <strong>{{ numCheckedInPassengers }}</strong>/<strong>{{ numPassengers }}</strong></p>
+    <p>Drivers: <strong>{{ numCheckedInDrivers }}</strong>/<strong>{{ numDrivers }}</strong></p>
+    <p>Self: <strong>{{ numCheckedInSelf }}</strong>/<strong>{{ numSelf }}</strong></p>
+    <p class="col-span-2 md:col-span-1">Capacity: <strong>{{ passengerCapacity }}</strong></p>
     <!-- Capacity Indicator -->
     <div class="flex items-center space-x-3">
       <Progress v-model="barWidth" :max="100" class="flex-1 [&_[data-slot=progress]]:bg-gray-200"
@@ -10,16 +16,16 @@
     </div>
     <p v-if="overCapacity" class="text-sm">Waitlisted: <strong>{{ waitlistedPassengers }}</strong></p>
   </div>
-  
+
 </template>
 
 <script setup>
 import {computed, ref} from 'vue'
-import { Progress } from '@/components/ui/progress'
+import {Progress} from '@/components/ui/progress'
 
 const props = defineProps({
-  users:             { type: Array, required: true },
-  passengerCapacity: { type: Number, required: true }
+  users: {type: Array, required: true},
+  passengerCapacity: {type: Number, required: true}
 })
 
 const numSignups = computed(() => props.users.length)
@@ -53,7 +59,7 @@ if (props.passengerCapacity === 0) {
   barWidth.value = 0
 } else {
   percentCapacity = ((numPassengers.value / props.passengerCapacity) * 100).toFixed(2)
-  if (percentCapacity > 100 ) {
+  if (percentCapacity > 100) {
     overCapacity = true
     barWidth.value = 100
   } else {
@@ -63,7 +69,7 @@ if (props.passengerCapacity === 0) {
 
 const waitlistedPassengers = computed(() => {
   return numPassengers.value - props.passengerCapacity > 0
-    ? numPassengers.value - props.passengerCapacity
-    : 0
+      ? numPassengers.value - props.passengerCapacity
+      : 0
 })
 </script>
