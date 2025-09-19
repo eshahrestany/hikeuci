@@ -2,7 +2,8 @@
 .idea
 /backend/.env
 /backend/celerybeat-schedule
-/backend/app/static/uploads
+/backend/app/static/uploads/*
+!/backend/app/static/uploads/readme.txt
 /frontend/node_modules/
 /frontend/.env
 /frontend/dist
