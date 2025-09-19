@@ -6,8 +6,6 @@ import {Skeleton} from "@/components/ui/skeleton/index.js";
 
 <template>
   <section class="p-6">
-    <h1 class="text-3xl text-white font-bold mb-3">HikeUCI Dashboard Members</h1>
-    <hr class="h-px mb-8 bg-gray-200 border-0 dark:bg-gray-700" />
     <Card class="mx-auto space-y-6">
       <CardHeader>
         <CardTitle class="text-2xl">Members</CardTitle>

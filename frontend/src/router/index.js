@@ -46,21 +46,25 @@ const routes = [
       {
         path: '',
         name: 'Dashboard',
+        meta: { title: 'HikeUCI Dashboard' },
         component: () => import('../views/admin/Dashboard.vue'),
       },
       {
         path: 'trails',
         name: 'Dashboard Trails',
+        meta: { title: 'HikeUCI Dashboard Trails' },
         component: () => import('../views/admin/DashboardTrails.vue'),
       },
       {
         path: 'members',
         name: 'Dashboard Members',
+        meta: { title: 'HikeUCI Dashboard Members' },
         component: () => import('../views/admin/DashboardMembers.vue'),
       },
       {
         path: 'history',
         name: 'Dashboard History',
+        meta: { title: 'HikeUCI Dashboard History' },
         component: () => import('../views/admin/HikeHistory.vue'),
       },
     ]

@@ -1,5 +1,5 @@
 <template>
-  <nav :class="['text-stone shadow-md font-montserrat','bg-midnight']">
+  <nav :class="['w-full text-stone shadow-md font-montserrat bg-midnight']">
     <div class="max-w-4xl mx-auto">
       <div class="flex justify-between h-16 items-center">
         <router-link to="/" class="text-uci-gold font-semibold text-xl tracking-wide hover:text-uci-blue transition-colors">
