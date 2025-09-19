@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 
 import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar";
 import AppSidebar from "@/components/admin/AppSidebar.vue";
@@ -7,27 +7,22 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const pageTitle = computed(() => (route.meta.title as string) || 'HikeUCI Dashboard')
+const pageTitle = computed(() => route.meta.title || 'HikeUCI Dashboard')
 
 </script>
 
 <template>
   <SidebarProvider>
-    <AppSidebar />
+    <AppSidebar/>
     <SidebarInset>
-      <div class="px-3 py-4 sm:p-6">
-        <h1 class="text-3xl text-white font-bold flex items-center gap-2">
-          <SidebarTrigger class="text-white" />
+      <div class="px-3 py-4 md:p-6">
+        <h1 class="text-2xl md:text-4xl font-extrabold flex items-center gap-2">
+          <SidebarTrigger/>
           {{ pageTitle }}
         </h1>
-        <hr class="h-px mb-8 bg-gray-200 border-0 dark:bg-gray-700" />
+        <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700"/>
       </div>
-      <router-view />
+      <router-view/>
     </SidebarInset>
   </SidebarProvider>
 </template>
-
-
-<style scoped>
-
-</style>

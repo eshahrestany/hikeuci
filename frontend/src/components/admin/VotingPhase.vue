@@ -20,7 +20,7 @@
             {{ trail.trail_num_votes }}
             ({{ votePercentage(trail) }}%)
           </p>
-          <Progress :v-model="votePercentsRef[trail]" class="mb-2" />
+          <Progress v-model="votePercentsRef[trail]" class="mb-2" />
           <Button
             variant="outline"
             class="mb-2 p-0"
