@@ -35,7 +35,7 @@ const alreadyVoted = computed(() => userVoteTrailId.value != null)
 
 /** Format helpers */
 function imageUrl(trailId) {
-  return `/api/uploads/${trailId}.png`
+  return `/api/uploads/${trailId}`
 }
 
 function percentFor(trailId) {
