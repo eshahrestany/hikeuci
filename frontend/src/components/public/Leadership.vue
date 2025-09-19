@@ -29,10 +29,8 @@
               <img
                 :src="officer.photo"
                 :alt="`Photo of ${officer.name}`"
-                class="w-32 h-32 object-cover rounded-full border-4 border-uci-gold shadow-md"
-                loading="lazy"
-                width="128"
-                height="128"
+                class="w-full max-w-[256px] object-cover rounded-full border-4 border-uci-gold shadow-md"
+                loading="eager"
               />
               <h3 class="text-xl font-bold text-midnight font-montserrat text-center">
                 <span class="block">{{ splitName(officer.name).first }}</span>
