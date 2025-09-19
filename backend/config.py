@@ -63,3 +63,5 @@ class Config:
     # the number of hours after a hike's scheduled time at which it is internally marked as inactive and a past hike.
 
     SERVER_TIMEZONE = os.getenv("SERVER_TIMEZONE", "America/Los_Angeles")
+
+    MAX_CONTENT_LENGTH = 32 * 1024 * 1024  # max request size is 32mb for uploading files
