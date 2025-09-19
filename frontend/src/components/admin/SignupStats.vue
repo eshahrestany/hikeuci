@@ -2,7 +2,7 @@
   <div>
     <p class="text-center text-lg font-semibold underline mb-2">Signup & Attendance Statistics</p>
     <div class="space-y-2 md:space-y-3 border-1 px-2 py-3 mb-2 rounded-md">
-      <p><span class="underline font-semibold">Signups:</span> <span class="font-bold">{{ numCheckedInSignups }}</span> checked in / <span class="font-bold">{{ numSignups }}</span> signed up</p>
+      <p><span class="underline font-semibold">Signups (total):</span> <span class="font-bold">{{ numCheckedInSignups }}</span> checked in / <span class="font-bold">{{ numSignups }}</span> signed up</p>
       <p><span class="underline font-semibold">Passengers:</span> <span class="font-bold">{{ numCheckedInPassengers }}</span> checked in / <span class="font-bold">{{ numPassengers }}</span> signed up</p>
       <p><span class="underline font-semibold">Drivers:</span> <span class="font-bold">{{ numCheckedInDrivers }}</span> checked in / <span class="font-bold">{{ numDrivers }}</span> signed up</p>
       <p><span class="underline font-semibold">Self-transports:</span> <span class="font-bold">{{ numCheckedInSelf }}</span> checked in / <span class="font-bold">{{ numSelf }}</span> signed up</p>
