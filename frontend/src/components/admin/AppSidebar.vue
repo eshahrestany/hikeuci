@@ -1,22 +1,20 @@
-<script setup lang="ts">
+<script setup>
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  type SidebarProps,
   SidebarRail,
 } from '@/components/ui/sidebar'
 import ThemeToggle from "@/components/admin/ThemeToggle.vue";
 import {useRouter} from 'vue-router';
 
 
-const props = defineProps<SidebarProps>()
+const props = defineProps()
 const router = useRouter();
 const data = {
   navMain: [
@@ -62,6 +60,6 @@ const data = {
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
-    <SidebarRail />
+    <SidebarRail/>
   </Sidebar>
 </template>

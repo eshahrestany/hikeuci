@@ -1,30 +1,34 @@
 <template>
   <section class="px-3 py-4 sm:p-6 overflow-x-hidden">
-    <h1 class="text-3xl text-white font-bold">HikeUCI Dashboard</h1>
-    <hr class="h-px mb-8 bg-gray-200 border-0 dark:bg-gray-700" />
-    <Card class="max-w-4xl mx-auto space-y-6">
-      <CardHeader>
+    <Card class="max-w-4xl mx-auto md:space-y-6">
+      <CardHeader class="flex items-center">
         <CardTitle class="text-2xl">Upcoming Hike</CardTitle>
-        <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
+        <Button size="sm" class="ml-auto" @click="loadUpcoming"><RefreshCcw/>Refresh data</Button>
       </CardHeader>
+      <hr class="h-px mx-6 bg-gray-200 border-0 dark:bg-gray-700"/>
       <CardContent>
-        <ActiveHikeTimeline class="mb-6"
+        <ActiveHikeTimeline
           v-if="response.status ==='awaiting_vote_start' || response.status ==='voting' || response.status === 'signup' || response.status === 'waiver'"
+          class="mb-6"
           :has-vote="response.has_vote"
           :current-phase="response.phase"
           :timestamps="response.timeline"
         />
+
+        <!-- special/error content -->
         <div v-if="loading">
-          <Skeleton class="h-6 w-3/5 mb-4" />
+          <Skeleton class="h-6 w-3/5 mb-4"/>
           <Skeleton class="space-y-2">
-            <Skeleton class="h-4 w-full" />
-            <Skeleton class="h-4 w-4/5" />
-            <Skeleton class="h-4 w-2/3" />
+            <Skeleton class="h-4 w-full"/>
+            <Skeleton class="h-4 w-4/5"/>
+            <Skeleton class="h-4 w-2/3"/>
           </Skeleton>
         </div>
-        <div v-else-if="response.status === null"><SetHikePanel/></div>
         <div v-else-if="response.status === 'awaiting_vote_start'" class="text-white">Hike set, awaiting vote start at {{ response.vote_start }}</div>
         <div v-else-if="response.status === 'error'" class="text-red-500">Could not fetch hike data from the server</div>
+
+        <!-- hike phase-specific content -->
+        <div v-else-if="response.status === null"><SetHikePanel/></div>
         <VotingPhase v-else-if="response.status === 'voting'" :voting-data="response"/>
         <SignupPhase v-else-if="response.status === 'signup'" :signup-data="response"/>
         <WaiverPhase v-else-if="response.status === 'waiver'" :waiver-data="response"/>
@@ -38,16 +42,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/index.js'
-import { Skeleton } from '@/components/ui/skeleton/index.js'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import ActiveHikeTimeline from '@/components/admin/ActiveHikeTimeline.vue'
 import SetHikePanel from '@/components/admin/SetHikePanel.vue'
 import VotingPhase from "@/components/admin/VotingPhase.vue"
 import SignupPhase from "@/components/admin/SignupPhase.vue"
 import WaiverPhase from "@/components/admin/WaiverPhase.vue"
+import {RefreshCcw} from 'lucide-vue-next'
 
 
-const { state: signOut, fetchWithAuth } = useAuth()
+const { fetchWithAuth } = useAuth()
 const router = useRouter()
 
 const loading = ref(true)
@@ -66,7 +72,5 @@ async function loadUpcoming() {
 }
 
 onMounted(loadUpcoming)
-
-function signOutAndReturn() { signOut(); router.replace('/login') }
 
 </script>

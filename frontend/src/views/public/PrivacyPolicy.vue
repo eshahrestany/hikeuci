@@ -1,5 +1,5 @@
 <template>
-  <section class="relative bg-stone/50 text-midnight py-20">
+  <section class="relative bg-stone-400 text-midnight py-20">
     <div class="max-w-6xl mx-auto px-6">
       <!-- Header -->
       <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-10">
