@@ -92,14 +92,13 @@ def batch_add_members():
 
     for i, item in enumerate(data, 1):
         name = item.get("name", "").strip()
-        email = _is_email_valid(item.get("email", "").strip().lower())
-
+        email = item.get("email", "").strip()
         if not name or not email:
             errors.append(f"Row {i}: Name and email are required.")
             continue
 
-        if not email:
-            errors.append(f"Row {i}: Email '{email}' has an invalid format.")
+        if not email_pattern.match(item.get("email", "").strip().lower()):
+            errors.append(f"Row {i}: Invalid email address.")
             continue
 
         if email in seen_emails_in_batch:

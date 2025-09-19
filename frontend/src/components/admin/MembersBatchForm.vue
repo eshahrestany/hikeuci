@@ -98,8 +98,10 @@ const handleClose = (openState) => {
       <DialogHeader>
         <DialogTitle>Batch Add Members</DialogTitle>
         <DialogDescription>
-          Paste data from a spreadsheet. Each member should be on a new line,
-          with Name and Email separated by a comma or tab.
+          <p>Paste data from a spreadsheet. Each member should be on a new line,
+            with Name and Email separated by a comma or tab.</p>
+          <p>If any errors are detected in your pasted data, no members will be created.
+            You will need to fix your errors and resubmit all data.</p>
         </DialogDescription>
       </DialogHeader>
 
