@@ -69,7 +69,7 @@ function mountESignSlots() {
         return h('div', {class: 'space-y-1'}, [
           h('div', {class: 'relative w-[240px] h-[80px] border border-stone-400'}, [
             h(VueSignaturePad, {
-              ref: targetRef,       // your existing signature1 / signature2 refs
+              ref: targetRef,
               maxWidth: 1,
               onBeginStroke: () => {
                 inkFlagRef.value = true
@@ -207,19 +207,18 @@ function mountESignSlots() {
               class: 'h-4 w-4 rounded border-stone-300',
               required: true,
             }),
-            h('span', { class: 'flex items-center gap-1' }, [
+            h('span', { class: 'gap-1' }, [
               "I have read and agree to the Hiking Club at UCI ",
               h("a", { href: "/privacy-policy", target: "_blank" }, "Privacy Policy"),
               " and ",
               h("a", { href: "/esign-policy", target: "_blank" }, "Electronic Records and Signatures Policy."),
               // Screen-reader hint
-              h('span', { id: 'agree-policy-required', class: 'sr-only' }, 'Required')
-            ]),
-            // Required indicator
-            h('span', {
+              h('span', { id: 'agree-policy-required', class: 'sr-only' }),
+              h('div', {
               'aria-hidden': 'true',
-              class: 'ml-2 text-xs font-medium text-rose-600'
+              class: 'block text-xs font-medium text-rose-600'
             }, '* Required')
+            ])
           ])
         ])
       }
@@ -371,7 +370,7 @@ watch(cancelDialogOpen, (isOpen) => {
       :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
     <div class="absolute inset-0"/>
-    <div class="relative mx-auto w-fit min-w-2xl px-2">
+    <div class="relative mx-auto w-fit px-2">
       <Card class="relative bg-white border">
         <Button
           v-if="waiverContent && !loading && !error && !submitSuccess && !cancelSuccess"

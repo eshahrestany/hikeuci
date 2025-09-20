@@ -5,11 +5,11 @@
     ref="sectionRef"
   >
     <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-12">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
         Meet Our Leadership
       </h2>
 
-      <div ref="wrapperRef" class="relative w-full overflow-hidden pb-5">
+      <div ref="wrapperRef" class="relative w-full overflow-hidden">
         <div
           ref="slidesRef"
           class="flex"
@@ -23,19 +23,19 @@
             :style="containerStyle"
           >
             <div
-              class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 leadership-card w-full"
+              class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center leadership-card w-full"
               :style="cardStyle"
             >
               <img
                 :src="officer.photo"
                 :alt="`Photo of ${officer.name}`"
-                class="w-full max-w-[256px] object-cover rounded-full border-4 border-uci-gold shadow-md"
+                class="w-full max-w-40 sm:max-w-[256px] object-cover rounded-full border-4 border-uci-gold shadow-md mb-4"
                 loading="eager"
               />
-              <h3 class="text-xl font-bold text-midnight font-montserrat text-center">
+              <div class="text-xl sm:text-3xl font-bold text-midnight font-montserrat text-center">
                 <span class="block">{{ splitName(officer.name).first }}</span>
                 <span class="block">{{ splitName(officer.name).last }}</span>
-              </h3>
+              </div>
               <p class="text-lg text-uci-blue font-medium text-center">{{ officer.title }}</p>
             </div>
           </div>
