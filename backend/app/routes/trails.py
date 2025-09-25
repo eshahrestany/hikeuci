@@ -116,9 +116,12 @@ def update_trail(trail_id):
 @admin_required
 def delete_trail(trail_id):
     trail = Trail.query.get_or_404(trail_id)
-    db.session.delete(trail)
-    db.session.commit()
-    return "Deleted Successfully", 200
+    try:
+        db.session.delete(trail)
+        db.session.commit()
+        return "Deleted Successfully", 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete trail, likely because a reference to it exists in the DB", "details": e}), 400
 
 
 

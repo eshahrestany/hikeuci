@@ -12,11 +12,11 @@ env = Environment(
 )
 
 EMAIL_SUBJECTS = {
-    "voting": "Vote for this week's hike",
-    "signup": "Sign up for this week's hike",
-    "waiver": "Complete your hike waiver",
-    "waiver_confirmation": "Completed: Your hike waiver",
-    "waitlist": "Waitlisted for this week's hike"
+    "voting": "[Hiking Club at UCI] Vote for this week's hike",
+    "signup": "[Hiking Club at UCI] Sign up for this week's hike",
+    "waiver": "[Hiking Club at UCI] Complete your hike waiver",
+    "waiver_confirmation": "[Hiking Club at UCI] Completed: Your hike waiver",
+    "waitlist": "[Hiking Club at UCI] Waitlisted for this week's hike"
 }
 
 

@@ -55,31 +55,39 @@ const selfTransports = computed(() =>
   </div>
 
   <!-- expandable lists -->
-  <div class="space-y-2 align-top">
-      <Button variant="link" @click="show.passengers = !show.passengers">
+  <div class="text-center text-lg font-semibold py-2">Signed-up member list:</div>
+  <div class="grid grid-cols-3 gap-4">
+    <div class="mx-auto">
+      <Button variant="outline" @click="show.passengers = !show.passengers">
         <ChevronDown v-if="show.passengers"/>
         <ChevronRight v-else />
         {{ show.passengers ? 'Hide Passengers' : 'See Passengers' }}
       </Button>
-      <ul v-if="show.passengers" class="list-disc list-inside text-sm ml-4">
+      <ul v-if="show.passengers" class="list-disc list-inside text-sm ml-4 mt-2">
         <li v-for="(name, idx) in passengers" :key="idx">{{ name }}</li>
       </ul>
-    <Button variant="link" @click="show.drivers = !show.drivers">
-      <ChevronDown v-if="show.drivers"/>
-      <ChevronRight v-else />
-      {{ show.drivers ? 'Hide Drivers' : 'See Drivers' }}
-    </Button>
-    <ul v-if="show.drivers" class="list-disc list-inside text-sm ml-4">
-      <li v-for="(name, idx) in drivers" :key="idx">{{ name }}</li>
-    </ul>
+    </div>
 
-    <Button variant="link" @click="show.self = !show.self">
-      <ChevronDown v-if="show.self"/>
-      <ChevronRight v-else />
-      {{ show.self ? 'Hide Self-Transports' : 'See Self-Transports' }}
-    </Button>
-    <ul v-if="show.self" class="list-disc list-inside text-sm ml-4">
-      <li v-for="(name, idx) in selfTransports" :key="idx">{{ name }}</li>
-    </ul>
+    <div class="mx-auto">
+      <Button variant="outline" @click="show.drivers = !show.drivers">
+        <ChevronDown v-if="show.drivers"/>
+        <ChevronRight v-else />
+        {{ show.drivers ? 'Hide Drivers' : 'See Drivers' }}
+      </Button>
+      <ul v-if="show.drivers" class="list-disc list-inside text-sm ml-4 mt-2">
+        <li v-for="(name, idx) in drivers" :key="idx">{{ name }}</li>
+      </ul>
+    </div>
+
+    <div class="mx-auto">
+      <Button variant="outline" @click="show.self = !show.self">
+        <ChevronDown v-if="show.self"/>
+        <ChevronRight v-else />
+        {{ show.self ? 'Hide Self-Transports' : 'See Self-Transports' }}
+      </Button>
+      <ul v-if="show.self" class="list-disc list-inside text-sm ml-4 mt-2">
+        <li v-for="(name, idx) in selfTransports" :key="idx">{{ name }}</li>
+      </ul>
+    </div>
   </div>
 </template>

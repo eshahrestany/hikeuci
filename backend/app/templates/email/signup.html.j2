@@ -12,10 +12,10 @@
               <p style="margin:0 0 12px;">Hi {{ personalization.name }},</p>
 
               <p style="margin:0 0 12px;">
-                This {{ batch.hike_day }} at {{ batch.hike_time }} we’ll be hiking <strong>{{ batch.hike_trail_name }}</strong> in <strong>{{ batch.hike_town_name }}</strong>.
-                The route is approximately <strong>{{ batch.hike_length_mi }}</strong> miles and should take about
+                This {{ batch.hike_day }}, we will be hiking <strong>{{ batch.hike_trail_name }}</strong>, which is in <strong>{{ batch.hike_town_name }}</strong>.
+                The hike is around <strong>{{ batch.hike_length_mi }}</strong> miles and should take about
                 <strong>{{ batch.hike_estimated_time_hr }}</strong> hours to complete. This hike is classified as
-                <strong>{{ batch.hike_difficulty }}</strong>.
+                <strong>{{ batch.hike_difficulty }}</strong>. Please note that we will be meeting at {{ batch.hike_time }}.
               </p>
               {% if batch.description %}
                   <p style="margin:0 0 12px;">
@@ -23,24 +23,9 @@
                   </p>
               {% endif %}
               <p style="margin:0 0 12px;">
-                Please bring enough water. A good rule of thumb is
-                ~1 liter every 2 hours. For this hike, we recommend bringing
+                Important: We strongly advise bringing enough water for this hike. The general rule is to have a liter of water for every two hours, so for this hike, we recommend you to have
                 <strong>{{ batch.num_liters }}</strong>
-                {% if batch.num_liters == 1 %}liter{% else %}liters{% endif %}.
-                We will check that you have water with you. If you do not, we’ll ask you to purchase some (e.g., at Target),
-                or you may not be allowed to join for safety reasons (heat/dehydration).
-              </p>
-
-              <p style="margin:0 0 12px;">
-                We prioritize based on attendance at the last two hikes: members who haven’t attended either get priority,
-                followed by those who attended one, then those who attended both. After that, we consider submission time
-                (first come, first serve). Drivers are highly appreciated, guaranteed a spot, and entered into an
-                end-of-quarter raffle!
-              </p>
-
-              <p style="margin:0 0 12px;">
-                We aim to alternate between <em>easy/moderate</em> and <em>moderate/difficult</em> weekends so you know what to expect.
-                Avid hikers can look forward to more challenging hikes every other weekend, with easier ones in between.
+                {% if batch.num_liters == 1 %}liter{% else %}liters{% endif %}.If you do not have any water, we will ask you to buy water at Target or you will not be allowed to come on the hike. This is for your safety so that we don't run into any issues with dehydration/heat exhaustion with warmer weather.
               </p>
 
               <p style="margin:0 0 20px;">
@@ -57,6 +42,13 @@
               <p style="margin:0 0 12px;">
                 The link will expire at the cutoff time of <strong>{{ batch.signup_expiry_date }}</strong>. If you’re selected, you’ll receive a confirmation email
                   at that time with a waiver to sign and submit electronically before the hike.
+              </p>
+
+              <p style="margin:0 0 12px;">
+                We prioritize based on attendance at the last two hikes: members who haven’t attended either get priority,
+                followed by those who attended one, then those who attended both. After that, we consider submission time
+                (first come, first serve). Drivers are highly appreciated, guaranteed a spot, and will be reimbursed at the end of the quarter.
+                Self-transports are also guaranteed a spot.
               </p>
 
               <p style="margin:0 0 16px;">

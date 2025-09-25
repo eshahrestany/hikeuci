@@ -70,7 +70,7 @@
             We may collect the following information when you join or participate in the Club:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-midnight/90">
-            <li>Contact details (name, email address, phone number, student ID).</li>
+            <li>Contact details (name, email address, phone number).</li>
             <li>Vehicle information if you sign up as a driver.</li>
             <li>Participation records (event sign-ups, waivers, attendance).</li>
             <li>Photos or videos taken at Club events.</li>
@@ -153,7 +153,7 @@
         <!-- Footer / Adoption -->
         <section id="adoption" class="space-y-1">
           <p class="text-midnight/90"><span class="font-semibold">Adopted by:</span> UCI Hiking Club Board</p>
-          <p class="text-midnight/90"><span class="font-semibold">Date:</span> September 2025</p>
+          <p class="text-midnight/90"><span class="font-semibold">Date:</span> September 23, 2025</p>
         </section>
       </article>
     </div>
