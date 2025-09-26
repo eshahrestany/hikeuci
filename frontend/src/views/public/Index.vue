@@ -50,14 +50,16 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="relative isolate overflow-hidden">
-    <!-- Mobile: keep original fixed background -->
-    <div
-        class="absolute inset-0 md:hidden bg-fixed bg-cover bg-center"
-        :style="`background-image:url(${bg});`"
-        aria-hidden="true"
+    <!-- Mobile: keep fixed background -->
+    <img
+      :src="bg"
+      alt=""
+      class="fixed inset-0 w-full h-full object-cover select-none pointer-events-none"
+      style="transform: translateZ(0); will-change: transform;"
+      aria-hidden="true"
     />
 
-    <!-- Desktop: real parallax via translateY -->
+    <!-- Desktop: parallax via translateY -->
     <div class="hidden md:block absolute inset-0 overflow-hidden" aria-hidden="true">
       <img
           :src="bg"

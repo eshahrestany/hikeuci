@@ -128,7 +128,7 @@
         <!-- Footer / Adoption -->
         <section id="adoption" class="space-y-1">
           <p class="text-midnight/90"><span class="font-semibold">Adopted by:</span> UCI Hiking Club Board</p>
-          <p class="text-midnight/90"><span class="font-semibold">Date:</span> September 2025</p>
+          <p class="text-midnight/90"><span class="font-semibold">Date:</span> September 23, 2025</p>
         </section>
       </article>
     </div>
