@@ -38,6 +38,8 @@ def create_member():
 
 
     tel = data.get('tel', None)
+    if tel == "":
+        tel = None
     is_officer = data.get('is_officer', False)
 
     new_member = Member(
@@ -63,6 +65,8 @@ def update_member(member_id):
 
     member.email = new_email if new_email else member.email
     member.tel = data.get('tel', member.tel)
+    if member.tel == "":
+        member.tel = None
     member.is_officer = data.get('is_officer', member.is_officer)
 
     db.session.commit()

@@ -38,7 +38,7 @@ def hike_vote_page():
                 "location": trail.location,
                 "length_mi": trail.length_mi,
                 "estimated_time_hr": trail.estimated_time_hr,
-                "difficulty": current_app.config.get("DIFFICULTY_INDEX").get(trail.difficulty)
+                "difficulty": trail.difficulty
             })
 
         payload = {
