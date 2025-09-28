@@ -82,7 +82,6 @@ async function loadVote() {
 
 async function submitVote(trailId) {
   try {
-    loading.value = true
     error.value = null
     const res = await fetch(`/api/hike-vote?token=${tokenRef.value}`, {
       method: 'POST',
@@ -98,12 +97,18 @@ async function submitVote(trailId) {
       }
       throw new Error(msg)
     }
-    await loadVote()       // refresh counts + selection
-    voteSaved.value = true // flash success state
+    if (userVoteTrailId.value !== null) {
+      // User is changing their vote, decrement old count
+      counts.value[userVoteTrailId.value] = (counts.value[userVoteTrailId.value] || 1) - 1
+    }
+    // Increment new count
+    counts.value[trailId] = (counts.value[trailId] || 0) + 1
+    totalVotes.value += userVoteTrailId.value === null ? 1 : 0
+    userVoteTrailId.value = trailId
+
+    voteSaved.value = true
   } catch (e) {
     error.value = e.message || 'Failed to submit vote'
-  } finally {
-    loading.value = false
   }
 }
 
