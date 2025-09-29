@@ -8,6 +8,7 @@ import {
 import {Button} from '@/components/ui/button'
 import backgroundImage from '@/assets/hiking_bg.jpg'
 import {Skeleton} from '@/components/ui/skeleton'
+import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
 
 /** ---------- State (mirrors SignupForm.vue patterns) ---------- */
 const props = defineProps({
@@ -48,17 +49,6 @@ function percentFor(trailId) {
 function countFor(trailId) {
   return counts.value[trailId]
 }
-
-function difficultyColor(dif) {
-  const colorDict = {
-    "Easy": "text-green-600",
-    "Moderate": "text-yellow-400",
-    "Difficult": "text-orange-500",
-    "Very Difficult": "text-red-500"
-  }
-  return colorDict[dif]
-}
-
 /** ---------- Fetch + Submit ---------- */
 async function loadVote() {
   loading.value = true
@@ -79,6 +69,7 @@ async function loadVote() {
     endsAt.value = data.ends_at || null
     hikeName.value = data.hike_name || ''
     trails.value = Array.isArray(data.trails) ? data.trails : []
+    console.log(trails.value)
     counts.value = data.counts
     totalVotes.value = data.total_votes || Object.values(counts.value).reduce((a, b) => a + b, 0)
     userVoteTrailId.value = data.user_vote_trail_id ?? null
@@ -91,7 +82,6 @@ async function loadVote() {
 
 async function submitVote(trailId) {
   try {
-    loading.value = true
     error.value = null
     const res = await fetch(`/api/hike-vote?token=${tokenRef.value}`, {
       method: 'POST',
@@ -107,12 +97,18 @@ async function submitVote(trailId) {
       }
       throw new Error(msg)
     }
-    await loadVote()       // refresh counts + selection
-    voteSaved.value = true // flash success state
+    if (userVoteTrailId.value !== null) {
+      // User is changing their vote, decrement old count
+      counts.value[userVoteTrailId.value] = (counts.value[userVoteTrailId.value] || 1) - 1
+    }
+    // Increment new count
+    counts.value[trailId] = (counts.value[trailId] || 0) + 1
+    totalVotes.value += userVoteTrailId.value === null ? 1 : 0
+    userVoteTrailId.value = trailId
+
+    voteSaved.value = true
   } catch (e) {
     error.value = e.message || 'Failed to submit vote'
-  } finally {
-    loading.value = false
   }
 }
 
@@ -198,6 +194,7 @@ onMounted(async () => {
                       <h3 class="text-lg font-bold text-midnight">{{ t.name }}</h3>
                       <p class="text-sm text-stone-600">{{ t.location }}</p>
                     </div>
+                    <DifficultyBadge class="float-right text-md" :difficulty="t.difficulty"></DifficultyBadge>
                   </div>
 
                   <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -221,9 +218,6 @@ onMounted(async () => {
                         <template v-else>—</template>
                       </p>
                     </div>
-                  </div>
-                  <div class="mt-2 text-lg font-semibold" :class="difficultyColor(t.difficulty)">
-                    {{ t.difficulty }}
                   </div>
 
                   <!-- Results display when already voted -->
