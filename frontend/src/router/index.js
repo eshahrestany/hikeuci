@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Index from '../views/public/Index.vue'
+import NotFound from '../views/public/NotFound.vue'
 
 const routes = [
   {
@@ -39,9 +40,39 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'Dashboard',
-    component: () => import('../views/admin/Dashboard.vue'),
-    meta: {requiresAuth: true},
+    component: () => import('../views/admin/DashboardLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Dashboard',
+        meta: { title: 'HikeUCI Dashboard' },
+        component: () => import('../views/admin/Dashboard.vue'),
+      },
+      {
+        path: 'trails',
+        name: 'Dashboard Trails',
+        meta: { title: 'HikeUCI Dashboard Trails' },
+        component: () => import('../views/admin/DashboardTrails.vue'),
+      },
+      {
+        path: 'members',
+        name: 'Dashboard Members',
+        meta: { title: 'HikeUCI Dashboard Members' },
+        component: () => import('../views/admin/DashboardMembers.vue'),
+      },
+      {
+        path: 'history',
+        name: 'Dashboard History',
+        meta: { title: 'HikeUCI Dashboard History' },
+        component: () => import('../views/admin/HikeHistory.vue'),
+      },
+    ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
   },
 ]
 const router = createRouter({

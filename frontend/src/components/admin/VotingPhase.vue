@@ -9,7 +9,7 @@
         <CardHeader>
           <img
             class="h-24 w-full object-cover rounded-md mb-2"
-            :src="`/api/images/uploads/${trail.trail_id}.png`"
+            :src="`/api/images/uploads/${trail.trail_id}`"
             :alt="trail.trail_name"
           />
           <CardTitle>{{ trail.trail_name }}</CardTitle>
@@ -20,7 +20,7 @@
             {{ trail.trail_num_votes }}
             ({{ votePercentage(trail) }}%)
           </p>
-          <Progress :v-model="votePercentsRef[trail]" class="mb-2" />
+          <Progress v-model="votePercents[trail.trail_id].value" class="mb-2" />
           <Button
             variant="outline"
             class="mb-2 p-0"
@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { reactive, computed } from 'vue'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -68,9 +68,9 @@ const totalVotes = computed(() =>
   props.votingData.trails.reduce((sum, c) => sum + c.trail_num_votes, 0)
 )
 
-const votePercentsRef = ref({})
+const votePercents = {}
 props.votingData.trails.forEach((trail) => {
-  votePercentsRef.value[trail] = votePercentage(trail)
+  votePercents[trail.trail_id] = computed(() => Number(votePercentage(trail)))
 })
 
 function votePercentage(trail) {

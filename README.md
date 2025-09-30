@@ -1,5 +1,6 @@
 # HikeUCI
 
+
 Disclaimer: this readme is quite outdated and details may not reflect the true nature of the code. Will be updated soon. -evan
 
 HikeUCI is a full-stack web application for the UC Irvine Hiking Club.

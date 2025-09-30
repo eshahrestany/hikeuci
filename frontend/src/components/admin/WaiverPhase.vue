@@ -1,48 +1,42 @@
 <template>
-  <div>
-    <p class="flex justify-center items-center font-semibold text-xl mb-6">
-      Current Phase:
-      <Badge class="text-md ml-2">Waiver</Badge>
-    </p>
-
-    <CardHeader class="flex items-start">
-      <div class="basis-1/2">
-        <img
-          class="w-1/2 object-cover rounded-md"
-          :src="`/api/images/uploads/${waiverData.trail_id}.png`"
-          :alt="waiverData.trail_name"
-        />
-      </div>
-      <div class="flex-1">
-        <CardTitle class="mb-4">{{ waiverData.trail_name }}</CardTitle>
-        <SignupStats
-          :users="waiverData.users"
-          :passenger-capacity="waiverData.passenger_capacity"
-        />
-      </div>
-    </CardHeader>
-    <Tabs default-value="selected">
-      <TabsList class="grid w-fit grid-cols-2">
-        <TabsTrigger value="selected">
-          Selected Hikers
-        </TabsTrigger>
-        <TabsTrigger value="waitlisted">
-          Waitlisted Hikers
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="selected">
-        <WaiverTable :waiver-data="props.waiverData"/>
-      </TabsContent>
-      <TabsContent value="waitlisted">
-        <WaitlistTable :waitlist-data="waitlist_data"/>
-      </TabsContent>
-    </Tabs>
+  <p class="flex justify-center items-center font-semibold text-xl mb-6">
+    Current Phase:
+    <Badge class="text-md ml-2">Waiver</Badge>
+  </p>
+  <div class="md:grid grid-cols-2 gap-4">
+    <div class="text-center text-lg font-semibold underline">
+      Trail: {{ waiverData.trail_name }}
+      <img
+          class="mt-2 w-auto object-cover rounded-md mb-2"
+          :src="`/api/images/uploads/${waiverData.trail_id}`"
+          :alt="`image of ${ waiverData.trail_name}`"
+      />
+    </div>
+    <SignupStats
+        :users="waiverData.users"
+        :passenger-capacity="waiverData.passenger_capacity"
+    />
   </div>
+  <Tabs default-value="selected">
+    <TabsList class="grid w-fit grid-cols-2">
+      <TabsTrigger value="selected">
+        Selected Hikers
+      </TabsTrigger>
+      <TabsTrigger value="waitlisted">
+        Waitlisted Hikers
+      </TabsTrigger>
+    </TabsList>
+    <TabsContent value="selected">
+      <WaiverTable :waiver-data="props.waiverData"/>
+    </TabsContent>
+    <TabsContent value="waitlisted">
+      <WaitlistTable :waitlist-data="waitlist_data"/>
+    </TabsContent>
+  </Tabs>
 </template>
 
 <script setup>
 import { Badge } from '@/components/ui/badge'
-import {CardHeader, CardTitle} from "@/components/ui/card/index.js";
 import {
   Tabs,
   TabsContent,

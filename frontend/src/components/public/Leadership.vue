@@ -1,17 +1,15 @@
 <template>
   <section
-    class="relative bg-stone/20 text-midnight py-20"
+    class="relative text-midnight py-8"
     id="leadership"
     ref="sectionRef"
   >
     <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-12">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-blue font-montserrat">
+      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
         Meet Our Leadership
       </h2>
 
-      <!-- Carousel wrapper -->
-      <div ref="wrapperRef" class="relative w-full overflow-hidden pb-5">
-        <!-- Slides -->
+      <div ref="wrapperRef" class="relative w-full overflow-hidden">
         <div
           ref="slidesRef"
           class="flex"
@@ -25,21 +23,19 @@
             :style="containerStyle"
           >
             <div
-              class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 leadership-card w-full"
+              class="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center leadership-card w-full"
               :style="cardStyle"
             >
               <img
                 :src="officer.photo"
                 :alt="`Photo of ${officer.name}`"
-                class="w-32 h-32 object-cover rounded-full border-4 border-uci-gold shadow-md"
-                loading="lazy"
-                width="128"
-                height="128"
+                class="w-full max-w-40 sm:max-w-[256px] object-cover rounded-full border-4 border-uci-gold shadow-md mb-4"
+                loading="eager"
               />
-              <h3 class="text-xl font-bold text-midnight font-montserrat text-center">
+              <div class="text-xl sm:text-3xl font-bold text-midnight font-montserrat text-center">
                 <span class="block">{{ splitName(officer.name).first }}</span>
                 <span class="block">{{ splitName(officer.name).last }}</span>
-              </h3>
+              </div>
               <p class="text-lg text-uci-blue font-medium text-center">{{ officer.title }}</p>
             </div>
           </div>
@@ -51,7 +47,17 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
+import type { CSSProperties } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
+
+import sophia  from '@/assets/officers/sophia.png'
+import eric    from '@/assets/officers/eric.png'
+import zoe     from '@/assets/officers/zoe.png'
+import advaith from '@/assets/officers/advaith.png'
+import shirley from '@/assets/officers/shirley.png'
+import evan    from '@/assets/officers/evan.png'
+import maddie  from '@/assets/officers/maddie.png'
+import jeremy  from '@/assets/officers/jeremy.png'
 
 /* -------------------------------------------------------------
  * Types
@@ -69,12 +75,14 @@ const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Aleksander Weihermuller', title: 'Co-President',   photo: '../assets/petr.png' },
-      { name: 'Anna Kapp',              title: 'Co-President',   photo: '../assets/petr.png' },
-      { name: 'Eric Miao',              title: 'Treasurer',      photo: '../assets/petr.png' },
-      { name: 'Zoe Glenn',              title: 'General Officer', photo: '../assets/petr.png' },
-      { name: 'Jake Gerber',            title: 'General Officer', photo: '../assets/petr.png' },
-      { name: 'Evan Shahrestany',       title: 'General Officer', photo: '../assets/petr.png' },
+      { name: 'Sophia Shao', title: 'Co-President', photo: sophia },
+      { name: 'Eric Miao', title: 'Co-President', photo: eric },
+      { name: 'Zoe Glenn', title: 'Hike Leader', photo: zoe},
+      { name: 'Advaith Srinivas', title: 'Hike Leader', photo: advaith},
+      { name: 'Shirley Wu', title: 'Social Coordinator', photo: shirley},
+      { name: 'Evan Shahrestany', title: 'Tech Lead', photo: evan},
+      { name: 'Maddie Nistl', title: 'Treasurer', photo: maddie},
+      { name: 'Jeremy Oliver', title: 'Photographer', photo: jeremy},
     ],
   },
   intervalMs: {
@@ -86,6 +94,7 @@ const props = defineProps({
 /* -------------------------------------------------------------
  * Import **only image files** from assets so CSS / audio / etc. are ignored.
  * -----------------------------------------------------------*/
+// @ts-ignore - Vite provides import.meta.glob at runtime; tsconfig may not know
 const importedImages = import.meta.glob(
   '../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg}',
   { eager: true, import: 'default' },
@@ -145,6 +154,7 @@ function getCardsPerView(width: number) {
 const wrapperRef = ref<HTMLElement | null>(null);
 const sectionRef = ref<HTMLElement | null>(null);
 const containerWidth = ref(0);
+const isInView = ref(false);
 
 // Capture initial dimensions right after mount so card sizing is available
 onMounted(() => {
@@ -157,22 +167,24 @@ onMounted(() => {
   measureNaturalWidths();
 
   // Handle seamless looping once the slide transition completes
-  slidesRef.value?.addEventListener('transitionend', () => {
-    const originalLength = displayedOfficers.value.length;
-    if (currentIndex.value >= originalLength) {
-      transitionEnabled.value = false; // temporarily disable animation
-      currentIndex.value = currentIndex.value - originalLength;
-      nextTick(() => {
-        // Force reflow so the browser registers the style change
-        void slidesRef.value?.offsetWidth;
-        transitionEnabled.value = true; // re-enable animation
-      });
-    }
-  });
+  slidesRef.value?.addEventListener('transitionend', onTransitionEnd);
+
+  // If fonts load after mount, re-measure once they're ready
+  // This helps ensure initial card widths are correct on first paint
+  // and avoids a case where text wrapping changes widths later.
+  (document as any).fonts?.ready?.then?.(() => measureNaturalWidths());
+
+  // Visibility/focus handling to prevent stale measurements when tab is hidden
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('focus', handleVisibilityChange);
+  window.addEventListener('blur', handleVisibilityChange);
 });
 
 onUnmounted(() => {
-  slidesRef.value?.removeEventListener('transitionend', () => {});
+  slidesRef.value?.removeEventListener('transitionend', onTransitionEnd);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('focus', handleVisibilityChange);
+  window.removeEventListener('blur', handleVisibilityChange);
 });
 
 // ResizeObserver – updates container width & cards-per-view reactively
@@ -184,10 +196,13 @@ useResizeObserver(wrapperRef, (entries) => {
 });
 
 /* -------------------------------------------------------------
- * Carousel translate logic – shift by exactly one visible card each tick
+ * Carousel translate logic – pixel-based shifting for consistent steps
  * -----------------------------------------------------------*/
 const currentIndex = ref(0);
-const translate = computed(() => `translateX(-${currentIndex.value * (100 / cardsPerView.value)}%)`);
+const translate = computed(() => {
+  const stepPx = columnWidth.value || 0;
+  return `translateX(-${currentIndex.value * stepPx}px)`;
+});
 
 // Interval with pause/resume
 const { pause, resume } = useIntervalFn(() => {
@@ -197,7 +212,8 @@ const { pause, resume } = useIntervalFn(() => {
 
 // Pause the carousel when the section scrolls out of view
 useIntersectionObserver(sectionRef, ([{ isIntersecting }]) => {
-  isIntersecting ? resume() : pause();
+  isInView.value = isIntersecting;
+  updatePlayback();
 });
 
 /* -------------------------------------------------------------
@@ -228,6 +244,8 @@ function measureNaturalWidths() {
 
 // Re-measure on officers change
 watch(() => props.officers, measureNaturalWidths, { deep: true, immediate: true });
+// Re-measure when container width changes (e.g., after tab visibility restore)
+watch(() => containerWidth.value, measureNaturalWidths);
 
 /* Width calculations */
 const columnWidth = computed(() => (containerWidth.value ? containerWidth.value / cardsPerView.value : 0));
@@ -236,8 +254,10 @@ const cardWidth = computed(() => {
   return Math.min(maxCardNaturalWidth.value, columnWidth.value);
 });
 
-const containerStyle = computed(() => ({
-  flex: `0 0 ${100 / cardsPerView.value}%`,
+const containerStyle = computed((): CSSProperties => ({
+  flex: '0 0 auto',
+  width: `${columnWidth.value}px`,
+  boxSizing: 'border-box',
 }));
 const cardStyle = computed(() => (cardWidth.value ? { width: `${cardWidth.value}px` } : {}));
 
@@ -249,12 +269,67 @@ const transitionEnabled = ref(true);
 const slidesStyle = computed(() => ({
   transform: translate.value,
   transition: transitionEnabled.value ? 'transform 0.7s ease-in-out' : 'none',
+  willChange: 'transform',
 }));
 
 /* -------------------------------------------------------------
  * Expose state for potential external controls / debugging
  * -----------------------------------------------------------*/
 defineExpose({ currentIndex });
+
+/* -------------------------------------------------------------
+ * Stable transitionend handler for seamless looping
+ * -----------------------------------------------------------*/
+function onTransitionEnd() {
+  const originalLength = displayedOfficers.value.length;
+  if (currentIndex.value >= originalLength) {
+    transitionEnabled.value = false; // temporarily disable animation
+    currentIndex.value = currentIndex.value - originalLength;
+    nextTick(() => {
+      // Force reflow so the browser registers the style change
+      void slidesRef.value?.offsetWidth;
+      transitionEnabled.value = true; // re-enable animation
+    });
+  }
+}
+
+/* -------------------------------------------------------------
+ * Playback helpers for visibility/focus changes
+ * -----------------------------------------------------------*/
+function updatePlayback() {
+  if (document.visibilityState === 'hidden' || !isInView.value) {
+    pause();
+  } else {
+    resume();
+  }
+}
+
+function normalizeIndex() {
+  const originalLength = displayedOfficers.value.length;
+  if (!originalLength) return;
+  const normalized = ((currentIndex.value % originalLength) + originalLength) % originalLength;
+  currentIndex.value = normalized;
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    // While hidden, pause and avoid animating to stale positions
+    transitionEnabled.value = false;
+    pause();
+    return;
+  }
+  // On visible/focus: refresh layout measurements and normalize position
+  containerWidth.value = wrapperRef.value?.clientWidth ?? containerWidth.value;
+  cardsPerView.value = getCardsPerView(window.innerWidth);
+  measureNaturalWidths();
+  normalizeIndex();
+  nextTick(() => {
+    // Force reflow to commit transform without animation, then re-enable
+    void slidesRef.value?.offsetWidth;
+    transitionEnabled.value = true;
+    updatePlayback();
+  });
+}
 </script>
 
 <style scoped>

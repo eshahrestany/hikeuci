@@ -2,6 +2,7 @@ import smtplib
 import ssl
 from contextlib import contextmanager
 from email.message import EmailMessage
+from email.utils import formataddr
 from typing import Optional
 from flask import current_app
 from .email_utils import EmailFile
@@ -61,7 +62,7 @@ class EmailConnection:
 
             # headers
             msg["Subject"] = subject
-            msg["From"] = mail_from
+            msg["From"] = formataddr((current_app.config.get("MAIL_DISPLAY_FROM"), mail_from))
             msg["To"] = to if isinstance(to, str) else ", ".join(to)
 
             # parts

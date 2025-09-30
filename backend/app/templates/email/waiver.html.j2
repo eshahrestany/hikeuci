@@ -14,7 +14,7 @@
                         <p style="margin:0 0 12px;">Hi {{ personalization.name }}!</p>
 
                         <p style="margin:0 0 12px;">
-                            You’re on our list for the upcoming hike on <strong>{{ batch.hike_day }}</strong> at
+                            You’re on our list of hikers for the upcoming hike on <strong>{{ batch.hike_day }}</strong> at
                             <strong>{{ batch.hike_trail_name }}</strong>.
                         </p>
 
@@ -24,18 +24,18 @@
 
                         {% if personalization.transport_type == "passenger" %}
                             <p style="margin:0 0 12px;">
-                                You signed up as a <strong>passenger</strong>. Carpools will be arranged once everyone
-                                arrives at the
-                                Chick-fil-A/Chipotle area in UTC. We leave promptly at <strong>{{ batch.hike_time }}</strong>,
-                                so please arrive
-                                <strong>15 minutes early</strong> to check in. Thanks for being punctual!
+                                You signed up as a <strong>passenger</strong>. Please meet us at our regular location at UTC between Chipotle and Chick-fil-A,
+                                where we will arrange carpools once everyone arrives. We will leave promptly at <strong>{{ batch.hike_time }}</strong>,
+                                so please arrive<strong>15 minutes early</strong> to check in.
+                            </p>
+                            <p>
+                                We understand that as a passenger, you will need a ride to the hike, and carpools will be arranged at UTC.
+                                If you need to cancel, please use the link below to update your status as soon as possible so we can allow other hikes off the waitlist if needed.
                             </p>
                         {% elif personalization.transport_type == "driver" %}
                             <p style="margin:0 0 12px;">
-                                You signed up as a <strong>driver</strong>. Please arrive at the Chick-fil-A/Chipotle
-                                area in UTC
-                                <strong>15 minutes early</strong> to check in. We leave promptly at
-                                <strong>{{ batch.hike_time }}</strong>.
+                                You signed up as a <strong>driver</strong>. Please arrive at the Chick-fil-A/Chipotle area in UTC
+                                <strong>15 minutes early</strong> to check in. We leave promptly at <strong>{{ batch.hike_time }}</strong>.
                             </p>
                             <p style="margin:0 0 12px;">
                                 As a driver, bring your vehicle with enough seats for your passengers and ensure you
@@ -46,10 +46,9 @@
                             </p>
                         {% elif personalization.transport_type == "self" %}
                             <p style="margin:0 0 12px;">
-                                You signed up as <strong>self-transport</strong>. Please arrive at the trailhead on
-                                time.
-                                We depart UTC at <strong>{{ batch.hike_time }}</strong>; plan your drive so you arrive when
-                                the group does.
+                                You signed up as <strong>self-transport</strong>. Please arrive at the trailhead on time.
+                                We depart from UTC at <strong>{{ batch.hike_time }}</strong>; you will need to plan your drive
+                                so you arrive to the trailhead before or at the same time as the group.
                             </p>
                         {% endif %}
 
@@ -66,18 +65,24 @@
                           background:#1d4ed8;color:#ffffff;font-weight:600;">Sign Waiver</a>
                         </p>
 
+                        {% if batch.hike_trail_gmap_link or batch.hike_trail_amap_link %}
                         <p style="margin:0 0 8px;"><strong>Trailhead maps</strong>:</p>
+                        {% endif %}
                         <ul style="padding-left:20px;margin:0 0 16px;">
+                            {% if batch.hike_trail_gmap_link %}
                             <li style="margin:0 0 6px">
                                 Google Maps: <a href="{{ batch.hike_trail_gmap_link }}"
                                                 style="color:#1d4ed8;text-decoration:underline;" target="_blank"
                                                 rel="noopener">{{ batch.hike_trail_gmap_link }}</a>
                             </li>
+                            {% endif %}
+                            {% if batch.hike_trail_amap_link %}
                             <li style="margin:0 0 6px">
                                 Apple Maps: <a href="{{ batch.hike_trail_amap_link }}"
                                                style="color:#1d4ed8;text-decoration:underline;" target="_blank"
                                                rel="noopener">{{ batch.hike_trail_amap_link }}</a>
                             </li>
+                            {% endif %}
                         </ul>
 
                         <p style="margin:0 0 8px;"><strong>Reminders before the hike</strong>:</p>
@@ -86,7 +91,7 @@
                                 <strong>{{ batch.hike_day }} {{ batch.hike_time }}</strong>.
                             </li>
                             <li style="margin:0 0 6px">Recommended items: water, light snack, sunscreen, hat,
-                                sunglasses, and comfortable athletic shoes.
+                                sunglasses, and comfortable athletic shoes or hiking boots.
                             </li>
                         </ul>
 

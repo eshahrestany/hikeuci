@@ -1,0 +1,1 @@
+Don't delete this file, this is to keep the uploads directory alive on git and therefore in the docker container.
