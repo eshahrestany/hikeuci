@@ -62,7 +62,6 @@ async function loadUpcoming() {
   try {
     const res = await fetchWithAuth('/api/admin/upcoming')
     response.value = await res.json()
-    console.log(response.value)
   } catch {
     response.value = { status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' }
   } finally {
