@@ -14,6 +14,7 @@ import TrailsForm from "@/components/admin/TrailsForm.vue";
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
 import {difficulties} from "@/lib/common.js"
 import {PlusCircle} from "lucide-vue-next"
+import {Input} from "@/components/ui/input/index.js";
 
 const { fetchWithAuth } = useAuth()
 
@@ -21,6 +22,7 @@ const loading = ref(true)
 const response = ref([])
 const formIsOpen = ref(false);
 const editTrailData = ref({});
+const search = ref('')
 
 
 async function loadTrails() {
@@ -48,8 +50,15 @@ function handleFormSuccess()
     loadTrails();
 }
 
-const data = computed(() => response.value )
-
+const data = computed(() => {
+  if (!search.value) {
+    return response.value;
+  }
+  return response.value.filter(trail =>
+    trail.name.toLowerCase().includes(search.value.toLowerCase()) ||
+    trail.location.toLowerCase().includes(search.value.toLowerCase())
+  );
+} )
 const columns = [
   {
     id: 'name',
@@ -129,7 +138,14 @@ onMounted(loadTrails)
 </script>
 
 <template>
-  <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Trail</Button>
+  <div class="flex flex-wrap gap-2">
+    <Input
+      v-model="search"
+      class="max-w-[300px]"
+      placeholder="Search name, location…"
+    />
+    <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Trail</Button>
+  </div>
   <TrailsForm
       v-model:isOpen="formIsOpen"
       :trail-data="editTrailData"

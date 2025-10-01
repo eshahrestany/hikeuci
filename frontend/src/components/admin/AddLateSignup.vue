@@ -165,7 +165,7 @@ async function onSave() {
       <!-- Driver vehicle logic -->
       <div v-if="form.transport_type === 'driver'" class="mt-4 space-y-4">
         <div v-if="vehicles.length">
-          <Label for="vehicleSelect">Choose Vehicle</Label>
+          <Label for="vehicleSelect" class="mb-2">Choose Vehicle</Label>
           <Select v-model="form.vehicle_id">
             <SelectTrigger id="vehicleSelect">
               <SelectValue placeholder="Select Vehicle…" />

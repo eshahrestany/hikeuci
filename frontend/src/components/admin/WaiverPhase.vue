@@ -15,6 +15,7 @@
     <SignupStats
         :users="waiverData.users"
         :passenger-capacity="waiverData.passenger_capacity"
+        :over-capacity-passengers="waiverData.over_capacity_passengers"
     />
   </div>
   <Tabs default-value="selected">

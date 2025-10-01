@@ -13,6 +13,7 @@ import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
 import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
 import {PlusCircle, ListPlus} from "lucide-vue-next"
+import {Input} from "@/components/ui/input/index.js";
 import { Badge } from "@/components/ui/badge";
 
 
@@ -23,7 +24,7 @@ const response = ref([])
 const formIsOpen = ref(false);
 const batchFormOpen = ref(false);
 const editMemberData = ref({});
-
+const search = ref('')
 
 async function loadMembers() {
   loading.value = true
@@ -48,7 +49,16 @@ function handleFormSuccess()
     loadMembers();
 }
 
-const data = computed(() => response.value )
+const data = computed(() => {
+  if (!search.value) {
+    return response.value;
+  }
+  return response.value.filter(member =>
+    member.name.toLowerCase().includes(search.value.toLowerCase()) ||
+    member.email.toLowerCase().includes(search.value.toLowerCase()) ||
+    member.tel?.toLowerCase().includes(search.value.toLowerCase())
+  );
+} )
 
 const columns = [
   {
@@ -114,13 +124,20 @@ onMounted(loadMembers)
 
 <template>
   <MembersBatchForm v-model:isOpen="batchFormOpen" @submitted="handleFormSuccess"/>
-  <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Member</Button>
-  <Button class="ml-2" variant="outline" @click="batchFormOpen=true"><ListPlus/>Batch Add Members</Button>
   <MembersForm
       v-model:isOpen="formIsOpen"
       :member-data="editMemberData"
       @submitted="handleFormSuccess"
   />
+  <div class="flex flex-wrap gap-2">
+    <Input
+      v-model="search"
+      class="max-w-[300px]"
+      placeholder="Search name, email, phone…"
+    />
+    <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Member</Button>
+    <Button variant="outline" @click="batchFormOpen=true"><ListPlus/>Batch Add Members</Button>
+  </div>
   <div v-if="!loading" class="text-sm text-gray-500 py-2">
     {{ response.length }} members
   </div>
@@ -158,23 +175,23 @@ onMounted(loadMembers)
   </Table>
   <div class="flex items-center py-1 mx-2 space-x-2">
     <Button
+      variant="outline"
+      size="sm"
+      :disabled="!table.getCanPreviousPage()"
+      @click="table.previousPage()"
+      >
+      Previous
+    </Button>
+    <Button
         variant="outline"
         size="sm"
-        :disabled="!table.getCanPreviousPage()"
-        @click="table.previousPage()"
-        >
-        Previous
-      </Button>
-      <Button
-          variant="outline"
-          size="sm"
-          :disabled="!table.getCanNextPage()"
-          @click="table.nextPage()"
-        >
-        Next
-      </Button>
-      <span class="ml-auto text-sm text-muted-foreground">
-        Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
-      </span>
-    </div>
+        :disabled="!table.getCanNextPage()"
+        @click="table.nextPage()"
+      >
+      Next
+    </Button>
+    <span class="ml-auto text-sm text-muted-foreground">
+      Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
+    </span>
+  </div>
 </template>
