@@ -39,7 +39,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -54,7 +53,6 @@ import {RefreshCcw} from 'lucide-vue-next'
 
 
 const { fetchWithAuth } = useAuth()
-const router = useRouter()
 
 const loading = ref(true)
 const response = ref({ status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' })
@@ -64,6 +62,7 @@ async function loadUpcoming() {
   try {
     const res = await fetchWithAuth('/api/admin/upcoming')
     response.value = await res.json()
+    console.log(response.value)
   } catch {
     response.value = { status: 'error', candidates: [], users: [], trail_id: null, trail_name: '' }
   } finally {

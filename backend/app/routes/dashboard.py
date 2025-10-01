@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
-from ..lib.model_utils import current_active_hike, bump_waitlist
+from ..lib.model_utils import current_active_hike, update_waitlist
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -103,7 +103,7 @@ def get_active_hike_info():
                 Waiver,
                 and_(Waiver.member_id == Member.id, Waiver.hike_id == hike.id),
             )
-            .filter(Signup.hike_id == hike.id, Signup.status != "waitlisted")
+            .filter(Signup.hike_id == hike.id)
             .all()
         )
 
@@ -125,6 +125,14 @@ def get_active_hike_info():
 
         return_data["users"] = users
         return_data["passenger_capacity"] = total_capacity
+        if phase == "waiver":
+            num_confirmed_passengers = (
+                db.session.query(Signup)
+                .filter_by(hike_id=hike.id, transport_type="passenger", status="confirmed")
+                .count()
+            )
+            if total_capacity < num_confirmed_passengers:
+                return_data["over_capacity_passengers"] = num_confirmed_passengers - total_capacity
         return jsonify(return_data), 200
 
     # Any other phase → just return the phase for now
@@ -360,11 +368,7 @@ def modify_user():
         current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
 
     db.session.commit()
-
-    if signup.transport_type == "driver":
-        capacity = Vehicle.query.get(signup.vehicle_id).passenger_seats
-        bump_waitlist(hike.id, num_passengers=capacity)
-
+    update_waitlist(hike.id)
 
     return jsonify(success=True), 200
 
@@ -431,6 +435,8 @@ def add_user():
     )
     db.session.add(signup)
     db.session.commit()
+
+    update_waitlist(hike.id)
 
     current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
 
