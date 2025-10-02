@@ -287,6 +287,11 @@ async function submitCancelRequest() {
             <Skeleton class="h-4 w-full"/>
           </div>
           <div v-else-if="error" class="text-red-500 text-center">
+            <img
+              src="@/assets/petr.png"
+              class="mx-auto max-h-[150px] mb-2"
+              alt=""
+            />
             {{ error }}
           </div>
           <div v-else-if="signupSuccess" class="text-center text-stone-700">

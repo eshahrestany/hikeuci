@@ -170,6 +170,11 @@ onMounted(async () => {
           </div>
 
           <div v-else-if="error" class="text-red-500 text-center">
+            <img
+              src="@/assets/petr.png"
+              class="mx-auto max-h-[150px] mb-2"
+              alt=""
+            />
             {{ error }}
           </div>
 
