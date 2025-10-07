@@ -1,14 +1,15 @@
 <template>
   <footer class="bg-midnight text-stone font-montserrat">
-    <div class="max-w-7xl mx-auto px-6 py-6 grid gap-12 md:grid-cols-3">
+    <div class="max-w-7xl mx-auto p-2 pt-4 md:p-6 grid gap-4 md:grid-cols-3">
       <!-- UCI Logo & address -->
-      <div class="flex flex-col gap-4">
+      <div class="inline-flex max-w-3xl h-fit">
         <img
-            :src="uciLogo"
+            class="aspect-square max-w-[100px]"
+            :src="hikingLogo"
             alt="University of California, Irvine"
             loading="lazy"
         />
-        <address class="not-italic text-sm leading-relaxed">
+        <address class="ml-3 not-italic text-sm leading-relaxed">
           Hiking Club @ UCI<br/>
           University of California, Irvine<br/>
           Irvine, CA&nbsp;92697
@@ -144,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import uciLogo from '../../assets/uci_logo.png';
+import hikingLogo from '../../assets/hiking_logo.png';
 
 /**
  * Current year – avoids having to update the template annually.

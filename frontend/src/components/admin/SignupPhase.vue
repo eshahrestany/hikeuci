@@ -56,7 +56,7 @@ const selfTransports = computed(() =>
 
   <!-- expandable lists -->
   <div class="text-center text-lg font-semibold py-2">Signed-up member list:</div>
-  <div class="grid grid-cols-3 gap-4">
+  <div class="flex flex-wrap gap-4 justify-center">
     <div class="mx-auto">
       <Button variant="outline" @click="show.passengers = !show.passengers">
         <ChevronDown v-if="show.passengers"/>
