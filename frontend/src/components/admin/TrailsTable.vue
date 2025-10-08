@@ -56,7 +56,8 @@ const data = computed(() => {
   }
   return response.value.filter(trail =>
     trail.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    trail.location.toLowerCase().includes(search.value.toLowerCase())
+    trail.location.toLowerCase().includes(search.value.toLowerCase()) ||
+    difficulties[trail.difficulty].toLowerCase().includes(search.value.toLowerCase())
   );
 } )
 const columns = [
