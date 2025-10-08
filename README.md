@@ -406,7 +406,7 @@ the right context its usually great at explaining things.
 If you still cant figure something out and Chat is hallucinating, ping @pgq in the
 [Hiking Club discord server](https://discord.com/invite/jWcN8dWQzC).
 
-## License
+# License
 
 This project is licensed under the MIT License. See `LICENSE` for details. 
 
