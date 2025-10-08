@@ -1,23 +1,14 @@
 # HikeUCI
 
-
-
 HikeUCI is a monolithic, event-driven, full-stack web application for the Hiking Club at UC Irvine.
 The web app is designed to automate the weekly hike organization processes of the club.
 
 This project provides:
 - A public static site with general club info.
 - Web forms for members to vote for trails, sign up for hikes, and electronically sign and submit waivers, based on a magic-link system.
-- An admin dashboard for officers to monitor and manage weekly hikes and statistics.
-- Automatic templated email sending via UCI's official SMTP server.
-
-View it in deployment here!
-### https://hikingclubatuci.org
-![dashboard.png](dashboard.png)
-![email.png](email.png)
-![signup.png](signup.png)
+- An admin dashboard for club officers to monitor and manage weekly hikes and statistics.
+- Automated sending of templated emails via integration with UCI's official SMTP server.
 ---
-
 
 ## Tech Stack
 
@@ -134,15 +125,22 @@ There is a server config for specifying the number of hours after the aforementi
 be internally marked as completed. After this point, we reach the end of a hike campaign and the update task changes 
 the `phase` of the hike from `waiver` to `NULL` and the  `status` from `active` to `past`.
 
+This wraps up the process of a hike campaign. I'm glossing over lots of details, but anyone who wishes to find out more
+details can search through the code for specifics.
+
 # Development Guide
 
 ## Preface
 
-This is a complex application, and doing development requires knowledge about full-stack development, familiarity with the frameworks involved in the project, and a general understanding of how web apps run in development, production, and the differences between the environments.
+This is a complex application, and doing development requires knowledge about full-stack development, familiarity with 
+the frameworks involved in the project, and a general understanding of how web apps run in development, production, 
+and the differences between the environments.
 
-Before diving into how to set up the project, let's talk a little bit about what this app looks like in deployment. It will make sense why later.
+Before diving into how to set up the project, let's talk a little bit about what this app looks like in deployment. 
+It will make sense why later.
 
-Firstly, Hiking Club pays for A VPS running Debian Linux. On it, we run an instance of Coolify. Through the Coolify dashboard, we configure and deploy six Docker containers:
+Firstly, Hiking Club pays for A VPS running Debian Linux. On it, we run an instance of Coolify. Through the Coolify 
+dashboard, we configure and deploy six Docker containers:
 1. A PostgreSQL server (publicly available Docker image)
 2. Redis (^ same deal)
 3. Backend container (backend/Dockerfile): serves the Flask app using Gunicorn (production WSGI server).
@@ -186,7 +184,8 @@ Copy the Client ID and the Client Secret, and paste them into your .env; more in
 
 ## 3. Configure environment variables
 
-There are two .env files for this project: backend/.env (the main one) and frontend/.env (contains just the Google Client ID for Google OAuth, which is a public ID).
+There are two .env files for this project: backend/.env (the main one) and frontend/.env (contains just the Google Client ID 
+for Google OAuth, which is a public ID).
 
 #### Backend
 Create a file called `.env` in `backend/` with at least the following. 
@@ -317,19 +316,18 @@ and learn what they do, or, if you ever find it convenient for development, make
 Once the waiver phase is seeded, hit `Refresh data` on the dashboard. You should see the example data displayed.
 ## Doing development
 You should now have everything you need to begin doing work. The reason I mentioned the production setup earlier was to
-give a general idea of how many concurrent processes need to be running for the entire app to run, however,
-not all of those processes are always needed to be up in development. Most of the time, hosting the frontend
-and the backend are enough. 
-
-Celery workers need to be run to send email testing, and with dummy email mode enabled, the email content
-will be simply logged to the worker output.
+give an idea of how many concurrent processes need to be running for the entire app to run, however,
+not all of those processes are always needed to be up in development. For example, Celery workers need to be run to 
+test email sending, and with dummy email mode enabled, the email content will be simply logged to the worker output.
+If the development you are doing doesn't have anything to do with emails (or the phase-change scripts), then you most 
+likely won't need to run celery. Most of the time, just hosting the frontend and backend are enough. 
 
 ### Shadcn
 When doing frontend development, specifically for the dashboard, browse the components available from 
 [shadcn-vue](https://www.shadcn-vue.com/).
-If you find any components that are useful for your situation, add them with the npx command. 
-The folder `backend/components/ui` will be auto populated with premade Vue component(s). Be sure to commit
-these new files.
+If you find any components that are useful for your situation, add them with the npx command and import them in
+the Vue component you want to add them to. The folder `backend/components/ui` will be auto populated with 
+premade shadcn-vue component(s). Be sure to commit these new files.
 
 
 ---
