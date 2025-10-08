@@ -124,10 +124,8 @@ def seed_email_vote():
     db.session.commit()
 
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
-               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
-               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
                Member(name="Example 1", email="example1@example.com"),
-               Member(name="Example 1", email="example2@example.com"),
+               Member(name="Example 2", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
@@ -329,10 +327,8 @@ def seed_email_signup():
     db.session.commit()
 
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
-               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
-               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
                Member(name="Example 1", email="example1@example.com"),
-               Member(name="Example 1", email="example2@example.com"),
+               Member(name="Example 2", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
@@ -519,10 +515,8 @@ def seed_email_waiver():
     db.session.commit()
 
     members = [Member(name="Evan Shahrestany", email="eashahre@uci.edu"),
-               Member(name="Evan Shahrestany 2", email="evanshahrestany2@gmail.com"),
-               Member(name="Evan Shahrestany 3", email="evanshahrestany3@gmail.com"),
                Member(name="Example 1", email="example1@example.com"),
-               Member(name="Example 1", email="example2@example.com"),
+               Member(name="Example 2", email="example2@example.com"),
                ]
     db.session.add_all(members)
     db.session.commit()
