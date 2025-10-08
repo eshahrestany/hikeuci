@@ -56,7 +56,8 @@ const data = computed(() => {
   }
   return response.value.filter(trail =>
     trail.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    trail.location.toLowerCase().includes(search.value.toLowerCase())
+    trail.location.toLowerCase().includes(search.value.toLowerCase()) ||
+    difficulties[trail.difficulty].toLowerCase().includes(search.value.toLowerCase())
   );
 } )
 const columns = [
@@ -142,7 +143,7 @@ onMounted(loadTrails)
     <Input
       v-model="search"
       class="max-w-[300px]"
-      placeholder="Search name, location…"
+      placeholder="Search name, location, difficulty…"
     />
     <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Trail</Button>
   </div>
