@@ -1,7 +1,6 @@
 # HikeUCI
 
-HikeUCI is a monolithic, event-driven, full-stack web application for the Hiking Club at UC Irvine.
-The web app is designed to automate the weekly hike organization processes of the club.
+HikeUCI is a monolithic, event-driven, full-stack web application designed to automate the weekly processes of the Hiking Club at UC Irvine.
 
 This project provides:
 - A public static site with general club info.
