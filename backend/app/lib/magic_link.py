@@ -39,11 +39,17 @@ class MagicLinkManager:
         if not associated_hike:
             return {'status': 'invalid_hike_id', 'user': magic_link.member_id}
 
-        if associated_hike.status != 'active' or magic_link.type != associated_hike.phase:
+        if associated_hike.status != 'active':
+            return {'status': 'expired', 'user': magic_link.member_id}
+
+        if magic_link.type == "late_signup" and associated_hike.phase != "waiver":
+                return {'status': 'invalid_scenario', 'user': magic_link.member_id}
+
+        if magic_link.type != "late_signup" and magic_link.type != associated_hike.phase:
             return {'status': 'expired', 'user': magic_link.member_id}
 
         if not magic_link.first_used:
-            magic_link.first_use = datetime.now(timezone.utc)
+            magic_link.first_used = datetime.now(timezone.utc)
         magic_link.used_count += 1
 
         return {'status': 'valid', 'magic_link': magic_link}
