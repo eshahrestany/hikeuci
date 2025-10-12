@@ -28,7 +28,7 @@
       </TabsTrigger>
     </TabsList>
     <TabsContent value="selected">
-      <WaiverTable :waiver-data="props.waiverData"/>
+      <SignupTable mode="waiver":users="props.waiverData.users"/>
     </TabsContent>
     <TabsContent value="waitlisted">
       <WaitlistTable :waitlist-data="waitlist_data"/>
@@ -45,7 +45,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs'
 import SignupStats from "@/components/admin/SignupStats.vue";
-import WaiverTable from "@/components/admin/WaiverTable.vue";
+import SignupTable from "@/components/admin/SignupTable.vue";
 import WaitlistTable from "@/components/admin/WaitlistTable.vue";
 import {onMounted, ref} from "vue";
 import {useAuth} from "@/lib/auth.js";

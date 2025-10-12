@@ -331,7 +331,7 @@ def modify_user():
         return jsonify(error="Missing fields"), 400
 
     hike = current_active_hike()
-    if not hike or (hike.phase or "").lower() != "waiver":
+    if not hike or (hike.phase or "").lower() not in ("signup", "waiver"):
         return jsonify(error="Not in waiver phase"), 400
 
     signup = Signup.query.filter_by(member_id=user_id, hike_id=hike.id).first()
@@ -382,18 +382,13 @@ def remove_user():
         return jsonify(error="Missing 'user_id'"), 400
 
     hike = current_active_hike()
-    if not hike or (hike.phase or "").lower() != 'waiver':
-        return jsonify(error="Not in waiver phase"), 400
+    if not hike or (hike.phase or "").lower() not in ('signup', 'waiver'):
+        return jsonify(error="Not in signup or waiver phase"), 400
 
-    # delete active magic link
     MagicLink.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
-
-    # delete waiver for THIS hike
-    Waiver.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
-    # delete signup for THIS hike
     Signup.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
-
     db.session.commit()
+
     return jsonify(success=True), 200
 
 
@@ -402,51 +397,71 @@ def remove_user():
 def add_user():
     data = request.get_json() or {}
     member_id = data.get("member_id")
-    transport_type = data.get("transport_type")
-    vehicle_id = data.get("vehicle_id")  # may be None
-
-    if None in (member_id, transport_type):
-        return jsonify(error="member_id and transport_type required"), 400
+    if member_id is None or Member.query.get(member_id) is None:
+        return jsonify(error="Invalid member_id"), 400
 
     hike = current_active_hike()
-    if not hike or (hike.phase or "").lower() != "waiver":
+    if not hike or (hike.phase or "").lower() not in ("signup", "waiver"):
         return jsonify(error="Hike not in waiver phase"), 400
 
     if Signup.query.filter_by(member_id=member_id, hike_id=hike.id).first():
         return jsonify(error="Member already signed up"), 409
 
-    if transport_type == "driver":
-        if not vehicle_id:
-            return jsonify(error="vehicle_id required for driver"), 400
-        vehicle = Vehicle.query.get(vehicle_id)
-        if not vehicle:
-            return jsonify(error="Vehicle not found"), 404
-        if vehicle.member_id != member_id:
-            return jsonify(error="Vehicle does not belong to this member"), 403
+    if hike.phase == "signup":
+        # new signup, simply dispatch signup email task.
+        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["signup", member_id, hike.id])
+        return jsonify(success=True), 201
 
-    signup = Signup(
-        hike_id=hike.id,
-        member_id=member_id,
-        transport_type=transport_type,
-        food_interest=False,
-        vehicle_id=vehicle_id if transport_type == "driver" else None,
-        is_checked_in=False,
-        status="confirmed",
-    )
-    db.session.add(signup)
-    db.session.commit()
 
-    update_waitlist(hike.id)
+    else:
+        # late signup, first determine manual or userlink mode
+        signup_mode = data.get("signup_mode")
+        if not signup_mode or signup_mode not in ("userlink", "manual"):
+            return jsonify(error="signup_mode missing or invalid"), 400
 
-    current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
+        if signup_mode == "userlink":
+            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["late_signup", member_id, hike.id])
+            return jsonify(success=True), 201
 
-    m = Member.query.get(member_id)
-    user_obj = {
-        "member_id": m.id,
-        "name": m.name,
-        "transport_type": transport_type,
-        "has_waiver": False,
-        "is_checked_in": False,
-        "vehicle_id": vehicle_id if transport_type == "driver" else None,
-    }
-    return jsonify(user_obj), 201
+        else:
+            transport_type = data.get("transport_type")
+            vehicle_id = data.get("vehicle_id")  # may be None
+
+            if transport_type is None:
+                return jsonify(error="transport_type required"), 400
+
+            if transport_type == "driver":
+                if not vehicle_id:
+                    return jsonify(error="vehicle_id required for driver"), 400
+                vehicle = Vehicle.query.get(vehicle_id)
+                if not vehicle:
+                    return jsonify(error="Vehicle not found"), 404
+                if vehicle.member_id != member_id:
+                    return jsonify(error="Vehicle does not belong to this member"), 403
+
+            signup = Signup(
+                hike_id=hike.id,
+                member_id=member_id,
+                transport_type=transport_type,
+                food_interest=False,
+                vehicle_id=vehicle_id if transport_type == "driver" else None,
+                is_checked_in=False,
+                status="confirmed",
+            )
+            db.session.add(signup)
+            db.session.commit()
+
+            update_waitlist(hike.id)
+
+            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
+
+            m = Member.query.get(member_id)
+            user_obj = {
+                "member_id": m.id,
+                "name": m.name,
+                "transport_type": transport_type,
+                "has_waiver": False,
+                "is_checked_in": False,
+                "vehicle_id": vehicle_id if transport_type == "driver" else None,
+            }
+            return jsonify(user_obj), 201

@@ -198,6 +198,8 @@ def send_email(email_type: str, member_id: int, hike_id, files=None):
     subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
 
     # render modules
+    # magic link is generated in get_personalization(), in the future I would like to factor this out to here
+    # and pass the magic link id into get_personalization.
     personalization = get_personalization(email_type, hike, member)
     text_body = text_body_mod.email(personalization, batch_text)
     html_body = html_body_mod.email(personalization, batch_text)
