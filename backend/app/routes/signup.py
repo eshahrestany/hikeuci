@@ -1,6 +1,4 @@
 from flask import Blueprint, jsonify, current_app, Response, request
-
-from ..lib.model_utils import update_waitlist
 from ..models import Hike, Member, MagicLink, Trail, Vehicle, Signup
 from .. import db
 
@@ -24,11 +22,10 @@ def signup() -> tuple[Response, int]:
             return jsonify({"error": "Token is invalid"}), 400
 
         magic_link = MagicLink.query.filter_by(token=token).first()
-        is_late = magic_link.type == "late_signup"
         member = Member.query.get(magic_link.member_id)
 
         hike = Hike.query.get(magic_link.hike_id)
-        if hike.phase != "signup" and not is_late:
+        if hike.phase != "signup":
             return jsonify({"error": "Hike not in signup phase"}), 400
 
         # check if already signed up
@@ -71,22 +68,15 @@ def signup() -> tuple[Response, int]:
         if result["status"] != "valid":
             return jsonify({"error": "Token is invalid"}), 400
 
-        ml = result["magic_link"]
-
-        member = Member.query.get(ml.member_id)
+        member = Member.query.get(result["magic_link"].member_id)
         if not member:
             return jsonify({"error": "Member not found"}), 404
 
-        hike = Hike.query.get(ml.hike_id)
+        hike = Hike.query.get(result["magic_link"].hike_id)
         if not hike:
             return jsonify({"error": "Hike not found"}), 404
 
-        if hike.status != "active":
-            return jsonify({"error": "Hike is not open for signup"}), 400
-
-        is_late = ml.type == "late_signup"
-
-        if hike.phase != "signup" and not is_late:
+        if hike.status != "active" or hike.phase != "signup":
             return jsonify({"error": "Hike is not open for signup"}), 400
 
         # check if already signed up
@@ -133,12 +123,6 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-
-            if is_late:
-                update_waitlist(hike.id)
-                db.session.delete(ml)
-                db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
             return jsonify({"message": "Successfully signed up as a passenger", "success": True}), 200
 
         elif transport_type == "is_self-transport":
@@ -150,11 +134,6 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-            if is_late:
-                update_waitlist(hike.id)
-                db.session.delete(ml)
-                db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
             return jsonify({"message": "Successfully signed up as a self-transport", "success": True}), 200
 
         elif transport_type == "is_driver":
@@ -204,11 +183,6 @@ def signup() -> tuple[Response, int]:
             )
             db.session.add(s)
             db.session.commit()
-            if is_late:
-                update_waitlist(hike.id)
-                db.session.delete(ml)
-                db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
             return jsonify({"message": "Successfully signed up as a driver", "success": True}), 200
 
 

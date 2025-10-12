@@ -52,9 +52,9 @@ def render_email_batch(email_type, hike: Hike):
     batch["num_liters"] = flatten_num(trail.required_water_liters)
     batch["description"] = trail.description
 
-    if email_type in ["signup", "late_signup"]:
+    if email_type == "signup":
         batch["signup_expiry_date"] = (hike.get_localized_time("waiver_date") - timedelta(minutes=1)).strftime("%A at %-I:%M %p")
-        return _render_email_batch("signup", batch) # late_signup is treated the same as signup
+        return _render_email_batch(email_type, batch)
 
     elif email_type in ["waiver", "waiver_confirmation"]:
         # added data

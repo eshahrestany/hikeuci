@@ -5,7 +5,7 @@ import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPagina
 import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, Undo2} from "lucide-vue-next";
 import {Input} from "@/components/ui/input/index.js";
 import {Button} from "@/components/ui/button/index.js";
-import AddSignup from "@/components/admin/AddSignup.vue";
+import AddLateSignup from "@/components/admin/AddLateSignup.vue";
 import {
   Dialog,
   DialogContent,
@@ -22,15 +22,11 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/i
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
 import {useAuth} from "@/lib/auth.js";
 
-const props = defineProps({
-  mode: {type: String, required: true}, // "waiver" or "signup"
-  users: { type: Object, required: true }
-})
+const props = defineProps({waiverData: { type: Object, required: true }})
 
 const editUser = ref(null)
-const confirmRemovalOpen = ref(false)
+const confirmOpen = ref(false)
 const confirmUser = ref(null)
-const sendEmailConfirmUser = ref(null)
 const undoOpen = ref(false)
 const undoUser = ref(null)
 const showAddSignup = ref(false)
@@ -94,7 +90,7 @@ function modifyRow(user) {
 
 function resendEmail(user) {
   postWithAuth('/api/mail/resend', {
-    email_type: props.mode,
+    email_type: "waiver",
     member_id: user.member_id
   })
     .then(res => {
@@ -104,12 +100,11 @@ function resendEmail(user) {
     .catch(() => {
       toast.error('Failed to resend email')
     })
-  sendEmailConfirmUser.value = null
 }
 
 function removeRow(user) {
   confirmUser.value = user
-  confirmRemovalOpen.value = true
+  confirmOpen.value = true
 }
 
 async function confirmedRemove() {
@@ -131,15 +126,14 @@ async function confirmedRemove() {
   } catch {
     toast.error('Remove failed')
   } finally {
-    confirmRemovalOpen.value = false
+    confirmOpen.value = false
     confirmUser.value = null
   }
 }
 
 
 // table setup
-const data = shallowRef([...props.users])
-
+const data = shallowRef([...props.waiverData.users])
 
 const columns = [
   {
@@ -211,7 +205,7 @@ const columns = [
                   h(
                     Button,
                     {
-                      class: props.mode === "waiver" ? 'md:hidden' : 'hidden',
+                      class: 'md:hidden',
                       size: 'icon',
                       onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
                       disabled: !row.original.has_waiver && !row.original.is_checked_in,
@@ -233,7 +227,7 @@ const columns = [
               ),
               h(PopoverContent, { class: 'w-64 p-3' }, () => [
                 h('div', { class: 'text-sm mb-3' }, `Type: ${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'driver' ? `Driver (${row.original.vehicle_capacity} passengers)` : 'Self-Transport'}`),
-                h('div', { class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden' }, [
+                h('div', { class: 'flex flex-wrap gap-2' }, [
                   !row.original.is_checked_in ? h(Button, {
                     size: 'sm',
                     onClick: () => checkInRow(row.original),
@@ -245,8 +239,8 @@ const columns = [
                   h(Button, {
                     size: 'sm', variant: 'outline',
                     disabled: row.original.has_waiver,
-                    onClick: () => { sendEmailConfirmUser.value = row.original },
-                  }, () => [h(MailPlus, { class: 'h-4 w-4 mr-1' }), 'Resend Email']),
+                    onClick: () => resendEmail(row.original),
+                  }, () => [h(MailPlus, { class: 'h-4 w-4 mr-1' }), 'Resend Waiver']),
                   h(Button, {
                     size: 'sm', variant: 'outline',
                     onClick: () => modifyRow(row.original),
@@ -264,7 +258,7 @@ const columns = [
         // Desktop: show individual action icons inline
         h('div', { class: 'hidden md:flex space-x-2' }, [
           // Check-In / Undo
-          props.mode === "waiver" ? h(
+          h(
             Tooltip,
             null,
             {
@@ -286,8 +280,8 @@ const columns = [
                 h(TooltipContent, null, () => row.original.is_checked_in ? 'Undo Check-In' : 'Check In Hiker'),
               ],
             },
-          ) : null,
-          // Resend Email
+          ),
+          // Resend Waiver
           h(
             Tooltip,
             null,
@@ -303,12 +297,12 @@ const columns = [
                         variant: 'outline',
                         size: 'icon',
                         disabled: row.original.has_waiver,
-                        onClick: () => { sendEmailConfirmUser.value = row.original },
+                        onClick: () => resendEmail(row.original),
                       },
                       () => h(MailPlus, { class: 'h-4 w-4' }),
                     ),
                 ),
-                h(TooltipContent, null, () => 'Resend Email'),
+                h(TooltipContent, null, () => 'Resend Waiver'),
               ],
             },
           ),
@@ -363,8 +357,8 @@ const columns = [
         ]),
       ]),
   },
-]
 
+]
 const table = useVueTable({
   data,
   columns,
@@ -372,10 +366,6 @@ const table = useVueTable({
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
   initialState: {
-    columnVisibility: {
-      waiver: props.mode === "waiver",
-      checked_in: props.mode === "waiver"
-    },
     pagination: {
       pageIndex: 0,
       pageSize: 10,
@@ -394,7 +384,7 @@ const table = useVueTable({
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
     />
     <Button class="md:ml-auto shrink-0" @click="showAddSignup = true">
-      <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
+      <PlusCircle class="h-4 w-4" />Add Late Signup
     </Button>
   </div>
 
@@ -463,16 +453,13 @@ const table = useVueTable({
       @saved="() => editUser = null"
   />
 
-  <AddSignup
+  <AddLateSignup
     v-if="showAddSignup"
-    :mode="props.mode === 'signup' ? 'new' : 'late'"
     @close="showAddSignup = false"
     @added="handleAdded"
   />
-  
-  
 
-  <Dialog v-model:open="confirmRemovalOpen">
+  <Dialog v-model:open="confirmOpen">
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Remove Hiker?</DialogTitle>
@@ -483,7 +470,7 @@ const table = useVueTable({
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button variant="outline" @click="confirmRemovalOpen = false">
+        <Button variant="outline" @click="confirmOpen = false">
           Cancel
         </Button>
         <Button variant="destructive" @click="confirmedRemove">
@@ -508,26 +495,6 @@ const table = useVueTable({
         </Button>
         <Button @click="confirmedUndo">
           Undo Check-In
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-
-  <Dialog v-model:open="sendEmailConfirmUser">
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Resend {{ props.mode.charAt(0).toUpperCase() + props.mode.slice(1) }} Email?</DialogTitle>
-        <DialogDescription>
-          <p>This will generate a new {{ props.mode }} link and email it to <span class="font-bold text-primary">{{ sendEmailConfirmUser?.name }}</span>.</p>
-          <p>If this member already has a {{ props.mode }} link, the previous one will be invalidated.</p>
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" @click="sendEmailConfirmUser = null">
-          Cancel
-        </Button>
-        <Button @click="resendEmail(sendEmailConfirmUser)">
-          Resend Email
         </Button>
       </DialogFooter>
     </DialogContent>
