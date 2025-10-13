@@ -1,6 +1,6 @@
 <template>
-  <section class="px-3 py-4 sm:p-6 overflow-x-hidden">
-    <Card class="max-w-4xl mx-auto md:space-y-6">
+  <section class="px-0 py-4 sm:p-6 overflow-x-hidden">
+    <Card class="max-w-4xl mx-auto md:space-y-6 border-0 sm:border-1">
       <CardHeader class="flex items-center">
         <CardTitle class="text-2xl">Upcoming Hike</CardTitle>
         <Button size="sm" class="ml-auto" @click="loadUpcoming"><RefreshCcw/>Refresh data</Button>

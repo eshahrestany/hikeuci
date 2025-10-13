@@ -1,11 +1,11 @@
 <script setup>
 
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
-import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {FlexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
 import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, Undo2} from "lucide-vue-next";
-import {Input} from "@/components/ui/input/index.js";
-import {Button} from "@/components/ui/button/index.js";
-import AddLateSignup from "@/components/admin/AddLateSignup.vue";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import AddSignup from "@/components/admin/AddSignup.vue";
 import {
   Dialog,
   DialogContent,
@@ -13,20 +13,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog/index.js";
+} from "@/components/ui/dialog";
 import ModifyUserModal from "@/components/admin/ModifyUserModal.vue";
 import {ref, shallowRef, h} from "vue";
 import {toast} from "vue-sonner";
-import {Badge} from "@/components/ui/badge/index.js";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
+import {Badge} from "@/components/ui/badge";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {useAuth} from "@/lib/auth.js";
+import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
+import {ButtonGroup} from "@/components/ui/button-group"
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 
-const props = defineProps({waiverData: { type: Object, required: true }})
+const props = defineProps({
+  mode: {type: String, required: true}, // "waiver" or "signup"
+  users: { type: Object, required: true }
+})
 
 const editUser = ref(null)
-const confirmOpen = ref(false)
+const confirmRemovalOpen = ref(false)
 const confirmUser = ref(null)
+const sendEmailConfirmUser = ref(null)
 const undoOpen = ref(false)
 const undoUser = ref(null)
 const showAddSignup = ref(false)
@@ -90,7 +97,7 @@ function modifyRow(user) {
 
 function resendEmail(user) {
   postWithAuth('/api/mail/resend', {
-    email_type: "waiver",
+    email_type: props.mode,
     member_id: user.member_id
   })
     .then(res => {
@@ -100,11 +107,12 @@ function resendEmail(user) {
     .catch(() => {
       toast.error('Failed to resend email')
     })
+  sendEmailConfirmUser.value = null
 }
 
 function removeRow(user) {
   confirmUser.value = user
-  confirmOpen.value = true
+  confirmRemovalOpen.value = true
 }
 
 async function confirmedRemove() {
@@ -126,72 +134,135 @@ async function confirmedRemove() {
   } catch {
     toast.error('Remove failed')
   } finally {
-    confirmOpen.value = false
+    confirmRemovalOpen.value = false
     confirmUser.value = null
   }
 }
 
+const headerWithSortBtn = (label, ctx) => {
+  const col = ctx.column
+  const sorted = col.getIsSorted() // 'asc' | 'desc' | false
+  const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown
+
+  return h('div', { class: 'inline-flex items-center w-fit gap-x-0 md:gap-x-2' }, [
+    h('span', label),
+    h(
+        Button,
+        {
+          variant: 'ghost',
+          size: 'icon',
+          class: 'h-4 w-4 p-0',
+          onClick: () => col.toggleSorting(sorted === 'asc'),
+          'aria-label': 'Toggle sort'
+        },
+        () => h(Icon, { class: 'h-4 w-4' })
+    )
+  ])
+}
+
+
 
 // table setup
-const data = shallowRef([...props.waiverData.users])
+const data = shallowRef([...props.users])
+
 
 const columns = [
   {
     id: 'name',
     header: 'Name',
     accessorFn: row => `${row.name}`,
-    cell: info => h('span', { class: 'break-words' }, info.getValue()),
+    cell: info => h('span', { class: 'break-words text-xs md:text-sm' }, info.getValue()),
     filterFn: (row, colId, filter) =>
       String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'type',
-    header: () => h('span', { class: 'hidden md:inline' }, 'Type'),
-    cell: ({ row }) =>
-      h('span', { class: 'hidden md:inline break-words' },
-        row.original.transport_type === "passenger"
-          ? 'Passenger'
-          : row.original.transport_type === "driver"
-            ? `Driver (${row.original.vehicle_capacity} passengers)`
-            : 'Self-Transport'
-      ),
+    enableSorting: true,
+    accessorFn: row => row.transport_type,
+    header: (ctx) => headerWithSortBtn('Type', ctx),
+    // order Driver < Self-Transport < Passenger
+    sortingFn: (a, b) => {
+      const r = (t) => (t === 'driver' ? 0 : t === 'self' ? 1 : 2)
+      return r(a.getValue('type')) - r(b.getValue('type'))
+    },
+    cell: ({ row }) => {
+      const t = row.original.transport_type
+      if (t === 'driver') {
+        return h(
+            HoverCard,
+            { openDelay: 100 },
+            {
+              default: () => [
+                h(
+                    HoverCardTrigger,
+                    { asChild: true },
+                    () => h('span',
+                        { class: 'inline underline decoration-dotted cursor-help text-xs md:text-sm' },
+                        'Driver'
+                    )
+                ),
+                h(
+                    HoverCardContent,
+                    { class: 'w-64' },
+                    () => h('div', { class: 'space-y-1' }, [
+                      h('div', { class: 'text-sm' }, row.original.vehicle_desc),
+                      h('div', { class: 'text-xs text-muted-foreground' },
+                          `${row.original.vehicle_capacity} passengers`
+                      ),
+                    ])
+                ),
+              ],
+            }
+        )
+      }
+      return h('span', { class: 'inline text-xs md:text-sm' },
+          t === 'passenger' ? 'Passenger' : 'Self-Transport'
+      )
+    },
   },
   {
     id: 'waiver',
-    header: 'Waiver?',
+    enableSorting: true,
+    accessorFn: row => row.has_waiver,
+    header: (ctx) => headerWithSortBtn('Waiver?', ctx),
+    sortingFn: (a, b) =>
+        Number(a.original.has_waiver) - Number(b.original.has_waiver),
     cell: ({ row }) =>
-      h(
-        Badge,
-        {
-          variant: 'outline',
-          class: row.original.has_waiver
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-        },
-        () => (row.original.has_waiver ? 'Yes' : 'No')
-      )
+        h(
+            Badge,
+            {
+              variant: 'outline',
+              class: row.original.has_waiver
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+            },
+            () => (row.original.has_waiver ? 'Yes' : 'No')
+        )
   },
   {
     id: 'checked_in',
-    header: 'Checked In?',
+    enableSorting: true,
+    accessorFn: row => row.is_checked_in,
+    header: (ctx) => headerWithSortBtn('Checked In?', ctx),
+    sortingFn: (a, b) =>
+        Number(a.original.is_checked_in) - Number(b.original.is_checked_in),
     cell: ({ row }) =>
-      h(
-        Badge,
-        {
-          variant: 'outline',
-          class: row.original.is_checked_in
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-        },
-        () => (row.original.is_checked_in ? 'Yes' : 'No')
-      ),
-    enableSorting: false
+        h(
+            Badge,
+            {
+              variant: 'outline',
+              class: row.original.is_checked_in
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+            },
+            () => (row.original.is_checked_in ? 'Yes' : 'No')
+        ),
   },
   {
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) =>
-      h('div', { class: 'flex items-center gap-2' }, [
+      h('div', { class: 'flex items-center' }, [
         // Mobile: quick Check-In / Undo icon
         h(
           Tooltip,
@@ -205,7 +276,7 @@ const columns = [
                   h(
                     Button,
                     {
-                      class: 'md:hidden',
+                      class: props.mode === "waiver" ? 'md:hidden' : 'hidden',
                       size: 'icon',
                       onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
                       disabled: !row.original.has_waiver && !row.original.is_checked_in,
@@ -226,8 +297,9 @@ const columns = [
                 h(Button, { variant: 'ghost', size: 'icon' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))
               ),
               h(PopoverContent, { class: 'w-64 p-3' }, () => [
-                h('div', { class: 'text-sm mb-3' }, `Type: ${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'driver' ? `Driver (${row.original.vehicle_capacity} passengers)` : 'Self-Transport'}`),
-                h('div', { class: 'flex flex-wrap gap-2' }, [
+                h('div', { class: 'text-sm mb-3' }, `${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'self-transport' ? 'Self-Transport' :
+                    `Driver (${row.original.vehicle_desc}, ${row.original.vehicle_capacity} passengers)` }`),
+                h('div', { class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden' }, [
                   !row.original.is_checked_in ? h(Button, {
                     size: 'sm',
                     onClick: () => checkInRow(row.original),
@@ -239,8 +311,8 @@ const columns = [
                   h(Button, {
                     size: 'sm', variant: 'outline',
                     disabled: row.original.has_waiver,
-                    onClick: () => resendEmail(row.original),
-                  }, () => [h(MailPlus, { class: 'h-4 w-4 mr-1' }), 'Resend Waiver']),
+                    onClick: () => { sendEmailConfirmUser.value = row.original },
+                  }, () => [h(MailPlus, { class: 'h-4 w-4 mr-1' }), 'Resend Email']),
                   h(Button, {
                     size: 'sm', variant: 'outline',
                     onClick: () => modifyRow(row.original),
@@ -256,9 +328,9 @@ const columns = [
         ]),
 
         // Desktop: show individual action icons inline
-        h('div', { class: 'hidden md:flex space-x-2' }, [
+        h(ButtonGroup, { class: 'hidden md:inline-flex' }, [
           // Check-In / Undo
-          h(
+          props.mode === "waiver" ? h(
             Tooltip,
             null,
             {
@@ -270,7 +342,7 @@ const columns = [
                     h(
                       Button,
                       {
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
                         disabled: !row.original.has_waiver && !row.original.is_checked_in,
                       },
@@ -280,8 +352,8 @@ const columns = [
                 h(TooltipContent, null, () => row.original.is_checked_in ? 'Undo Check-In' : 'Check In Hiker'),
               ],
             },
-          ),
-          // Resend Waiver
+          ) : null,
+          // Resend Email
           h(
             Tooltip,
             null,
@@ -295,14 +367,14 @@ const columns = [
                       Button,
                       {
                         variant: 'outline',
-                        size: 'icon',
+                        size: 'sm',
                         disabled: row.original.has_waiver,
-                        onClick: () => resendEmail(row.original),
+                        onClick: () => { sendEmailConfirmUser.value = row.original },
                       },
                       () => h(MailPlus, { class: 'h-4 w-4' }),
                     ),
                 ),
-                h(TooltipContent, null, () => 'Resend Waiver'),
+                h(TooltipContent, null, () => 'Resend Email'),
               ],
             },
           ),
@@ -320,7 +392,7 @@ const columns = [
                       Button,
                       {
                         variant: 'outline',
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => modifyRow(row.original),
                       },
                       () => h(Edit, { class: 'h-4 w-4' }),
@@ -344,7 +416,7 @@ const columns = [
                       Button,
                       {
                         variant: 'destructive',
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => removeRow(row.original),
                       },
                       () => h(Trash, { class: 'h-4 w-4' }),
@@ -357,21 +429,35 @@ const columns = [
         ]),
       ]),
   },
-
 ]
+
+const sorting = ref([])
+
 const table = useVueTable({
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
-  initialState: {
-    pagination: {
-      pageIndex: 0,
-      pageSize: 10,
+  getSortedRowModel: getSortedRowModel(),
+  state: {
+    get sorting() {
+      return sorting.value
     }
+  },
+  onSortingChange: (updater) => {
+    sorting.value =
+        typeof updater === 'function' ? updater(sorting.value) : updater
+  },
+  initialState: {
+    columnVisibility: {
+      waiver: props.mode === 'waiver',
+      checked_in: props.mode === 'waiver'
+    },
+    pagination: { pageIndex: 0, pageSize: 10 }
   }
 })
+
 
 </script>
 
@@ -384,16 +470,16 @@ const table = useVueTable({
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
     />
     <Button class="md:ml-auto shrink-0" @click="showAddSignup = true">
-      <PlusCircle class="h-4 w-4" />Add Late Signup
+      <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
     </Button>
   </div>
 
   <!-- Table of Users -->
   <div class="rounded-md border overflow-x-auto w-full">
-    <Table>
+    <Table class="table-fixed">
       <TableHeader>
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-          <TableHead v-for="h in hg.headers" :key="h.id" class="whitespace-normal">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="w-[20px] whitespace-normal">
             <FlexRender
               v-if="!h.isPlaceholder"
               :render="h.column.columnDef.header"
@@ -453,13 +539,16 @@ const table = useVueTable({
       @saved="() => editUser = null"
   />
 
-  <AddLateSignup
+  <AddSignup
     v-if="showAddSignup"
+    :mode="props.mode === 'signup' ? 'new' : 'late'"
     @close="showAddSignup = false"
     @added="handleAdded"
   />
+  
+  
 
-  <Dialog v-model:open="confirmOpen">
+  <Dialog v-model:open="confirmRemovalOpen">
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Remove Hiker?</DialogTitle>
@@ -470,7 +559,7 @@ const table = useVueTable({
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button variant="outline" @click="confirmOpen = false">
+        <Button variant="outline" @click="confirmRemovalOpen = false">
           Cancel
         </Button>
         <Button variant="destructive" @click="confirmedRemove">
@@ -495,6 +584,26 @@ const table = useVueTable({
         </Button>
         <Button @click="confirmedUndo">
           Undo Check-In
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="sendEmailConfirmUser">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Resend {{ props.mode.charAt(0).toUpperCase() + props.mode.slice(1) }} Email?</DialogTitle>
+        <DialogDescription>
+          <p>This will generate a new {{ props.mode }} link and email it to <span class="font-bold text-primary">{{ sendEmailConfirmUser?.name }}</span>.</p>
+          <p>If this member already has a {{ props.mode }} link, the previous one will be invalidated.</p>
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="outline" @click="sendEmailConfirmUser = null">
+          Cancel
+        </Button>
+        <Button @click="resendEmail(sendEmailConfirmUser)">
+          Resend Email
         </Button>
       </DialogFooter>
     </DialogContent>
