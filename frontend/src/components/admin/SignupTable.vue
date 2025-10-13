@@ -1,10 +1,10 @@
 <script setup>
 
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table/index.js";
-import {FlexRender, getCoreRowModel, getFilteredRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {FlexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useVueTable, getPaginationRowModel} from "@tanstack/vue-table";
 import {Check, Edit, MailPlus, PlusCircle, Trash, MoreHorizontal, Undo2} from "lucide-vue-next";
-import {Input} from "@/components/ui/input/index.js";
-import {Button} from "@/components/ui/button/index.js";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import AddSignup from "@/components/admin/AddSignup.vue";
 import {
   Dialog,
@@ -13,14 +13,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "@/components/ui/dialog/index.js";
+} from "@/components/ui/dialog";
 import ModifyUserModal from "@/components/admin/ModifyUserModal.vue";
 import {ref, shallowRef, h} from "vue";
 import {toast} from "vue-sonner";
-import {Badge} from "@/components/ui/badge/index.js";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip/index.js";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
+import {Badge} from "@/components/ui/badge";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {useAuth} from "@/lib/auth.js";
+import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 
 const props = defineProps({
   mode: {type: String, required: true}, // "waiver" or "signup"
@@ -136,6 +138,28 @@ async function confirmedRemove() {
   }
 }
 
+const headerWithSortBtn = (label, ctx) => {
+  const col = ctx.column
+  const sorted = col.getIsSorted() // 'asc' | 'desc' | false
+  const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown
+
+  return h('div', { class: 'inline-flex items-center gap-x-1 md:gap-x-2' }, [
+    h('span', label),
+    h(
+        Button,
+        {
+          variant: 'ghost',
+          size: 'icon',
+          class: 'h-4 w-4 p-0',
+          onClick: () => col.toggleSorting(sorted === 'asc'),
+          'aria-label': 'Toggle sort'
+        },
+        () => h(Icon, { class: 'h-4 w-4' })
+    )
+  ])
+}
+
+
 
 // table setup
 const data = shallowRef([...props.users])
@@ -146,52 +170,92 @@ const columns = [
     id: 'name',
     header: 'Name',
     accessorFn: row => `${row.name}`,
-    cell: info => h('span', { class: 'break-words' }, info.getValue()),
+    cell: info => h('span', { class: 'break-words text-xs md:text-sm' }, info.getValue()),
     filterFn: (row, colId, filter) =>
       String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
     id: 'type',
-    header: () => h('span', { class: 'hidden md:inline' }, 'Type'),
-    cell: ({ row }) =>
-      h('span', { class: 'hidden md:inline break-words' },
-        row.original.transport_type === "passenger"
-          ? 'Passenger'
-          : row.original.transport_type === "driver"
-            ? `Driver (${row.original.vehicle_capacity} passengers)`
-            : 'Self-Transport'
-      ),
+    enableSorting: true,
+    accessorFn: row => row.transport_type,
+    header: (ctx) => headerWithSortBtn('Type', ctx),
+    // order Driver < Self-Transport < Passenger
+    sortingFn: (a, b) => {
+      const r = (t) => (t === 'driver' ? 0 : t === 'self' ? 1 : 2)
+      return r(a.getValue('type')) - r(b.getValue('type'))
+    },
+    cell: ({ row }) => {
+      const t = row.original.transport_type
+      if (t === 'driver') {
+        return h(
+            HoverCard,
+            { openDelay: 100 },
+            {
+              default: () => [
+                h(
+                    HoverCardTrigger,
+                    { asChild: true },
+                    () => h('span',
+                        { class: 'inline underline decoration-dotted cursor-help' },
+                        'Driver'
+                    )
+                ),
+                h(
+                    HoverCardContent,
+                    { class: 'w-64' },
+                    () => h('div', { class: 'space-y-1' }, [
+                      h('div', { class: 'text-sm' }, row.original.vehicle_desc),
+                      h('div', { class: 'text-xs text-muted-foreground' },
+                          `${row.original.vehicle_capacity} passengers`
+                      ),
+                    ])
+                ),
+              ],
+            }
+        )
+      }
+      return h('span', { class: 'inline' },
+          t === 'passenger' ? 'Passenger' : 'Self-Transport'
+      )
+    },
   },
   {
     id: 'waiver',
-    header: 'Waiver?',
+    enableSorting: true,
+    accessorFn: row => row.has_waiver,
+    header: (ctx) => headerWithSortBtn('Waiver?', ctx),
+    sortingFn: (a, b) =>
+        Number(a.original.has_waiver) - Number(b.original.has_waiver),
     cell: ({ row }) =>
-      h(
-        Badge,
-        {
-          variant: 'outline',
-          class: row.original.has_waiver
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-        },
-        () => (row.original.has_waiver ? 'Yes' : 'No')
-      )
+        h(
+            Badge,
+            {
+              variant: 'outline',
+              class: row.original.has_waiver
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+            },
+            () => (row.original.has_waiver ? 'Yes' : 'No')
+        )
   },
   {
     id: 'checked_in',
-    header: 'Checked In?',
+    enableSorting: true,
+    accessorFn: row => row.is_checked_in,
+    header: (ctx) => headerWithSortBtn('Checked In?', ctx),
+    sortingFn: (a, b) =>
+        Number(a.original.is_checked_in) - Number(b.original.is_checked_in),
     cell: ({ row }) =>
-      h(
-        Badge,
-        {
-          variant: 'outline',
-          class: row.original.is_checked_in
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-        },
-        () => (row.original.is_checked_in ? 'Yes' : 'No')
-      ),
-    enableSorting: false
+        h(
+            Badge,
+            {
+              variant: 'outline',
+              class: row.original.is_checked_in
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+            },
+            () => (row.original.is_checked_in ? 'Yes' : 'No')
+        ),
   },
   {
     id: 'actions',
@@ -232,7 +296,8 @@ const columns = [
                 h(Button, { variant: 'ghost', size: 'icon' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))
               ),
               h(PopoverContent, { class: 'w-64 p-3' }, () => [
-                h('div', { class: 'text-sm mb-3' }, `Type: ${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'driver' ? `Driver (${row.original.vehicle_capacity} passengers)` : 'Self-Transport'}`),
+                h('div', { class: 'text-sm mb-3' }, `${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'self-transport' ? 'Self-Transport' :
+                    `Driver (${row.original.vehicle_desc}, ${row.original.vehicle_capacity} passengers)` }`),
                 h('div', { class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden' }, [
                   !row.original.is_checked_in ? h(Button, {
                     size: 'sm',
@@ -365,23 +430,33 @@ const columns = [
   },
 ]
 
+const sorting = ref([])
+
 const table = useVueTable({
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  state: {
+    get sorting() {
+      return sorting.value
+    }
+  },
+  onSortingChange: (updater) => {
+    sorting.value =
+        typeof updater === 'function' ? updater(sorting.value) : updater
+  },
   initialState: {
     columnVisibility: {
-      waiver: props.mode === "waiver",
-      checked_in: props.mode === "waiver"
+      waiver: props.mode === 'waiver',
+      checked_in: props.mode === 'waiver'
     },
-    pagination: {
-      pageIndex: 0,
-      pageSize: 10,
-    }
+    pagination: { pageIndex: 0, pageSize: 10 }
   }
 })
+
 
 </script>
 
@@ -400,7 +475,7 @@ const table = useVueTable({
 
   <!-- Table of Users -->
   <div class="rounded-md border overflow-x-auto w-full">
-    <Table>
+    <Table class="table-fixed w-full">
       <TableHeader>
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
           <TableHead v-for="h in hg.headers" :key="h.id" class="whitespace-normal">

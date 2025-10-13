@@ -86,7 +86,6 @@ def get_active_hike_info():
         return_data["trail_id"] = trail.id
         return_data["trail_name"] = trail.name
 
-        # Pull signups for THIS active hike; include vehicle info and whether waiver exists FOR THIS HIKE
         rows = (
             db.session.query(
                 Member,
@@ -94,11 +93,9 @@ def get_active_hike_info():
                 Signup.transport_type,
                 Signup.is_checked_in,
                 Signup.vehicle_id,
-                Vehicle.passenger_seats,
                 Waiver.id.label("waiver_id"),
             )
             .join(Signup, Member.id == Signup.member_id)
-            .outerjoin(Vehicle, Signup.vehicle_id == Vehicle.id)
             .outerjoin(
                 Waiver,
                 and_(Waiver.member_id == Member.id, Waiver.hike_id == hike.id),
@@ -109,7 +106,7 @@ def get_active_hike_info():
 
         users = []
         total_capacity = 0
-        for member, signup_status, transport_type, is_checked_in, vehicle_id, seats, waiver_id in rows:
+        for member, signup_status, transport_type, is_checked_in, vehicle_id, waiver_id in rows:
             user_obj = {
                 "member_id": member.id,
                 "name": member.name,
@@ -118,9 +115,11 @@ def get_active_hike_info():
                 "is_checked_in": is_checked_in,
             }
             if transport_type == "driver":
+                vehicle = Vehicle.query.get(vehicle_id)
                 user_obj["vehicle_id"] = vehicle_id
-                user_obj["vehicle_capacity"] = int(seats or 0)
-                total_capacity += int(seats or 0)
+                user_obj["vehicle_desc"] = f"{vehicle.year} {vehicle.make} {vehicle.model}"
+                user_obj["vehicle_capacity"] = int(vehicle.passenger_seats)
+                total_capacity += int(vehicle.passenger_seats)
             users.append(user_obj)
 
         return_data["users"] = users
