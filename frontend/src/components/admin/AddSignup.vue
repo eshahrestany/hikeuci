@@ -118,7 +118,7 @@ async function submitLate() {
       signup_mode: lateMode.value
     }
 
-    if (lateMode === 'manual') {
+    if (lateMode.value === 'manual') {
       payload.transport_type = form.transport_type
       payload.vehicle_id = form.transport_type === 'driver' ? form.vehicle_id : null
     }
@@ -148,15 +148,17 @@ async function submitLate() {
         <DialogDescription v-if="props.mode === 'new'">Select member by email</DialogDescription>
       </DialogHeader>
 
-      <p class="text-sm">Select a member, then select the signup mode.</p>
-      <p class="text-xs text-primary/60">
-        <span class="font-bold">User Signup Link</span> will immediately send the user a special late signup link via email.
-        As soon as they submit the signup email, they will immediately receive a waiver by email.
-      </p>
-      <p class="text-xs text-primary/60">
-        <span class="font-bold">Manual Officer Signup</span> can be used if we already know the member's signup transport info.
-        On submission, the member will immediately receive a waiver by email.
-      </p>
+      <template v-if="props.mode === 'late'">
+        <p class="text-sm">Select a member, then select the signup mode.</p>
+        <p class="text-xs text-primary/60">
+          <span class="font-bold">User Signup Link</span> will immediately send the user a special late signup link via email.
+          As soon as they submit the signup email, they will immediately receive a waiver by email.
+        </p>
+        <p class="text-xs text-primary/60">
+          <span class="font-bold">Manual Officer Signup</span> can be used if we already know the member's signup transport info.
+          On submission, the member will immediately receive a waiver by email.
+        </p>
+      </template>
 
       <!-- Email Combobox -->
       <Combobox by="email" v-model="selected">

@@ -422,45 +422,45 @@ def add_user():
             current_app.extensions["celery"].send_task("app.tasks.send_email", args=["late_signup", member_id, hike.id])
             return jsonify(success=True), 201
 
-        else:
-            transport_type = data.get("transport_type")
-            vehicle_id = data.get("vehicle_id")  # may be None
+        # otherwise signup is manual
+        transport_type = data.get("transport_type")
+        vehicle_id = data.get("vehicle_id")  # may be None
 
-            if transport_type is None:
-                return jsonify(error="transport_type required"), 400
+        if transport_type is None:
+            return jsonify(error="transport_type required"), 400
 
-            if transport_type == "driver":
-                if not vehicle_id:
-                    return jsonify(error="vehicle_id required for driver"), 400
-                vehicle = Vehicle.query.get(vehicle_id)
-                if not vehicle:
-                    return jsonify(error="Vehicle not found"), 404
-                if vehicle.member_id != member_id:
-                    return jsonify(error="Vehicle does not belong to this member"), 403
+        if transport_type == "driver":
+            if not vehicle_id:
+                return jsonify(error="vehicle_id required for driver"), 400
+            vehicle = Vehicle.query.get(vehicle_id)
+            if not vehicle:
+                return jsonify(error="Vehicle not found"), 404
+            if vehicle.member_id != member_id:
+                return jsonify(error="Vehicle does not belong to this member"), 403
 
-            signup = Signup(
-                hike_id=hike.id,
-                member_id=member_id,
-                transport_type=transport_type,
-                food_interest=False,
-                vehicle_id=vehicle_id if transport_type == "driver" else None,
-                is_checked_in=False,
-                status="confirmed",
-            )
-            db.session.add(signup)
-            db.session.commit()
+        signup = Signup(
+            hike_id=hike.id,
+            member_id=member_id,
+            transport_type=transport_type,
+            food_interest=False,
+            vehicle_id=vehicle_id if transport_type == "driver" else None,
+            is_checked_in=False,
+            status="confirmed",
+        )
+        db.session.add(signup)
+        db.session.commit()
 
-            update_waitlist(hike.id)
+        update_waitlist(hike.id)
 
-            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
+        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
 
-            m = Member.query.get(member_id)
-            user_obj = {
-                "member_id": m.id,
-                "name": m.name,
-                "transport_type": transport_type,
-                "has_waiver": False,
-                "is_checked_in": False,
-                "vehicle_id": vehicle_id if transport_type == "driver" else None,
-            }
-            return jsonify(user_obj), 201
+        m = Member.query.get(member_id)
+        user_obj = {
+            "member_id": m.id,
+            "name": m.name,
+            "transport_type": transport_type,
+            "has_waiver": False,
+            "is_checked_in": False,
+            "vehicle_id": vehicle_id if transport_type == "driver" else None,
+        }
+        return jsonify(user_obj), 201

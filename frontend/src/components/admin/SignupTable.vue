@@ -22,6 +22,7 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {useAuth} from "@/lib/auth.js";
 import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
+import {ButtonGroup} from "@/components/ui/button-group"
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -143,7 +144,7 @@ const headerWithSortBtn = (label, ctx) => {
   const sorted = col.getIsSorted() // 'asc' | 'desc' | false
   const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown
 
-  return h('div', { class: 'inline-flex items-center gap-x-1 md:gap-x-2' }, [
+  return h('div', { class: 'inline-flex items-center w-fit gap-x-0 md:gap-x-2' }, [
     h('span', label),
     h(
         Button,
@@ -196,7 +197,7 @@ const columns = [
                     HoverCardTrigger,
                     { asChild: true },
                     () => h('span',
-                        { class: 'inline underline decoration-dotted cursor-help' },
+                        { class: 'inline underline decoration-dotted cursor-help text-xs md:text-sm' },
                         'Driver'
                     )
                 ),
@@ -214,7 +215,7 @@ const columns = [
             }
         )
       }
-      return h('span', { class: 'inline' },
+      return h('span', { class: 'inline text-xs md:text-sm' },
           t === 'passenger' ? 'Passenger' : 'Self-Transport'
       )
     },
@@ -261,7 +262,7 @@ const columns = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) =>
-      h('div', { class: 'flex items-center gap-2' }, [
+      h('div', { class: 'flex items-center' }, [
         // Mobile: quick Check-In / Undo icon
         h(
           Tooltip,
@@ -327,7 +328,7 @@ const columns = [
         ]),
 
         // Desktop: show individual action icons inline
-        h('div', { class: 'hidden md:flex space-x-2' }, [
+        h(ButtonGroup, { class: 'hidden md:inline-flex' }, [
           // Check-In / Undo
           props.mode === "waiver" ? h(
             Tooltip,
@@ -341,7 +342,7 @@ const columns = [
                     h(
                       Button,
                       {
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
                         disabled: !row.original.has_waiver && !row.original.is_checked_in,
                       },
@@ -366,7 +367,7 @@ const columns = [
                       Button,
                       {
                         variant: 'outline',
-                        size: 'icon',
+                        size: 'sm',
                         disabled: row.original.has_waiver,
                         onClick: () => { sendEmailConfirmUser.value = row.original },
                       },
@@ -391,7 +392,7 @@ const columns = [
                       Button,
                       {
                         variant: 'outline',
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => modifyRow(row.original),
                       },
                       () => h(Edit, { class: 'h-4 w-4' }),
@@ -415,7 +416,7 @@ const columns = [
                       Button,
                       {
                         variant: 'destructive',
-                        size: 'icon',
+                        size: 'sm',
                         onClick: () => removeRow(row.original),
                       },
                       () => h(Trash, { class: 'h-4 w-4' }),
@@ -475,10 +476,10 @@ const table = useVueTable({
 
   <!-- Table of Users -->
   <div class="rounded-md border overflow-x-auto w-full">
-    <Table class="table-fixed w-full">
+    <Table class="table-fixed">
       <TableHeader>
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-          <TableHead v-for="h in hg.headers" :key="h.id" class="whitespace-normal">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="w-[20px] whitespace-normal">
             <FlexRender
               v-if="!h.isPlaceholder"
               :render="h.column.columnDef.header"
