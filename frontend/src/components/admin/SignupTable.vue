@@ -144,8 +144,15 @@ const headerWithSortBtn = (label, ctx) => {
   const sorted = col.getIsSorted() // 'asc' | 'desc' | false
   const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown
 
+  const labelNode = typeof label === 'string'
+      ? h('span', label)
+      : h('span', { class: 'inline-flex items-center gap-1' }, [
+          h('span', { class: 'sm:hidden' }, label.short),
+          h('span', { class: 'hidden sm:inline' }, label.long),
+        ])
+
   return h('div', { class: 'inline-flex items-center w-fit gap-x-0 md:gap-x-2' }, [
-    h('span', label),
+    labelNode,
     h(
         Button,
         {
@@ -156,9 +163,10 @@ const headerWithSortBtn = (label, ctx) => {
           'aria-label': 'Toggle sort'
         },
         () => h(Icon, { class: 'h-4 w-4' })
-    )
+    ),
   ])
 }
+
 
 
 
@@ -169,9 +177,9 @@ const data = shallowRef([...props.users])
 const columns = [
   {
     id: 'name',
-    header: 'Name',
+    header: h('span', {class: "mr-auto"}, 'Name'),
     accessorFn: row => `${row.name}`,
-    cell: info => h('span', { class: 'break-words text-xs md:text-sm' }, info.getValue()),
+    cell: info => h('span', { class: 'inline-flex text-xs max-w-18 md:max-w-full md:text-sm line-clamp-3 md:line-clamp-0' }, info.getValue()),
     filterFn: (row, colId, filter) =>
       String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
@@ -190,23 +198,34 @@ const columns = [
       if (t === 'driver') {
         return h(
             HoverCard,
-            { openDelay: 100 },
+            {openDelay: 100},
             {
               default: () => [
                 h(
                     HoverCardTrigger,
-                    { asChild: true },
-                    () => h('span',
-                        { class: 'inline underline decoration-dotted cursor-help text-xs md:text-sm' },
-                        'Driver'
-                    )
+                    {asChild: true},
+                    () => {
+                      return h('span', {class: 'inline-flex sm:float-start items-center gap-1'}, [
+                        // Mobile:
+                        h(
+                            Badge,
+                            {class: 'md:hidden px-1 py-0 size-7 bg-stone-600 text-white text-xl text-center'},
+                            () => 'D'
+                        ),
+
+                        // Desktop
+                        h('span', {
+                          class: 'hidden md:inline underline decoration-dotted md:text-sm'
+                        }, 'Driver'),
+                      ])
+                    }
                 ),
                 h(
                     HoverCardContent,
-                    { class: 'w-64' },
-                    () => h('div', { class: 'space-y-1' }, [
-                      h('div', { class: 'text-sm' }, row.original.vehicle_desc),
-                      h('div', { class: 'text-xs text-muted-foreground' },
+                    {class: 'w-64'},
+                    () => h('div', {class: 'space-y-1'}, [
+                      h('div', {class: 'text-sm'}, row.original.vehicle_desc),
+                      h('div', {class: 'text-xs text-muted-foreground'},
                           `${row.original.vehicle_capacity} passengers`
                       ),
                     ])
@@ -214,17 +233,42 @@ const columns = [
               ],
             }
         )
+      } else if (t === "passenger") {
+        return h('span', {class: 'inline-flex sm:float-start items-center gap-1'}, [
+          // Mobile
+          h(
+              Badge,
+              {class: 'md:hidden size-7 px-1 py-0 bg-stone-600 text-white text-xl text-center'},
+              () => 'P'
+          ),
+
+          // Desktop
+          h('span', {
+            class: 'hidden md:inline'
+          }, 'Passenger'),
+        ])
       }
-      return h('span', { class: 'inline text-xs md:text-sm' },
-          t === 'passenger' ? 'Passenger' : 'Self-Transport'
-      )
-    },
+
+      return h('span', {class: 'inline-flex sm:float-start items-center gap-1'}, [
+        // Mobile
+        h(
+            Badge,
+            {class: 'md:hidden size-7 px-1 py-0 bg-stone-600 text-white text-xl text-center'},
+            () => 'S'
+        ),
+
+        // Desktop
+        h('span', {
+          class: 'hidden md:inline'
+        }, 'Passenger'),
+      ])
+    }
   },
   {
     id: 'waiver',
     enableSorting: true,
     accessorFn: row => row.has_waiver,
-    header: (ctx) => headerWithSortBtn('Waiver?', ctx),
+    header: (ctx) => headerWithSortBtn({long: "Waiver?", short: 'Wvr?'}, ctx),
     sortingFn: (a, b) =>
         Number(a.original.has_waiver) - Number(b.original.has_waiver),
     cell: ({ row }) =>
@@ -232,9 +276,9 @@ const columns = [
             Badge,
             {
               variant: 'outline',
-              class: row.original.has_waiver
+              class: 'h-7 text-md ' + (row.original.has_waiver
                   ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
+                  : 'bg-red-100 text-red-800')
             },
             () => (row.original.has_waiver ? 'Yes' : 'No')
         )
@@ -243,7 +287,7 @@ const columns = [
     id: 'checked_in',
     enableSorting: true,
     accessorFn: row => row.is_checked_in,
-    header: (ctx) => headerWithSortBtn('Checked In?', ctx),
+    header: (ctx) => headerWithSortBtn({long: "Checked In?", short: 'Chkd?'}, ctx),
     sortingFn: (a, b) =>
         Number(a.original.is_checked_in) - Number(b.original.is_checked_in),
     cell: ({ row }) =>
@@ -251,9 +295,9 @@ const columns = [
             Badge,
             {
               variant: 'outline',
-              class: row.original.is_checked_in
+              class: 'h-7 text-md ' + (row.original.has_waiver
                   ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
+                  : 'bg-red-100 text-red-800')
             },
             () => (row.original.is_checked_in ? 'Yes' : 'No')
         ),
@@ -262,7 +306,7 @@ const columns = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) =>
-      h('div', { class: 'flex items-center' }, [
+      h('div', { class: 'inline-flex items-center overflow-x-auto' }, [
         // Mobile: quick Check-In / Undo icon
         h(
           Tooltip,
@@ -276,12 +320,12 @@ const columns = [
                   h(
                     Button,
                     {
-                      class: props.mode === "waiver" ? 'md:hidden' : 'hidden',
+                      class: 'size-7 ' + (props.mode === "waiver" ? 'md:hidden' : 'hidden'),
                       size: 'icon',
                       onClick: () => row.original.is_checked_in ? promptUndo(row.original) : checkInRow(row.original),
                       disabled: !row.original.has_waiver && !row.original.is_checked_in,
                     },
-                    () => row.original.is_checked_in ? h(Undo2, { class: 'h-4 w-4' }) : h(Check, { class: 'h-4 w-4' }),
+                    () => row.original.is_checked_in ? h(Undo2, { class: 'size-[18px]' }) : h(Check, { class: 'size-[18px]' }),
                   ),
               ),
               h(TooltipContent, null, () => row.original.is_checked_in ? 'Undo Check-In' : 'Check In Hiker'),
@@ -297,7 +341,7 @@ const columns = [
                 h(Button, { variant: 'ghost', size: 'icon' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))
               ),
               h(PopoverContent, { class: 'w-64 p-3' }, () => [
-                h('div', { class: 'text-sm mb-3' }, `${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'self-transport' ? 'Self-Transport' :
+                h('div', { class: 'text-sm mb-3' }, `${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'self' ? 'Self-Transport' :
                     `Driver (${row.original.vehicle_desc}, ${row.original.vehicle_capacity} passengers)` }`),
                 h('div', { class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden' }, [
                   !row.original.is_checked_in ? h(Button, {
@@ -464,7 +508,7 @@ const table = useVueTable({
 <template>
   <div class="flex items-center py-2 flex-nowrap">
     <Input
-      class="max-w-[12rem] sm:max-w-sm mr-3"
+      class="w-full sm:max-w-sm mr-3"
       placeholder="Filter names..."
       :model-value="table.getColumn('name')?.getFilterValue()"
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
@@ -475,11 +519,26 @@ const table = useVueTable({
   </div>
 
   <!-- Table of Users -->
-  <div class="rounded-md border overflow-x-auto w-full">
-    <Table class="table-fixed">
+  <div class="border rounded-sm">
+    <Table
+        class="table-fixed text-sm
+               [&_th]:px-2 [&_td]:px-2
+               [&_th]:py-1.5 [&_td]:py-1.5
+               [&_th]:text-xs [&_td]:text-xs
+               [&_th]:font-medium"
+      >
+      <colgroup>
+        <col
+          v-for="col in table.getVisibleLeafColumns()"
+          :key="col.id"
+          :class="col.id === 'name'
+            ? 'w-[30%]'   // make Name wider
+            : 'w-auto'"
+        />
+      </colgroup>
       <TableHeader>
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-          <TableHead v-for="h in hg.headers" :key="h.id" class="w-[20px] whitespace-normal">
+          <TableHead v-for="h in hg.headers" :key="h.id">
             <FlexRender
               v-if="!h.isPlaceholder"
               :render="h.column.columnDef.header"

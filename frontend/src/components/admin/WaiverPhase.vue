@@ -28,7 +28,7 @@
       </TabsTrigger>
     </TabsList>
     <TabsContent value="selected">
-      <SignupTable mode="waiver":users="props.waiverData.users"/>
+      <SignupTable mode="waiver" :users="props.waiverData.users"/>
     </TabsContent>
     <TabsContent value="waitlisted">
       <WaitlistTable :waitlist-data="waitlist_data"/>
