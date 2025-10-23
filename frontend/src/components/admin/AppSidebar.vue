@@ -2,6 +2,7 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -10,12 +11,13 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { Button } from "@/components/ui/button"
 import ThemeToggle from "@/components/admin/ThemeToggle.vue";
-import {useRouter} from 'vue-router';
-
+import { LogOut } from 'lucide-vue-next'
+import { useAuth } from '@/lib/auth.js'
+const { signOut } = useAuth()
 
 const props = defineProps()
-const router = useRouter();
 const data = {
   navMain: [
     {
@@ -47,6 +49,7 @@ const data = {
     <SidebarHeader>
       <div class="w-fit"><ThemeToggle/></div>
     </SidebarHeader>
+
     <SidebarContent>
       <SidebarGroup v-for="item in data.navMain">
         <SidebarGroupContent>
@@ -60,6 +63,20 @@ const data = {
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
+
+    <SidebarFooter>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton as-child>
+            <Button variant="ghost" @click="signOut()">
+              <LogOut class="h-4 w-4"/>
+              <span>Sign out</span>
+            </Button>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
+
     <SidebarRail/>
   </Sidebar>
 </template>
