@@ -295,7 +295,7 @@ const columns = [
             Badge,
             {
               variant: 'outline',
-              class: 'h-7 text-md ' + (row.original.has_waiver
+              class: 'h-7 text-md ' + (row.original.is_checked_in
                   ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800')
             },
