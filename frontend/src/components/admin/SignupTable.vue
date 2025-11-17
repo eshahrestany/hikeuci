@@ -260,7 +260,7 @@ const columns = [
         // Desktop
         h('span', {
           class: 'hidden md:inline'
-        }, 'Passenger'),
+        }, 'Self-Transport'),
       ])
     }
   },
@@ -532,8 +532,10 @@ const table = useVueTable({
           v-for="col in table.getVisibleLeafColumns()"
           :key="col.id"
           :class="col.id === 'name'
-            ? 'w-[30%]'   // make Name wider
-            : 'w-auto'"
+              ? 'w-[40%]'
+            : col.id === 'actions'
+              ? 'w-[21%]'
+            : 'w-[15%]'"
         />
       </colgroup>
       <TableHeader>
