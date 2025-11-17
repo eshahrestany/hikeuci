@@ -237,6 +237,28 @@ def get_waitlist():
 
     return jsonify(waitlist_users), 200
 
+@dashboard.route("/list-emails", methods=["GET"])
+@admin_required
+def list_all_emails():
+    return jsonify([m.email for m in Member.query.all()]), 200
+
+
+@dashboard.route("/list-emails-in-hike", methods=["GET"])
+@admin_required
+def list_emails_in_hike():
+    hike = current_active_hike()
+    if not hike:
+        return jsonify([]), 200
+
+    signed_ids = [mid for (mid,) in db.session.query(Signup.member_id).filter(Signup.hike_id == hike.id).all()]
+    members = (
+        Member.query
+        .filter(Member.id.in_(signed_ids))
+        .order_by(Member.email)
+        .all()
+    )
+    return jsonify([m.email for m in members]), 200
+
 
 @dashboard.route("/list-emails-not-in-hike", methods=["GET"])
 @admin_required

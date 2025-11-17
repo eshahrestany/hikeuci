@@ -24,6 +24,7 @@ import {useAuth} from "@/lib/auth.js";
 import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hover-card";
 import {ButtonGroup} from "@/components/ui/button-group"
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
+import ExportEmailButton from "@/components/admin/ExportEmailButton.vue";
 
 const props = defineProps({
   mode: {type: String, required: true}, // "waiver" or "signup"
@@ -513,9 +514,12 @@ const table = useVueTable({
       :model-value="table.getColumn('name')?.getFilterValue()"
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
     />
-    <Button class="md:ml-auto shrink-0" @click="showAddSignup = true">
-      <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
-    </Button>
+    <div class="flex gap-1 md:ml-auto">
+      <ExportEmailButton mode="signup"/>
+      <Button @click="showAddSignup = true">
+        <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
+      </Button>
+    </div>
   </div>
 
   <!-- Table of Users -->
