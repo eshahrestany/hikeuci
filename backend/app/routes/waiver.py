@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app, render_template
+
+from ..lib.model_utils import update_waitlist
 from ..models import Member, Hike, Trail, MagicLink, Waiver, Signup
 from .. import db
 
@@ -113,5 +115,7 @@ def cancel():
     db.session.delete(existing_signup)
     db.session.delete(magic_link)
     db.session.commit()
+
+    update_waitlist(hike.id)
 
     return jsonify({"status": "Cancelled successfully", "success": True}), 200
