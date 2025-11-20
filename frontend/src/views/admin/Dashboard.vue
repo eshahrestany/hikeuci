@@ -1,4 +1,5 @@
 <template>
+  <div class="hidden"><ThemeToggle/></div> <!-- This needs to be here to fix a bug where the app defaults to light mode until the themetoggle from the sidebar is loaded in-->
   <section class="px-0 py-4 sm:p-6 overflow-x-hidden">
     <Card class="max-w-4xl mx-auto md:space-y-6 border-0 sm:border-1">
       <CardHeader class="flex items-center">
@@ -50,6 +51,7 @@ import VotingPhase from "@/components/admin/VotingPhase.vue"
 import SignupPhase from "@/components/admin/SignupPhase.vue"
 import WaiverPhase from "@/components/admin/WaiverPhase.vue"
 import {RefreshCcw} from 'lucide-vue-next'
+import ThemeToggle from "@/components/admin/ThemeToggle.vue";
 
 
 const { fetchWithAuth } = useAuth()
