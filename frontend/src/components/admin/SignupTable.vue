@@ -342,10 +342,15 @@ const columns = [
                 h(Button, { variant: 'ghost', size: 'icon' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))
               ),
               h(PopoverContent, { class: 'w-64 p-3' }, () => [
-                h('div', { class: 'text-sm mb-3' }, `${row.original.transport_type === 'passenger' ? 'Passenger' : row.original.transport_type === 'self' ? 'Self-Transport' :
-                    `Driver (${row.original.vehicle_desc}, ${row.original.vehicle_capacity} passengers)` }`),
-                h('div', { class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden' }, [
+                h('div', { class: 'text-sm mb-3' },
+                    `${row.original.transport_type === 'passenger'
+                        ? 'Passenger'
+                        : row.original.transport_type === 'self'
+                            ? 'Self-Transport'
+                            : `Driver (${row.original.vehicle_desc}, ${row.original.vehicle_capacity} passengers)` }`),
+                h('div', { class: 'flex flex-wrap gap-2' }, [
                   !row.original.is_checked_in ? h(Button, {
+                    class: props.mode === "waiver" ? 'flex flex-wrap gap-2' : 'hidden',
                     size: 'sm',
                     onClick: () => checkInRow(row.original),
                     disabled: !row.original.has_waiver,
@@ -507,14 +512,14 @@ const table = useVueTable({
 </script>
 
 <template>
-  <div class="flex items-center py-2 flex-nowrap">
+  <div class="grid grid-cols-2 items-center py-2 gap-x-2">
     <Input
-      class="w-full sm:max-w-sm mr-3"
+      class="w-full mt-auto sm:max-w-sm mr-3"
       placeholder="Filter names..."
       :model-value="table.getColumn('name')?.getFilterValue()"
       @update:model-value="(val) => table.getColumn('name')?.setFilterValue(val)"
     />
-    <div class="flex gap-1 md:ml-auto">
+    <div class="flex flex-wrap gap-1 md:ml-auto">
       <ExportEmailButton mode="signup"/>
       <Button @click="showAddSignup = true">
         <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
