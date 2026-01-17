@@ -12,7 +12,9 @@
             :src="`/api/images/uploads/${trail.trail_id}`"
             :alt="trail.trail_name"
           />
-          <CardTitle>{{ trail.trail_name }}</CardTitle>
+          <CardTitle>
+            <Link :to="trail.trail_alltrails_url" :text="trail.trail_name" :new-tab="true"></Link>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p class="text-sm mb-1">
@@ -58,6 +60,7 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChevronDown, ChevronRight } from 'lucide-vue-next'
+import Link from "@/components/common/Link.vue";
 
 const props = defineProps({
   votingData: { type: Object, required: true }

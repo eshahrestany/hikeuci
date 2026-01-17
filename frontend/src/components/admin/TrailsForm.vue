@@ -116,7 +116,6 @@ const uploadPhoto = async (trailId) => {
     console.error("Failed to submit trail photo:", error)
     toast.error('Photo Submission Failed', { description: error.message })
   }
-
 }
 
 const handleSubmit = async () => {
@@ -168,7 +167,7 @@ const handleClose = (openState) => {
 
 <template>
   <Dialog :open="isOpen" @update:open="handleClose">
-    <DialogContent class="sm:max-w-2xl grid-rows-[auto,1fr,auto]">
+    <DialogContent class="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{{ dialogTitle }}</DialogTitle>
         <DialogDescription>
@@ -176,10 +175,8 @@ const handleClose = (openState) => {
         </DialogDescription>
       </DialogHeader>
 
-      <form id="trail-form" @submit.prevent="handleSubmit" class="py-4 overflow-y-auto pr-6">
+      <form id="trail-form" @submit.prevent="handleSubmit" class="py-4 pr-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
           <div class="space-y-2">
             <Label for="name">Trail Name</Label>
             <Input id="name" v-model="formData.name" required />
@@ -239,7 +236,7 @@ const handleClose = (openState) => {
               </SelectContent>
             </Select>
           </div>
-          <div class="space-y-2 col-span-2 grid grid-cols-2 gap-4">
+          <div class="space-y-2 col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label class="mb-2" for="picture">Picture</Label>
               <Input id="picture" type="file" accept="image/png, image/jpeg" @change="handleFileChange" :required="!isEditing"/>
@@ -249,6 +246,7 @@ const handleClose = (openState) => {
               <a class="text-blue-300 hover:underline text-sm" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
             </div>
           </div>
+
           <div class="space-y-2 col-span-1 md:col-span-2">
             <Label for="alltrails_url">AllTrails URL</Label>
             <Input id="alltrails_url" type="url" v-model="formData.alltrails_url" placeholder="https://www.alltrails.com/..."  />
@@ -271,7 +269,7 @@ const handleClose = (openState) => {
         </div>
       </form>
 
-      <DialogFooter class="w-full flex justify-between items-center gap-4">
+      <DialogFooter class="w-full flex flex-row flex-nowrap justify-between items-center gap-2">
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
         <Button type="submit" variant="default" form="trail-form">{{ submitButtonText }}</Button>
         <Button v-if="isEditing" type="button" variant="destructive" @click="deleteTrail()">Delete</Button>

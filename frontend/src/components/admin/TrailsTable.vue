@@ -12,6 +12,7 @@ import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import TrailsForm from "@/components/admin/TrailsForm.vue";
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
+import Link from "@/components/common/Link.vue";
 import {difficulties} from "@/lib/common.js"
 import {PlusCircle} from "lucide-vue-next"
 import {Input} from "@/components/ui/input/index.js";
@@ -64,8 +65,14 @@ const columns = [
   {
     id: 'name',
     header: 'Name',
-    accessorFn: row => `${row.name}`,
-    cell: info => info.getValue(),
+    accessorFn: row => `${row.name}`, // keep for filter/sort
+    cell: ({ row }) =>
+        h(Link, {
+          to: row.original.alltrails_url,
+          text: row.original.name,
+          newTab: true,
+          size: 14,
+        }),
     filterFn: (row, colId, filter) =>
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },

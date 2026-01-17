@@ -5,7 +5,7 @@
   </p>
   <div class="md:grid grid-cols-2 gap-4">
     <div class="text-center text-lg font-semibold underline">
-      Trail: {{ waiverData.trail_name }}
+      <Link size="20" :to="waiverData.trail_alltrails_url" :text="waiverData.trail_name" :new-tab="true"/>
       <img
           class="mt-2 w-auto object-cover rounded-md mb-2"
           :src="`/api/images/uploads/${waiverData.trail_id}`"
@@ -49,6 +49,7 @@ import SignupTable from "@/components/admin/SignupTable.vue";
 import WaitlistTable from "@/components/admin/WaitlistTable.vue";
 import {onMounted, ref} from "vue";
 import {useAuth} from "@/lib/auth.js";
+import Link from "@/components/common/Link.vue";
 
 const { fetchWithAuth } = useAuth()
 

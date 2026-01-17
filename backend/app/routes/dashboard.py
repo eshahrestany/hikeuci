@@ -66,6 +66,7 @@ def get_active_hike_info():
             results.append({
                 "trail_id": row.id,
                 "trail_name": row.name,
+                "trail_alltrails_url": row.alltrails_url,
                 "trail_num_votes": len(names),
                 "trail_voters": names,
             })
@@ -85,6 +86,7 @@ def get_active_hike_info():
 
         return_data["trail_id"] = trail.id
         return_data["trail_name"] = trail.name
+        return_data["trail_alltrails_url"] = trail.alltrails_url
 
         rows = (
             db.session.query(
