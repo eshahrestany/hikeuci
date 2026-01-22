@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge'
 import SignupStats from "@/components/admin/SignupStats.vue"
 import SignupTable from "@/components/admin/SignupTable.vue";
+import Link from "@/components/common/Link.vue";
 
 const props = defineProps({
   signupData: { type: Object, required: true }
@@ -16,7 +17,7 @@ const props = defineProps({
   </p>
   <div class="md:grid grid-cols-2 gap-4">
     <div class="text-center text-lg font-semibold underline">
-      Trail: {{ signupData.trail_name }}
+      <Link size="20" :to="signupData.trail_alltrails_url" :text="signupData.trail_name" :new-tab="true"/>
       <img
         class="mt-2 w-auto object-cover rounded-md mb-2"
         :src="`/api/images/uploads/${signupData.trail_id}`"
