@@ -1,5 +1,6 @@
 from .auth import auth
 from .dashboard import dashboard
+from .dashboard_history import admin_history
 from .images import images
 from .vote import hike_vote
 from .signup import hike_signup
@@ -13,6 +14,7 @@ from .trails import trails
 def register_routes(app):
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(dashboard, url_prefix="/api/admin")
+    app.register_blueprint(admin_history, url_prefix="/api/admin/history")
     app.register_blueprint(trails, url_prefix="/api/admin/trails")
     app.register_blueprint(members, url_prefix="/api/admin/members")
     app.register_blueprint(images, url_prefix="/api/images")
