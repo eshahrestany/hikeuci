@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/number-field'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
+import ElevationChart from '@/components/common/ElevationChart.vue'
 
 const props = defineProps({
   isOpen: {
@@ -79,6 +80,23 @@ const isEditing = computed(() => !!props.trailData)
 const dialogTitle = computed(() => isEditing.value ? 'Edit Trail' : 'Create New Trail')
 const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : 'Create Trail')
 
+const elevationData = ref(null)
+
+watch(() => props.trailData, async (newTrail) => {
+  elevationData.value = null
+  if (newTrail?.has_elevation_data) {
+    try {
+      const res = await fetchWithAuth(`/api/admin/trails/${newTrail.id}/elevation`)
+      if (res.ok) {
+        const data = await res.json()
+        elevationData.value = data.elevation_data
+      }
+    } catch (e) {
+      console.error('Failed to fetch elevation data:', e)
+    }
+  }
+}, { immediate: true })
+
 
 
 const selectedFile = ref(null);
@@ -86,6 +104,14 @@ function handleFileChange(event) {
   const file = event.target.files[0];
   if (file) {
     selectedFile.value = file;
+  }
+}
+
+const selectedElevationFile = ref(null);
+function handleElevationFileChange(event) {
+  const file = event.target.files[0];
+  if (file) {
+    selectedElevationFile.value = file;
   }
 }
 
@@ -118,6 +144,33 @@ const uploadPhoto = async (trailId) => {
   }
 }
 
+const uploadElevation = async (trailId) => {
+  try {
+    const endpoint = `/api/admin/trails/${trailId}/elevation`;
+    const uploadFormData = new FormData()
+    uploadFormData.append("file", selectedElevationFile.value)
+
+    const headers = {
+      ...getAuthHeaders(),
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: uploadFormData,
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw Error(data.error || response.status)
+    }
+
+    toast.success(`Elevation map successfully uploaded 🎉`)
+  } catch (error) {
+    console.error("Failed to upload elevation map:", error)
+    toast.error('Elevation Upload Failed', { description: error.message })
+  }
+}
+
 const handleSubmit = async () => {
   try {
     const endpoint = isEditing.value ? `/api/admin/trails/${props.trailData.id}` : '/api/admin/trails'
@@ -131,6 +184,9 @@ const handleSubmit = async () => {
 
     if (selectedFile.value) {
       await uploadPhoto(body.id);
+    }
+    if (selectedElevationFile.value) {
+      await uploadElevation(body.id);
     }
     toast.success(`Trail successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
     Object.assign(formData, defaultTrailState)
@@ -245,6 +301,21 @@ const handleClose = (openState) => {
               <p class="text-sm text-gray-400">This trail has an existing image, view it with the link below or upload a new one to replace it.</p>
               <a class="text-blue-300 hover:underline text-sm" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
             </div>
+          </div>
+
+          <div class="space-y-2 col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label class="mb-2" for="elevation_map">Elevation Map (.json)</Label>
+              <Input id="elevation_map" type="file" accept=".json,.js,application/json" @change="handleElevationFileChange" />
+            </div>
+            <div v-if="isEditing && formData.has_elevation_data">
+              <p class="text-sm text-gray-400">This trail already has elevation data uploaded. Upload a new file to replace it.</p>
+            </div>
+          </div>
+
+          <div v-if="elevationData" class="col-span-1 md:col-span-2">
+            <Label class="mb-2">Elevation Preview</Label>
+            <ElevationChart :elevationData="elevationData" />
           </div>
 
           <div class="space-y-2 col-span-1 md:col-span-2">

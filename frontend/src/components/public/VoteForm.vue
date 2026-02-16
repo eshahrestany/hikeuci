@@ -9,6 +9,7 @@ import {Button} from '@/components/ui/button'
 import backgroundImage from '@/assets/hiking_bg.jpg'
 import {Skeleton} from '@/components/ui/skeleton'
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
+import ElevationChart from "@/components/common/ElevationChart.vue";
 
 /** ---------- State (mirrors SignupForm.vue patterns) ---------- */
 const props = defineProps({
@@ -224,6 +225,8 @@ onMounted(async () => {
                       </p>
                     </div>
                   </div>
+
+                  <ElevationChart v-if="t.elevation_data" :elevationData="t.elevation_data" class="mt-3" />
 
                   <!-- Results display when already voted -->
                   <div v-if="alreadyVoted" class="mt-4">

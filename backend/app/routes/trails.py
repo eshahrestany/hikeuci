@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, jsonify, request, current_app
 from ..decorators import admin_required
 from ..models import Trail
@@ -31,6 +33,7 @@ def _serialize_trail(t):
         "trailhead_gmaps_url": t.trailhead_gmaps_url,
         "trailhead_amaps_url": t.trailhead_amaps_url,
         "description": t.description,
+        "has_elevation_data": t.elevation_data is not None,
     }
 
 
@@ -124,4 +127,76 @@ def delete_trail(trail_id):
         return jsonify({"error": f"Failed to delete trail, likely because a reference to it exists in the DB", "details": e}), 400
 
 
+MAX_ELEVATION_POINTS = 10_000
 
+
+def _parse_elevation_data(raw: dict) -> list[dict]:
+    """Validate and sanitize elevation JSON. Returns a flat list of {lon, lat, ele} dicts."""
+    track_data = raw.get("data", {}).get("trackData")
+    if not isinstance(track_data, list) or len(track_data) == 0:
+        raise ValueError("Missing or empty data.trackData array")
+
+    points = []
+    for segment in track_data:
+        if not isinstance(segment, list):
+            raise ValueError("Each trackData segment must be an array")
+        for pt in segment:
+            if not isinstance(pt, dict):
+                raise ValueError("Each point must be an object")
+            try:
+                lon = float(pt["lon"])
+                lat = float(pt["lat"])
+                ele = float(pt["ele"])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError("Each point must have numeric lon, lat, and ele")
+            if not (-180 <= lon <= 180):
+                raise ValueError(f"lon out of range: {lon}")
+            if not (-90 <= lat <= 90):
+                raise ValueError(f"lat out of range: {lat}")
+            if not (-500 <= ele <= 9000):
+                raise ValueError(f"ele out of range: {ele}")
+            points.append({"lon": round(lon, 6), "lat": round(lat, 6), "ele": round(ele, 1)})
+
+    if len(points) == 0:
+        raise ValueError("No elevation points found")
+    if len(points) > MAX_ELEVATION_POINTS:
+        raise ValueError(f"Too many points ({len(points)}), max is {MAX_ELEVATION_POINTS}")
+
+    return points
+
+
+@trails.route("/<int:trail_id>/elevation", methods=["GET"])
+@admin_required
+def get_elevation(trail_id):
+    trail = Trail.query.get_or_404(trail_id)
+    if trail.elevation_data is None:
+        return jsonify({"error": "No elevation data"}), 404
+    return jsonify({"elevation_data": trail.elevation_data}), 200
+
+
+@trails.route("/<int:trail_id>/elevation", methods=["POST"])
+@admin_required
+def upload_elevation(trail_id):
+    trail = Trail.query.get_or_404(trail_id)
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    if not file.filename or not file.filename.lower().endswith((".json", ".js")):
+        return jsonify({"error": "File must be a .json file"}), 400
+
+    try:
+        raw = json.loads(file.read())
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return jsonify({"error": "Invalid JSON file"}), 400
+
+    try:
+        points = _parse_elevation_data(raw)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    trail.elevation_data = points
+    db.session.commit()
+
+    return jsonify({"message": "Elevation data uploaded", "point_count": len(points)}), 200
