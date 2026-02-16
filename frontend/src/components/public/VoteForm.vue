@@ -9,6 +9,7 @@ import {Button} from '@/components/ui/button'
 import backgroundImage from '@/assets/hiking_bg.jpg'
 import {Skeleton} from '@/components/ui/skeleton'
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
+import ElevationChart from "@/components/common/ElevationChart.vue";
 
 /** ---------- State (mirrors SignupForm.vue patterns) ---------- */
 const props = defineProps({
@@ -181,7 +182,7 @@ onMounted(async () => {
               <div
                   v-for="t in trails"
                   :key="t.id"
-                  class="group relative overflow-hidden rounded-2xl border border-stone-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                  class="group relative overflow-hidden rounded-2xl border border-stone-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col"
                   :class="{'bg-white': alreadyVoted && userVoteTrailId !== t.id, 'bg-blue-200': alreadyVoted && userVoteTrailId === t.id}"
               >
                 <div class="aspect-[16/10] w-full overflow-hidden bg-stone-100 hover:scale-[1.05]">
@@ -193,7 +194,7 @@ onMounted(async () => {
                   />
                 </div>
 
-                <div class="p-4">
+                <div class="p-4 flex flex-col flex-1">
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <h3 class="text-lg font-bold text-midnight">{{ t.name }}</h3>
@@ -225,34 +226,38 @@ onMounted(async () => {
                     </div>
                   </div>
 
-                  <!-- Results display when already voted -->
-                  <div v-if="alreadyVoted" class="mt-4">
-                    <div class="flex items-center justify-between text-xs text-stone-600 mb-1">
-                      <span>Votes: {{ countFor(t.id) }} / {{ totalVotes }}</span>
-                      <span class="font-semibold text-midnight">{{ percentFor(t.id) }}%</span>
-                    </div>
-                    <div class="w-full h-3 rounded-full bg-stone-100 border border-stone-200 overflow-hidden">
-                      <div
-                          class="h-full bg-uci-blue transition-all duration-500"
-                          :style="{ width: percentFor(t.id) + '%' }"
-                      />
-                    </div>
-                  </div>
+                  <ElevationChart v-if="t.elevation_data" :elevationData="t.elevation_data" class="mt-3" />
 
-                  <div v-if="userVoteTrailId !== t.id" class="mt-4 flex">
-                    <Button
-                        type="button"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm bg-uci-blue text-white hover:bg-uci-blue/90 font-semibold transition focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                        @click="submitVote(t.id)"
-                    >
-                      <span>
-                        <template v-if="!alreadyVoted">Vote</template>
-                        <template v-else>Change vote to this</template>
-                      </span>
-                    </Button>
-                  </div>
-                  <div v-else class="inline-flex items-center justify-center gap-2 rounded-xl border bg-uci-gold/50 mt-4 px-4 py-2 text-sm font-semibold">
-                    You voted for this
+                  <div class="mt-auto pt-4">
+                    <!-- Results display when already voted -->
+                    <div v-if="alreadyVoted" class="mb-4">
+                      <div class="flex items-center justify-between text-xs text-stone-600 mb-1">
+                        <span>Votes: {{ countFor(t.id) }} / {{ totalVotes }}</span>
+                        <span class="font-semibold text-midnight">{{ percentFor(t.id) }}%</span>
+                      </div>
+                      <div class="w-full h-3 rounded-full bg-stone-100 border border-stone-200 overflow-hidden">
+                        <div
+                            class="h-full bg-uci-blue transition-all duration-500"
+                            :style="{ width: percentFor(t.id) + '%' }"
+                        />
+                      </div>
+                    </div>
+
+                    <div v-if="userVoteTrailId !== t.id" class="flex">
+                      <Button
+                          type="button"
+                          class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm bg-uci-blue text-white hover:bg-uci-blue/90 font-semibold transition focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                          @click="submitVote(t.id)"
+                      >
+                        <span>
+                          <template v-if="!alreadyVoted">Vote</template>
+                          <template v-else>Change vote to this</template>
+                        </span>
+                      </Button>
+                    </div>
+                    <div v-else class="inline-flex items-center justify-center gap-2 rounded-xl border bg-uci-gold/50 px-4 py-2 text-sm font-semibold">
+                      You voted for this
+                    </div>
                   </div>
                 </div>
               </div>
