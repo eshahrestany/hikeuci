@@ -1,13 +1,19 @@
 <script setup>
+import { ref } from 'vue'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ArrowLeftRight } from 'lucide-vue-next'
 import SignupStats from "@/components/admin/SignupStats.vue"
-import SignupTable from "@/components/admin/SignupTable.vue";
-import Link from "@/components/common/Link.vue";
+import SignupTable from "@/components/admin/SignupTable.vue"
+import Link from "@/components/common/Link.vue"
+import SwitchTrailModal from "@/components/admin/SwitchTrailModal.vue"
 
 const props = defineProps({
   signupData: { type: Object, required: true }
 })
+const emit = defineEmits(['refresh'])
 
+const showSwitchModal = ref(false)
 </script>
 
 <template>
@@ -23,6 +29,10 @@ const props = defineProps({
         :src="`/api/images/uploads/${signupData.trail_id}`"
         :alt="`image of ${ signupData.trail_name}`"
       />
+      <Button variant="outline" size="sm" class="mt-1 no-underline" @click="showSwitchModal = true">
+        <ArrowLeftRight class="h-4 w-4"/>
+        Switch Trail
+      </Button>
     </div>
     <SignupStats
       :users="signupData.users"
@@ -31,4 +41,12 @@ const props = defineProps({
   </div>
 
   <SignupTable mode="signup" :users="signupData.users"/>
+
+  <SwitchTrailModal
+    v-if="showSwitchModal"
+    :current-trail-id="signupData.trail_id"
+    phase="signup"
+    @switched="emit('refresh')"
+    @close="showSwitchModal = false"
+  />
 </template>
