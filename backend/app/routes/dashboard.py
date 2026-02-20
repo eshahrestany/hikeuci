@@ -140,6 +140,35 @@ def get_active_hike_info():
     return jsonify(return_data), 200
 
 
+@dashboard.route('/hike/trail', methods=['PUT'])
+@admin_required
+def switch_hike_trail():
+    hike = current_active_hike()
+    if not hike:
+        return jsonify(error="No active hike"), 400
+
+    if hike.phase not in ('signup', 'waiver'):
+        return jsonify(error="Trail can only be switched during signup or waiver phase"), 400
+
+    data = request.get_json() or {}
+    trail_id = data.get('trail_id')
+    if trail_id is None:
+        return jsonify(error="Missing trail_id"), 400
+
+    trail = Trail.query.get(trail_id)
+    if not trail:
+        return jsonify(error="Trail not found"), 404
+
+    hike.trail_id = trail_id
+    db.session.commit()
+
+    return jsonify(
+        trail_id=trail.id,
+        trail_name=trail.name,
+        trail_alltrails_url=trail.alltrails_url,
+    ), 200
+
+
 @dashboard.route('/set-hike', methods=['POST'])
 @admin_required
 def set_next_hike():
