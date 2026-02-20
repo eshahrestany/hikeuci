@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
+import TrailPicker from '@/components/admin/TrailPicker.vue'
 
 const props = defineProps({
   currentTrailId: { type: Number, required: true },
@@ -23,33 +24,10 @@ const open = ref(true)
 watch(open, v => { if (!v) emit('close') })
 
 const step = ref(1)
-const trails = ref([])
-const selectedTrail = ref(null)
-const loading = ref(false)
+const selectedTrail = ref(null) // full trail object from TrailPicker
 const submitting = ref(false)
 
 const { fetchWithAuth } = useAuth()
-
-async function loadTrails() {
-  loading.value = true
-  try {
-    const res = await fetchWithAuth('/api/admin/trails')
-    if (!res.ok) throw new Error()
-    trails.value = (await res.json()).filter(t => t.id !== props.currentTrailId)
-  } catch {
-    toast.error('Could not load trails')
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadTrails)
-
-function difficultyVariant(d) {
-  if (d === 'easy') return 'secondary'
-  if (d === 'hard') return 'destructive'
-  return 'default'
-}
 
 async function confirm() {
   if (!selectedTrail.value) return
@@ -77,7 +55,7 @@ async function confirm() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[500px]">
+    <DialogContent class="sm:max-w-[600px]">
 
       <!-- Step 1: Select Trail -->
       <template v-if="step === 1">
@@ -86,32 +64,16 @@ async function confirm() {
           <DialogDescription>Select a new trail for this hike.</DialogDescription>
         </DialogHeader>
 
-        <div v-if="loading" class="py-6 text-center text-sm text-muted-foreground">
-          Loading trails…
-        </div>
-        <div v-else-if="trails.length === 0" class="py-6 text-center text-sm text-muted-foreground">
-          No other trails available.
-        </div>
-        <div v-else class="overflow-y-auto max-h-72 flex flex-col gap-2 pr-1">
-          <button
-            v-for="trail in trails"
-            :key="trail.id"
-            type="button"
-            class="w-full text-left rounded-md border px-4 py-3 transition-colors hover:bg-accent"
-            :class="selectedTrail?.id === trail.id ? 'border-primary bg-accent' : 'border-border'"
-            @click="selectedTrail = trail"
-          >
-            <div class="flex items-center justify-between">
-              <span class="font-medium">{{ trail.name }}</span>
-              <Badge :variant="difficultyVariant(trail.difficulty)">{{ trail.difficulty }}</Badge>
-            </div>
-            <div class="text-sm text-muted-foreground mt-0.5">{{ trail.location }}</div>
-          </button>
-        </div>
+        <Label>Trail</Label>
+        <TrailPicker
+          mode="single"
+          :exclude-id="currentTrailId"
+          v-model="selectedTrail"
+        />
 
         <DialogFooter>
           <Button variant="outline" @click="open = false">Cancel</Button>
-          <Button :disabled="!selectedTrail || loading" @click="step = 2">Next</Button>
+          <Button :disabled="!selectedTrail" @click="step = 2">Next</Button>
         </DialogFooter>
       </template>
 
