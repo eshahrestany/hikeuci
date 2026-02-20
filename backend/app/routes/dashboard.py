@@ -6,6 +6,7 @@ from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
 from ..lib.model_utils import current_active_hike, update_waitlist
+from ..lib import phases
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -19,10 +20,10 @@ def get_active_hike_info():
         return jsonify(status=None), 200
 
     return_data = {}
-    phase = hike.phase.lower()
+    phase = (hike.phase or "").lower()
     if not phase:
         return_data["status"] = 'awaiting_vote_start'
-        return_data["vote_start"] = hike.voting_date.get_localized_time("voting_date").strftime("%c")
+        return_data["vote_start"] = hike.get_localized_time('created_date').strftime("%c")
     else:
         return_data["status"] = phase
 
@@ -138,6 +139,50 @@ def get_active_hike_info():
 
     # Any other phase → just return the phase for now
     return jsonify(return_data), 200
+
+
+@dashboard.route('/hike/trail', methods=['PUT'])
+@admin_required
+def switch_hike_trail():
+    hike = current_active_hike()
+    if not hike:
+        return jsonify(error="No active hike"), 400
+
+    if hike.phase not in ('signup', 'waiver'):
+        return jsonify(error="Trail can only be switched during signup or waiver phase"), 400
+
+    data = request.get_json() or {}
+    trail_id = data.get('trail_id')
+    if trail_id is None:
+        return jsonify(error="Missing trail_id"), 400
+
+    trail = Trail.query.get(trail_id)
+    if not trail:
+        return jsonify(error="Trail not found"), 404
+
+    hike.trail_id = trail_id
+    db.session.commit()
+
+    return jsonify(
+        trail_id=trail.id,
+        trail_name=trail.name,
+        trail_alltrails_url=trail.alltrails_url,
+    ), 200
+
+
+@dashboard.route('/hike/cancel', methods=['POST'])
+@admin_required
+def cancel_hike():
+    hike = current_active_hike()
+    if not hike:
+        return jsonify(error="No active hike"), 400
+
+    try:
+        phases.cancel_hike(hike.id)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+
+    return jsonify(message="Hike cancelled"), 200
 
 
 @dashboard.route('/set-hike', methods=['POST'])

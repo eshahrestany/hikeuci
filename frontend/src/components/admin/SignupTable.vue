@@ -25,11 +25,14 @@ import {HoverCard, HoverCardContent, HoverCardTrigger} from "@/components/ui/hov
 import {ButtonGroup} from "@/components/ui/button-group"
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 import ExportEmailButton from "@/components/admin/ExportEmailButton.vue";
+import DangerZoneDrawer from "@/components/admin/DangerZoneDrawer.vue";
 
 const props = defineProps({
   mode: {type: String, required: true}, // "waiver" or "signup"
-  users: { type: Object, required: true }
+  users: { type: Object, required: true },
+  currentTrailId: { type: Number, required: true },
 })
+const emit = defineEmits(['switched', 'cancelled'])
 
 const editUser = ref(null)
 const confirmRemovalOpen = ref(false)
@@ -524,6 +527,12 @@ const table = useVueTable({
       <Button @click="showAddSignup = true">
         <PlusCircle class="h-4 w-4" /> {{ props.mode === 'signup' ? "Add New Signup" : "Add Late Signup" }}
       </Button>
+      <DangerZoneDrawer
+        :current-trail-id="props.currentTrailId"
+        :phase="props.mode"
+        @switched="emit('switched', $event)"
+        @cancelled="emit('cancelled')"
+      />
     </div>
   </div>
 

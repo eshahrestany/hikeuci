@@ -28,18 +28,21 @@ class Trail(db.Model):
     trailhead_gmaps_url = db.Column(db.String(300), nullable=True)
     trailhead_amaps_url = db.Column(db.String(300), nullable=True)
     description              = db.Column(db.Text, nullable=True)
+    elevation_data           = db.Column(db.JSON, nullable=True)
 
 
 class Hike(db.Model):
     """
     Hikes table. Use `status` to indicate lifecycle:
-    'active' current weekly hike and has non-null phase, 'completed' (past), 'canceled' (past)
+    'active' - current weekly hike with an ongoing phase
+    'past'   - hike completed normally
+    'cancelled' - hike was cancelled before completion
     """
     __tablename__ = 'hikes'
     id        = db.Column(db.Integer, primary_key=True)
     trail_id  = db.Column(db.Integer, db.ForeignKey('trails.id'), default=None, nullable=True)
-    status    = db.Column(db.String(20), nullable=False, index=True, default='active')  # 'active' or 'past'
-    phase     = db.Column(db.String(20), nullable=True)  #  for status=active: None [pending vote start], 'voting', 'signups', 'waiver'
+    status    = db.Column(db.String(20), nullable=False, index=True, default='active')  # 'active', 'past', 'cancelled'
+    phase     = db.Column(db.String(20), nullable=True)  # for status=active: None [pending vote start], 'voting', 'signup', 'waiver'
     email_campaign_completed = db.Column(db.Boolean, nullable=False, default=False)
     has_vote = db.Column(db.Boolean, nullable=False, default=True)
     # dates

@@ -28,15 +28,23 @@
       </TabsTrigger>
     </TabsList>
     <TabsContent value="selected">
-      <SignupTable mode="waiver" :users="props.waiverData.users"/>
+      <SignupTable
+        mode="waiver"
+        :users="props.waiverData.users"
+        :current-trail-id="waiverData.trail_id"
+        @switched="emit('refresh')"
+        @cancelled="emit('refresh')"
+      />
     </TabsContent>
     <TabsContent value="waitlisted">
       <WaitlistTable :waitlist-data="waitlist_data"/>
     </TabsContent>
   </Tabs>
+
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import {
   Tabs,
@@ -44,16 +52,16 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'
-import SignupStats from "@/components/admin/SignupStats.vue";
-import SignupTable from "@/components/admin/SignupTable.vue";
-import WaitlistTable from "@/components/admin/WaitlistTable.vue";
-import {onMounted, ref} from "vue";
-import {useAuth} from "@/lib/auth.js";
-import Link from "@/components/common/Link.vue";
+import SignupStats from "@/components/admin/SignupStats.vue"
+import SignupTable from "@/components/admin/SignupTable.vue"
+import WaitlistTable from "@/components/admin/WaitlistTable.vue"
+import { useAuth } from "@/lib/auth.js"
+import Link from "@/components/common/Link.vue"
 
 const { fetchWithAuth } = useAuth()
 
 const props = defineProps({waiverData: {type: Object, required: true}})
+const emit = defineEmits(['refresh'])
 const waitlist_data = ref([])
 
 async function loadWaitlist() {
@@ -64,5 +72,4 @@ async function loadWaitlist() {
 }
 
 onMounted(loadWaitlist)
-
 </script>

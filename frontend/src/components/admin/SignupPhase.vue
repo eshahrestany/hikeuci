@@ -1,13 +1,13 @@
 <script setup>
 import { Badge } from '@/components/ui/badge'
 import SignupStats from "@/components/admin/SignupStats.vue"
-import SignupTable from "@/components/admin/SignupTable.vue";
-import Link from "@/components/common/Link.vue";
+import SignupTable from "@/components/admin/SignupTable.vue"
+import Link from "@/components/common/Link.vue"
 
 const props = defineProps({
   signupData: { type: Object, required: true }
 })
-
+const emit = defineEmits(['refresh'])
 </script>
 
 <template>
@@ -30,5 +30,11 @@ const props = defineProps({
     />
   </div>
 
-  <SignupTable mode="signup" :users="signupData.users"/>
+  <SignupTable
+    mode="signup"
+    :users="signupData.users"
+    :current-trail-id="signupData.trail_id"
+    @switched="emit('refresh')"
+    @cancelled="emit('refresh')"
+  />
 </template>

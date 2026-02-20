@@ -62,3 +62,23 @@ def complete_hike(hike_id: int):
     ah.status = "past"
     ah.phase = None
     db.session.commit()
+
+
+def cancel_hike(hike_id: int):
+    ah = Hike.query.get(hike_id)
+    if not ah: raise Exception("Invalid hike ID")
+    if ah.status != "active":
+        raise Exception(f"Hike {ah.id} is not active (status={ah.status}), cannot cancel")
+
+    # invalidate all outstanding magic links
+    MagicLink.query.filter_by(hike_id=ah.id).delete()
+
+    # reset any vote candidates that were set for this hike's voting phase
+    # (unused, currently vote phase can't be canceled in the frontend)
+    Trail.query.filter_by(is_active_vote_candidate=True).update(
+        {Trail.is_active_vote_candidate: False}
+    )
+
+    ah.status = "cancelled"
+    ah.phase = None
+    db.session.commit()
