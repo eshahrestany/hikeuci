@@ -6,6 +6,7 @@ from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
 from ..lib.model_utils import current_active_hike, update_waitlist
+from ..lib import phases
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -19,10 +20,10 @@ def get_active_hike_info():
         return jsonify(status=None), 200
 
     return_data = {}
-    phase = hike.phase.lower()
+    phase = (hike.phase or "").lower()
     if not phase:
         return_data["status"] = 'awaiting_vote_start'
-        return_data["vote_start"] = hike.voting_date.get_localized_time("voting_date").strftime("%c")
+        return_data["vote_start"] = hike.get_localized_time('created_date').strftime("%c")
     else:
         return_data["status"] = phase
 
@@ -167,6 +168,21 @@ def switch_hike_trail():
         trail_name=trail.name,
         trail_alltrails_url=trail.alltrails_url,
     ), 200
+
+
+@dashboard.route('/hike/cancel', methods=['POST'])
+@admin_required
+def cancel_hike():
+    hike = current_active_hike()
+    if not hike:
+        return jsonify(error="No active hike"), 400
+
+    try:
+        phases.cancel_hike(hike.id)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+
+    return jsonify(message="Hike cancelled"), 200
 
 
 @dashboard.route('/set-hike', methods=['POST'])

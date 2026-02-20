@@ -28,11 +28,12 @@
     "lucide-vue-next": "^0.395.0",
     "marked": "^13.0.0",
     "radix-vue": "^1.8.2",
-    "reka-ui": "^2.5.1",
+    "reka-ui": "^2.8.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.3.5",
+    "vaul-vue": "^0.4.1",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1",
     "vue-sonner": "^2.0.2"
