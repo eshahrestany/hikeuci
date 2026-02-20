@@ -2,14 +2,13 @@
 import { ref, watch } from 'vue'
 import {
   Dialog,
-  DialogContent,
+  DialogScrollContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 import TrailPicker from '@/components/admin/TrailPicker.vue'
@@ -55,7 +54,7 @@ async function confirm() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[600px]">
+    <DialogScrollContent class="sm:max-w-[600px]">
 
       <!-- Step 1: Select Trail -->
       <template v-if="step === 1">
@@ -64,7 +63,6 @@ async function confirm() {
           <DialogDescription>Select a new trail for this hike.</DialogDescription>
         </DialogHeader>
 
-        <Label>Trail</Label>
         <TrailPicker
           mode="single"
           :exclude-id="currentTrailId"
@@ -104,6 +102,6 @@ async function confirm() {
         </DialogFooter>
       </template>
 
-    </DialogContent>
+    </DialogScrollContent>
   </Dialog>
 </template>
