@@ -23,6 +23,7 @@ def get_active_hike_info():
     phase = (hike.phase or "").lower()
     if not phase:
         return_data["status"] = 'awaiting_vote_start'
+        return_data["vote_start"] = hike.get_localized_time('created_date').strftime("%c")
     else:
         return_data["status"] = phase
 
