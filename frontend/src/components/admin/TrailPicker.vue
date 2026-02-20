@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableHead, TableRow, TableHeader, TableCell, TableBody } from '@/components/ui/table'
 import { useAuth } from '@/lib/auth.js'
-import { difficulties } from '@/lib/common.js'
+import DifficultyBadge from '@/components/common/DifficultyBadge.vue'
 
 const props = defineProps({
   // 'single': modelValue is a trail object | null
@@ -34,7 +34,7 @@ async function load() {
       id: t.id,
       name: t.name,
       location: t.location,
-      difficulty: difficulties[t.difficulty] ?? t.difficulty,
+      difficulty: t.difficulty,
     }))
   } catch (e) {
     error.value = e?.message ?? 'Failed to load trails'
@@ -51,10 +51,11 @@ const filteredTrails = computed(() => {
     : allTrails.value
   const q = search.value.trim().toLowerCase()
   if (!q) return list
+  const difficultyLabels = ['easy', 'moderate', 'difficult', 'very difficult']
   return list.filter(t =>
     (t.name ?? '').toLowerCase().includes(q) ||
     (t.location ?? '').toLowerCase().includes(q) ||
-    String(t.difficulty ?? '').toLowerCase().includes(q)
+    (difficultyLabels[t.difficulty] ?? '').includes(q)
   )
 })
 
@@ -109,13 +110,13 @@ const selectionLabel = computed(() =>
         <p class="text-xs text-muted-foreground shrink-0">{{ selectionLabel }}</p>
       </div>
 
-      <Table>
+      <Table class="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead class="w-12">Select</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Difficulty</TableHead>
+            <TableHead class="w-10">Select</TableHead>
+            <TableHead class="w-2/5">Name</TableHead>
+            <TableHead class="w-2/5">Location</TableHead>
+            <TableHead class="w-28">Difficulty</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -143,9 +144,9 @@ const selectionLabel = computed(() =>
                 @change="toggle(t)"
               />
             </TableCell>
-            <TableCell class="font-medium">{{ t.name }}</TableCell>
-            <TableCell>{{ t.location || '—' }}</TableCell>
-            <TableCell>{{ t.difficulty ?? '—' }}</TableCell>
+            <TableCell class="font-medium whitespace-normal break-words">{{ t.name }}</TableCell>
+            <TableCell class="whitespace-normal break-words">{{ t.location || '—' }}</TableCell>
+            <TableCell><DifficultyBadge :difficulty="t.difficulty" /></TableCell>
           </TableRow>
 
           <TableRow v-if="!filteredTrails.length">

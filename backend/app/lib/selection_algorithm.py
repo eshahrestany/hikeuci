@@ -31,6 +31,7 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
                           )
 
     past_hikes = (Hike.query
+                  .filter(Hike.status == "past")
                   .filter(Hike.hike_date < current_hike.hike_date)
                   .filter(Hike.id != current_hike.id)
                   .order_by(Hike.hike_date.desc())

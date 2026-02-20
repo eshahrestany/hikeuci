@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -55,53 +54,53 @@ async function confirm() {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="sm:max-w-[600px]">
+    <DialogContent class="sm:max-w-[600px] max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
 
       <!-- Step 1: Select Trail -->
       <template v-if="step === 1">
-        <DialogHeader>
-          <DialogTitle>Switch Trail</DialogTitle>
-          <DialogDescription>Select a new trail for this hike.</DialogDescription>
-        </DialogHeader>
-
-        <Label>Trail</Label>
-        <TrailPicker
-          mode="single"
-          :exclude-id="currentTrailId"
-          v-model="selectedTrail"
-        />
-
-        <DialogFooter>
+        <div class="overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 p-6">
+          <DialogHeader>
+            <DialogTitle>Switch Trail</DialogTitle>
+            <DialogDescription>Select a new trail for this hike.</DialogDescription>
+          </DialogHeader>
+          <Label>Trail</Label>
+          <TrailPicker
+            mode="single"
+            :exclude-id="currentTrailId"
+            v-model="selectedTrail"
+          />
+        </div>
+        <div class="shrink-0 border-t flex justify-end gap-2 px-6 py-4">
           <Button variant="outline" @click="open = false">Cancel</Button>
           <Button :disabled="!selectedTrail" @click="step = 2">Next</Button>
-        </DialogFooter>
+        </div>
       </template>
 
       <!-- Step 2: Confirm -->
       <template v-else>
-        <DialogHeader>
-          <DialogTitle>Confirm Trail Switch</DialogTitle>
-          <DialogDescription>
-            Replace the current trail with <strong>{{ selectedTrail.name }}</strong>?
-          </DialogDescription>
-        </DialogHeader>
-
-        <div class="rounded-md border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-200">
-          <template v-if="phase === 'waiver'">
-            Members with confirmed signups will <strong>not</strong> be automatically notified of this change.
-            Any waivers already signed remain on file.
-          </template>
-          <template v-else>
-            Signed-up members will <strong>not</strong> be automatically notified of this change.
-          </template>
+        <div class="overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 p-6">
+          <DialogHeader>
+            <DialogTitle>Confirm Trail Switch</DialogTitle>
+            <DialogDescription>
+              Replace the current trail with <strong>{{ selectedTrail.name }}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <div class="rounded-md border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-200">
+            <template v-if="phase === 'waiver'">
+              Members with confirmed signups will <strong>not</strong> be automatically notified of this change.
+              Any waivers already signed remain on file.
+            </template>
+            <template v-else>
+              Signed-up members will <strong>not</strong> be automatically notified of this change.
+            </template>
+          </div>
         </div>
-
-        <DialogFooter>
+        <div class="shrink-0 border-t flex justify-end gap-2 px-6 py-4">
           <Button variant="outline" @click="step = 1">Back</Button>
           <Button variant="destructive" :disabled="submitting" @click="confirm">
             {{ submitting ? 'Switching…' : 'Switch Trail' }}
           </Button>
-        </DialogFooter>
+        </div>
       </template>
 
     </DialogContent>
