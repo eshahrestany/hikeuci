@@ -52,6 +52,6 @@ class MagicLinkManager:
             magic_link.first_used = datetime.now(timezone.utc)
         magic_link.used_count += 1
 
-        db.session.commit()
+        self.db.session.commit()
 
         return {'status': 'valid', 'magic_link': magic_link}
