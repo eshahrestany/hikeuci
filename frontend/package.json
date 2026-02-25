@@ -17,6 +17,8 @@
     "@tailwindcss/typography": "^0.5.13",
     "@tailwindcss/vite": "^4.0.0",
     "@tanstack/vue-table": "^8.21.3",
+    "@unovis/ts": "^1.6.4",
+    "@unovis/vue": "^1.6.4",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vuepic/vue-datepicker": "^11.0.2",
     "@vueuse/core": "^10.11.1",
