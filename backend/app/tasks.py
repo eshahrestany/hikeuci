@@ -9,6 +9,7 @@ from . import db
 from .lib import phases
 from .lib.email_connection import EmailConnection
 from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike, Waiver
+from .lib.model_utils import get_current_ay_start
 from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
@@ -47,7 +48,8 @@ def start_email_campaign(hike_id: int, waitlist=False) -> int:
     # 3) Populate tasks from all members
 
     if email_type in ("voting", "signup"):
-        members: List[Member] = Member.query.all()
+        ay_start = get_current_ay_start()
+        members: List[Member] = Member.query.filter(Member.joined_on >= ay_start).all()
     else:
         if waitlist:
             # send waitlist email only to waitlisted hikers
