@@ -11,7 +11,8 @@ def get_current_ay_start() -> datetime:
     now = datetime.now(timezone.utc)
     month = current_app.config["ACADEMIC_YEAR_START_MONTH"]
     day = current_app.config["ACADEMIC_YEAR_START_DAY"]
-    year = now.year if now.month >= month else now.year - 1
+    cutoff = now.replace(month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
+    year = now.year if now >= cutoff else now.year - 1
     return datetime(year, month, day, 0, 0, 0, tzinfo=timezone.utc)
 
 
