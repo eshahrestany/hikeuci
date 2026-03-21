@@ -67,20 +67,6 @@ const routes = [
         meta: { title: 'HikeUCI Dashboard History' },
         component: () => import('../views/admin/HikeHistory.vue'),
       },
-      {
-        path: 'history/hikes/:hikeId',
-        name: 'Hike Detail',
-        meta: { title: 'HikeUCI Hike Detail' },
-        component: () => import('../views/admin/HikeDetail.vue'),
-        props: true,
-      },
-      {
-        path: 'history/members/:memberId',
-        name: 'Member History',
-        meta: { title: 'HikeUCI Member History' },
-        component: () => import('../views/admin/MemberHistory.vue'),
-        props: true,
-      },
     ]
   },
   {

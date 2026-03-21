@@ -61,8 +61,7 @@ const defaultTrailState = {
   alltrails_url: '',
   trailhead_gmaps_url: '',
   trailhead_amaps_url: '',
-  description: '',
-  driving_distance_mi: null,
+  description: ''
 }
 
 
@@ -269,17 +268,6 @@ const handleClose = (openState) => {
           <div class="space-y-2">
             <Label for="required_water_liters">Required Water (liters)</Label>
             <NumberField id="required_water_liters" v-model="formData.required_water_liters" :min="0" :step="0.5">
-              <NumberFieldContent>
-                <NumberFieldDecrement />
-                <NumberFieldInput />
-                <NumberFieldIncrement />
-              </NumberFieldContent>
-            </NumberField>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="driving_distance_mi">Driving Distance to Trailhead (mi)</Label>
-            <NumberField id="driving_distance_mi" v-model="formData.driving_distance_mi" :min="0" :step="0.1">
               <NumberFieldContent>
                 <NumberFieldDecrement />
                 <NumberFieldInput />

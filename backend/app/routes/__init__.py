@@ -8,13 +8,11 @@ from .vehicles import vehicles
 from .members import members
 from .mail import mail
 from .trails import trails
-from .dashboard_history import dashboard_history
 
 
 def register_routes(app):
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(dashboard, url_prefix="/api/admin")
-    app.register_blueprint(dashboard_history, url_prefix="/api/admin/history")
     app.register_blueprint(trails, url_prefix="/api/admin/trails")
     app.register_blueprint(members, url_prefix="/api/admin/members")
     app.register_blueprint(images, url_prefix="/api/images")
