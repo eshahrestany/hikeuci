@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from .. import db
 from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
-from ..lib.model_utils import current_active_hike, update_waitlist
+from ..lib.model_utils import current_active_hike, get_current_ay_start, update_waitlist
 from ..lib import phases
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
@@ -287,7 +287,8 @@ def get_waitlist():
 @dashboard.route("/list-emails", methods=["GET"])
 @admin_required
 def list_all_emails():
-    return jsonify([m.email for m in Member.query.all()]), 200
+    ay_start = get_current_ay_start()
+    return jsonify([m.email for m in Member.query.filter(Member.joined_on >= ay_start).all()]), 200
 
 
 @dashboard.route("/list-emails-in-hike", methods=["GET"])
@@ -317,6 +318,8 @@ def list_emails_not_in_hike():
     # Members signed up for THIS active hike
     signed_ids = [mid for (mid,) in db.session.query(Signup.member_id).filter(Signup.hike_id == hike.id).all()]
 
+    ay_start = get_current_ay_start()
+
     # Waitlisted members for THIS active hike
     waitlisted_ids = [mid for (mid,) in db.session.query(Signup.member_id)
                       .filter(Signup.hike_id == hike.id, Signup.status == "waitlisted").all()]
@@ -328,9 +331,10 @@ def list_emails_not_in_hike():
         .all()
     )
 
-    # Members not signed up for THIS active hike
+    # Members not signed up for THIS active hike (current AY only)
     unsigned_members = (
         Member.query
+        .filter(Member.joined_on >= ay_start)
         .filter(~Member.id.in_(signed_ids))
         .order_by(Member.email)
         .all()

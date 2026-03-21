@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from ..decorators import admin_required
 from ..extensions import db
 from ..models import Member
+from ..lib.model_utils import get_current_ay_start
 
 members = Blueprint("members", __name__, url_prefix="members")
 email_pattern = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
@@ -20,7 +21,8 @@ def _serialize_member(member):
 @members.route("", methods=['GET'])
 @admin_required
 def list_members():
-    all_members = Member.query.order_by(Member.name.asc()).all()
+    ay_start = get_current_ay_start()
+    all_members = Member.query.filter(Member.joined_on >= ay_start).order_by(Member.name.asc()).all()
     return jsonify([_serialize_member(member) for member in all_members])
 
 @members.route("", methods=['POST'])
@@ -121,7 +123,9 @@ def batch_add_members():
     if seen_emails_in_batch:
         existing_emails = {
             result[0] for result in db.session.query(Member.email)
-            .filter(Member.email.in_(seen_emails_in_batch)).all()
+            .filter(Member.email.in_(seen_emails_in_batch))
+            .filter(Member.joined_on >= get_current_ay_start())
+            .all()
         }
 
         if existing_emails:
