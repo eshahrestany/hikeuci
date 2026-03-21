@@ -14,7 +14,7 @@ import TrailsForm from "@/components/admin/TrailsForm.vue";
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
 import Link from "@/components/common/Link.vue";
 import {difficulties} from "@/lib/common.js"
-import {PlusCircle} from "lucide-vue-next"
+import {PlusCircle, Pencil} from "lucide-vue-next"
 import {Input} from "@/components/ui/input/index.js";
 
 const { fetchWithAuth } = useAuth()
@@ -118,13 +118,13 @@ const columns = [
   },
   {
     id: 'edit',
-    header: 'Modify',
+    header: '',
     cell: ({ row }) =>
       h(Button, {
         variant: 'outline',
         size: 'sm',
         onClick: () => openForm(row.original)
-      }, () => 'Edit'),
+      }, () => [h(Pencil, { class: 'h-3.5 w-3.5 mr-1' }), 'Edit Trail']),
   }
 ];
 

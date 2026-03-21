@@ -34,6 +34,7 @@ def _serialize_trail(t):
         "trailhead_amaps_url": t.trailhead_amaps_url,
         "description": t.description,
         "has_elevation_data": t.elevation_data is not None,
+        "driving_distance_mi": t.driving_distance_mi,
     }
 
 
@@ -84,7 +85,8 @@ def create_trail():
         alltrails_url=data.get('alltrails_url'),
         trailhead_gmaps_url=data.get('trailhead_gmaps_url'),
         trailhead_amaps_url=data.get('trailhead_amaps_url'),
-        description=data.get('description')
+        description=data.get('description'),
+        driving_distance_mi=data.get('driving_distance_mi'),
     )
     db.session.add(new_trail)
     db.session.commit()
@@ -110,6 +112,8 @@ def update_trail(trail_id):
     trail.trailhead_gmaps_url = data.get('trailhead_gmaps_url', trail.trailhead_gmaps_url)
     trail.trailhead_amaps_url = data.get('trailhead_amaps_url', trail.trailhead_amaps_url)
     trail.description = data.get('description', trail.description)
+    if 'driving_distance_mi' in data:
+        trail.driving_distance_mi = data['driving_distance_mi'] or None
 
     db.session.commit()
     return jsonify(_serialize_trail(trail))

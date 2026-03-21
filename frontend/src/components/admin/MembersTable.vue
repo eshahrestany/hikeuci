@@ -12,11 +12,13 @@ import {ref, h, computed, onMounted, watch} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
 import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
-import {PlusCircle, ListPlus} from "lucide-vue-next"
+import {PlusCircle, ListPlus, History, Pencil} from "lucide-vue-next"
+import { useRouter } from "vue-router"
 import {Input} from "@/components/ui/input/index.js";
 import { Badge } from "@/components/ui/badge";
 
 
+const router = useRouter()
 const {fetchWithAuth } = useAuth()
 
 const loading = ref(true)
@@ -95,13 +97,20 @@ const columns = [
   },
   {
     id: 'edit',
-    header: 'Modify',
+    header: '',
     cell: ({ row }) =>
-      h(Button, {
-        variant: 'outline',
-        size: 'sm',
-        onClick: () => openForm(row.original)
-      }, () => 'Edit'),
+      h('div', { class: 'flex items-center gap-2' }, [
+        h(Button, {
+          variant: 'outline',
+          size: 'sm',
+          onClick: () => openForm(row.original)
+        }, () => [h(Pencil, { class: 'h-3.5 w-3.5 mr-1' }), 'Edit Member']),
+        h(Button, {
+          variant: 'outline',
+          size: 'sm',
+          onClick: () => router.push({ name: 'Member History', params: { memberId: row.original.id } })
+        }, () => [h(History, { class: 'h-3.5 w-3.5 mr-1' }), 'Signup History']),
+      ]),
   }
 ];
 
