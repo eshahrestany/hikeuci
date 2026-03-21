@@ -1,6 +1,4 @@
 from typing import List
-from ..models import Hike, Signup, Vehicle
-from typing import List
 
 from ..models import Hike, Signup, Vehicle
 
@@ -18,6 +16,7 @@ def calc_passenger_capacity(drivers: List[Signup]) -> int:
 
 
 def run(hike_id: int) -> tuple[List[int], List[int]]:
+    from .model_utils import get_current_ay_start
     current_hike = Hike.query.get(hike_id)
     confirmed: List[int] = []
     waitlisted: List[int] = []
@@ -30,8 +29,10 @@ def run(hike_id: int) -> tuple[List[int], List[int]]:
                           .all()
                           )
 
+    ay_start = get_current_ay_start()
     past_hikes = (Hike.query
                   .filter(Hike.status == "past")
+                  .filter(Hike.hike_date >= ay_start)
                   .filter(Hike.hike_date < current_hike.hike_date)
                   .filter(Hike.id != current_hike.id)
                   .order_by(Hike.hike_date.desc())

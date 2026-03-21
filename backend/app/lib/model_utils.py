@@ -1,7 +1,18 @@
+from datetime import datetime, timezone
+
 from flask import current_app
 from .selection_algorithm import calc_passenger_capacity
 from .. import db
 from ..models import Hike, Signup
+
+
+def get_current_ay_start() -> datetime:
+    """Returns the UTC datetime of the start of the current academic year (Aug 1, 00:00 UTC)."""
+    now = datetime.now(timezone.utc)
+    month = current_app.config["ACADEMIC_YEAR_START_MONTH"]
+    day = current_app.config["ACADEMIC_YEAR_START_DAY"]
+    year = now.year if now.month >= month else now.year - 1
+    return datetime(year, month, day, 0, 0, 0, tzinfo=timezone.utc)
 
 
 def current_active_hike() -> Hike | None:
