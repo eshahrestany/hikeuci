@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { CheckIcon, ChevronsUpDownIcon, Calculator, Download } from 'lucide-vue-next'
+import { CheckIcon, ChevronsUpDownIcon, Calculator, Download, Loader2 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -34,6 +35,7 @@ import HikeHistoryTable from '@/components/admin/HikeHistoryTable.vue'
 import { toast } from 'vue-sonner'
 import { useAuth } from '@/lib/auth.js'
 
+const router = useRouter()
 const { fetchWithAuth, postWithAuth } = useAuth()
 
 const loading = ref(true)
@@ -42,6 +44,8 @@ const selectedAY = ref('')
 const open = ref(false)
 const hikes = ref([])
 const hikesLoading = ref(false)
+const loadError = ref('')
+const attendanceFrequency = ref(null)
 
 // Reimbursement state
 const selectedHikeIds = ref([])
@@ -50,6 +54,32 @@ const ratePerMile = ref('0.00')
 const reimbursementLoading = ref(false)
 const resultsDialogOpen = ref(false)
 const reimbursementResults = ref(null)
+
+// Frequency drill-down state
+const frequencyDialogOpen = ref(false)
+const frequencyDialogCount = ref(0)
+const frequencyDialogMembers = ref([])
+const frequencyDialogLoading = ref(false)
+
+async function onSelectFrequency(count) {
+  frequencyDialogCount.value = count
+  frequencyDialogOpen.value = true
+  frequencyDialogLoading.value = true
+  frequencyDialogMembers.value = []
+  try {
+    const res = await fetchWithAuth(
+      `/api/admin/history/attendance-frequency/members?ay=${encodeURIComponent(selectedAY.value)}&count=${count}`
+    )
+    if (!res.ok) throw Error(res.status)
+    const data = await res.json()
+    frequencyDialogMembers.value = data.members
+  } catch {
+    toast.error('Failed to load members')
+    frequencyDialogOpen.value = false
+  } finally {
+    frequencyDialogLoading.value = false
+  }
+}
 
 const selectedLabel = computed(() =>
   academicYears.value.find(ay => ay === selectedAY.value) || 'Select year...'
@@ -62,6 +92,7 @@ function selectAY(val) {
 
 async function loadAcademicYears() {
   loading.value = true
+  loadError.value = ''
   try {
     const res = await fetchWithAuth('/api/admin/history/academic-years')
     if (!res.ok) throw Error(res.status)
@@ -71,6 +102,8 @@ async function loadAcademicYears() {
   } catch (e) {
     console.error('Failed to load academic years:', e)
     academicYears.value = []
+    loadError.value = 'Failed to load academic years.'
+    toast.error('Failed to load academic years')
   } finally {
     loading.value = false
   }
@@ -79,13 +112,21 @@ async function loadAcademicYears() {
 async function loadHikes(ay) {
   if (!ay) return
   hikesLoading.value = true
+  loadError.value = ''
   try {
-    const res = await fetchWithAuth(`/api/admin/history/hikes?ay=${encodeURIComponent(ay)}`)
-    if (!res.ok) throw Error(res.status)
-    hikes.value = await res.json()
+    const [hikesRes, freqRes] = await Promise.all([
+      fetchWithAuth(`/api/admin/history/hikes?ay=${encodeURIComponent(ay)}`),
+      fetchWithAuth(`/api/admin/history/attendance-frequency?ay=${encodeURIComponent(ay)}`),
+    ])
+    if (!hikesRes.ok) throw Error(hikesRes.status)
+    hikes.value = await hikesRes.json()
+    attendanceFrequency.value = freqRes.ok ? await freqRes.json() : null
   } catch (e) {
     console.error('Failed to load hikes:', e)
     hikes.value = []
+    attendanceFrequency.value = null
+    loadError.value = 'Failed to load hike history.'
+    toast.error('Failed to load hike history')
   } finally {
     hikesLoading.value = false
   }
@@ -127,9 +168,9 @@ function exportReimbursementsCSV() {
 
   for (const r of rows) {
     csvRows.push([
-      `"${r.name}"`,
-      `"${r.email}"`,
-      `"${r.phone}"`,
+      `"${(r.name || '').replace(/"/g, '""')}"`,
+      `"${(r.email || '').replace(/"/g, '""')}"`,
+      `"${(r.phone || '').replace(/"/g, '""')}"`,
       r.hikes_driven,
       r.total_miles,
       r.reimbursement.toFixed(2),
@@ -206,7 +247,7 @@ onMounted(loadAcademicYears)
       <CardContent>
         <Skeleton v-if="hikesLoading" class="h-64 w-full" />
         <template v-else-if="hikes.length">
-          <HikeHistoryCharts :hikes="hikes" />
+          <HikeHistoryCharts :hikes="hikes" :attendance-frequency="attendanceFrequency" @select-frequency="onSelectFrequency" />
           <div class="flex items-center justify-end mb-3">
             <Button
               :disabled="selectedHikeIds.length === 0"
@@ -219,6 +260,9 @@ onMounted(loadAcademicYears)
           </div>
           <HikeHistoryTable :hikes="hikes" @update:selected-hike-ids="selectedHikeIds = $event" />
         </template>
+        <p v-else-if="loadError" class="text-sm text-destructive text-center py-8">
+          {{ loadError }}
+        </p>
         <p v-else-if="selectedAY" class="text-sm text-muted-foreground text-center py-8">
           No past hikes found for {{ selectedAY }}.
         </p>
@@ -309,6 +353,48 @@ onMounted(loadAcademicYears)
           >
             <Download class="h-4 w-4 mr-1" /> Export CSV
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Frequency Drill-Down Dialog -->
+    <Dialog v-model:open="frequencyDialogOpen">
+      <DialogContent class="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            Members with {{ frequencyDialogCount }} hike{{ frequencyDialogCount !== 1 ? 's' : '' }} attended
+          </DialogTitle>
+          <DialogDescription>
+            {{ frequencyDialogMembers.length }} member{{ frequencyDialogMembers.length !== 1 ? 's' : '' }}
+            in {{ selectedAY }}
+          </DialogDescription>
+        </DialogHeader>
+        <div v-if="frequencyDialogLoading" class="flex justify-center py-8">
+          <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+        <div v-else-if="frequencyDialogMembers.length" class="border rounded-sm">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
+                v-for="m in frequencyDialogMembers"
+                :key="m.id"
+                class="cursor-pointer hover:bg-muted/50"
+                @click="frequencyDialogOpen = false; router.push({ name: 'Member History', params: { memberId: m.id } })"
+              >
+                <TableCell>{{ m.name }}</TableCell>
+                <TableCell>{{ m.email }}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" @click="frequencyDialogOpen = false">Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

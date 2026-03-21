@@ -46,6 +46,9 @@ def get_academic_years():
 
 def _parse_ay(ay_str: str) -> tuple[datetime, datetime]:
     """Parse '2025-2026' into (ay_start, ay_end) as UTC datetimes."""
+    import re
+    if not re.fullmatch(r"\d{4}-\d{4}", ay_str):
+        raise ValueError(f"Invalid academic year format: {ay_str}")
     start_year = int(ay_str.split("-")[0])
     ay_start = datetime(start_year, 8, 1, tzinfo=timezone.utc)
     ay_end = datetime(start_year + 1, 8, 1, tzinfo=timezone.utc)
@@ -86,9 +89,10 @@ def get_hikes():
                 Signup.hike_id,
                 func.sum(case((Signup.status == "confirmed", 1), else_=0)).label("num_confirmed"),
                 func.sum(case((Signup.status == "waitlisted", 1), else_=0)).label("num_waitlisted"),
-                func.sum(case((Signup.is_checked_in == True, 1), else_=0)).label("num_checked_in"),
+                func.sum(case((Signup.is_checked_in.is_(True), 1), else_=0)).label("num_checked_in"),
                 func.sum(case((and_(Signup.transport_type == "driver", Signup.status == "confirmed"), 1), else_=0)).label("num_drivers"),
                 func.sum(case((and_(Signup.transport_type == "passenger", Signup.status == "confirmed"), 1), else_=0)).label("num_passengers"),
+                func.sum(case((and_(Signup.transport_type == "passenger", Signup.is_checked_in.is_(True)), 1), else_=0)).label("num_checked_in_passengers"),
             )
             .filter(Signup.hike_id.in_(hike_ids))
             .group_by(Signup.hike_id)
@@ -101,10 +105,12 @@ def get_hikes():
                 "num_checked_in": int(row.num_checked_in or 0),
                 "num_drivers": int(row.num_drivers or 0),
                 "num_passengers": int(row.num_passengers or 0),
+                "num_checked_in_passengers": int(row.num_checked_in_passengers or 0),
             }
 
     # Batch query passenger capacity per hike (sum of vehicle seats for confirmed drivers)
     capacity_by_hike = {}
+    checked_in_capacity_by_hike = {}
     if hike_ids:
         cap_rows = (
             db.session.query(
@@ -123,6 +129,24 @@ def get_hikes():
         for row in cap_rows:
             capacity_by_hike[row.hike_id] = int(row.passenger_capacity)
 
+        # Capacity from checked-in drivers only
+        checked_in_cap_rows = (
+            db.session.query(
+                Signup.hike_id,
+                func.coalesce(func.sum(Vehicle.passenger_seats), 0).label("passenger_capacity"),
+            )
+            .join(Vehicle, Signup.vehicle_id == Vehicle.id)
+            .filter(
+                Signup.hike_id.in_(hike_ids),
+                Signup.transport_type == "driver",
+                Signup.is_checked_in.is_(True),
+            )
+            .group_by(Signup.hike_id)
+            .all()
+        )
+        for row in checked_in_cap_rows:
+            checked_in_capacity_by_hike[row.hike_id] = int(row.passenger_capacity)
+
     result = []
     for hike, trail in hikes:
         s = signup_stats.get(hike.id, {
@@ -131,6 +155,7 @@ def get_hikes():
             "num_checked_in": 0,
             "num_drivers": 0,
             "num_passengers": 0,
+            "num_checked_in_passengers": 0,
         })
         num_confirmed = s["num_confirmed"]
         num_checked_in = s["num_checked_in"]
@@ -151,7 +176,9 @@ def get_hikes():
             "attendance_rate": attendance_rate,
             "num_drivers": s["num_drivers"],
             "num_passengers": s["num_passengers"],
+            "num_checked_in_passengers": s["num_checked_in_passengers"],
             "passenger_capacity": passenger_capacity,
+            "checked_in_capacity": checked_in_capacity_by_hike.get(hike.id, 0),
         })
 
     return jsonify(result)
@@ -160,11 +187,11 @@ def get_hikes():
 @dashboard_history.route("/hikes/<int:hike_id>", methods=["GET"])
 @admin_required
 def get_hike_detail(hike_id: int):
-    hike = Hike.query.get(hike_id)
+    hike = db.session.get(Hike, hike_id)
     if not hike or hike.status not in ("past", "cancelled"):
         return jsonify({"error": "Hike not found"}), 404
 
-    trail = Trail.query.get(hike.trail_id) if hike.trail_id else None
+    trail = db.session.get(Trail, hike.trail_id) if hike.trail_id else None
 
     rows = (
         db.session.query(
@@ -224,7 +251,7 @@ def get_hike_detail(hike_id: int):
 @dashboard_history.route("/members/<int:member_id>", methods=["GET"])
 @admin_required
 def get_member_history(member_id: int):
-    member = Member.query.get(member_id)
+    member = db.session.get(Member, member_id)
     if not member:
         return jsonify({"error": "Member not found"}), 404
 
@@ -301,7 +328,7 @@ def calculate_reimbursements():
 
     if not hike_ids:
         return jsonify(error="No hikes selected"), 400
-    if rate_per_mile is None or rate_per_mile <= 0:
+    if not isinstance(rate_per_mile, (int, float)) or rate_per_mile <= 0:
         return jsonify(error="Invalid reimbursement rate"), 400
 
     # Validate hikes and check driving distances
@@ -325,16 +352,17 @@ def calculate_reimbursements():
         .filter(
             Signup.hike_id.in_(hike_ids),
             Signup.transport_type == "driver",
-            Signup.is_checked_in == True,
+            Signup.is_checked_in.is_(True),
         )
         .all()
     )
 
     # Aggregate miles per member
+    hike_map = {h.id: h for h in hikes}
     member_miles = {}
     member_hike_count = {}
     for hike_id, member_id in driver_signups:
-        hike = next(h for h in hikes if h.id == hike_id)
+        hike = hike_map[hike_id]
         trail = trails[hike.trail_id]
         round_trip = trail.driving_distance_mi * 2
 
@@ -368,3 +396,106 @@ def calculate_reimbursements():
         total_reimbursement=total_reimbursement,
         total_miles=total_miles,
     )
+
+
+@dashboard_history.route("/attendance-frequency", methods=["GET"])
+@admin_required
+def get_attendance_frequency():
+    ay = request.args.get("ay")
+    if not ay:
+        return jsonify({"error": "Missing 'ay' query parameter"}), 400
+
+    try:
+        ay_start, ay_end = _parse_ay(ay)
+    except (ValueError, IndexError):
+        return jsonify({"error": "Invalid academic year format"}), 400
+
+    # Count how many hikes each member checked into within the academic year
+    member_counts = (
+        db.session.query(
+            Signup.member_id,
+            func.count(Signup.id).label("hikes_attended"),
+        )
+        .join(Hike, Signup.hike_id == Hike.id)
+        .filter(
+            Hike.status == "past",
+            Hike.hike_date >= ay_start,
+            Hike.hike_date < ay_end,
+            Signup.is_checked_in.is_(True),
+        )
+        .group_by(Signup.member_id)
+        .subquery()
+    )
+
+    # Group by attendance count to get the frequency distribution
+    freq_rows = (
+        db.session.query(
+            member_counts.c.hikes_attended,
+            func.count().label("num_members"),
+        )
+        .group_by(member_counts.c.hikes_attended)
+        .order_by(member_counts.c.hikes_attended)
+        .all()
+    )
+
+    distribution = [
+        {"hikes_attended": row.hikes_attended, "num_members": row.num_members}
+        for row in freq_rows
+    ]
+
+    total_members = sum(row["num_members"] for row in distribution)
+    repeat_members = sum(row["num_members"] for row in distribution if row["hikes_attended"] > 1)
+    repeat_rate = round(repeat_members / total_members, 2) if total_members > 0 else 0
+
+    return jsonify({
+        "distribution": distribution,
+        "total_members": total_members,
+        "repeat_rate": repeat_rate,
+    })
+
+
+@dashboard_history.route("/attendance-frequency/members", methods=["GET"])
+@admin_required
+def get_attendance_frequency_members():
+    ay = request.args.get("ay")
+    count = request.args.get("count", type=int)
+    if not ay or count is None or count < 1:
+        return jsonify({"error": "Missing or invalid 'ay'/'count' parameters"}), 400
+
+    try:
+        ay_start, ay_end = _parse_ay(ay)
+    except (ValueError, IndexError):
+        return jsonify({"error": "Invalid academic year format"}), 400
+
+    # Subquery: member_id -> hikes_attended count
+    member_counts = (
+        db.session.query(
+            Signup.member_id,
+            func.count(Signup.id).label("hikes_attended"),
+        )
+        .join(Hike, Signup.hike_id == Hike.id)
+        .filter(
+            Hike.status == "past",
+            Hike.hike_date >= ay_start,
+            Hike.hike_date < ay_end,
+            Signup.is_checked_in.is_(True),
+        )
+        .group_by(Signup.member_id)
+        .having(func.count(Signup.id) == count)
+        .subquery()
+    )
+
+    members = (
+        db.session.query(Member.id, Member.name, Member.email)
+        .join(member_counts, Member.id == member_counts.c.member_id)
+        .order_by(Member.name)
+        .all()
+    )
+
+    return jsonify({
+        "count": count,
+        "members": [
+            {"id": m.id, "name": m.name, "email": m.email}
+            for m in members
+        ],
+    })

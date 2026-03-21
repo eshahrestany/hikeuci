@@ -12,7 +12,10 @@ import {
 
 const props = defineProps({
   hikes: { type: Array, required: true },
+  attendanceFrequency: { type: Object, default: null },
 })
+
+const emit = defineEmits(['select-frequency'])
 
 function formatShortDate(isoStr) {
   const d = new Date(isoStr)
@@ -68,14 +71,14 @@ const transportData = computed(() =>
     label: formatShortDate(h.hike_date),
     drivers: h.num_drivers,
     passengers: h.num_passengers,
-    selfTransport: h.num_confirmed - h.num_drivers - h.num_passengers,
+    selfTransport: Math.max(0, h.num_confirmed - h.num_drivers - h.num_passengers),
     waitlisted: h.num_waitlisted,
   }))
 )
 
 const transportConfig = {
-  drivers: { label: 'Drivers', color: 'hsl(221, 83%, 53%)' },
-  passengers: { label: 'Passengers', color: 'hsl(262, 83%, 58%)' },
+  drivers: { label: 'Drivers', color: 'hsl(220, 100%, 78%)' },
+  passengers: { label: 'Passengers', color: 'hsl(275, 83%, 58%)' },
   selfTransport: { label: 'Self-Transport', color: 'hsl(25, 95%, 53%)' },
   waitlisted: { label: 'Waitlisted', color: 'hsl(0, 84%, 60%)' },
 }
@@ -83,14 +86,6 @@ const transportConfig = {
 const transportTooltip = componentToString(transportConfig, ChartTooltipContent, {
   labelFormatter: (i) => transportData.value[i]?.label ?? '',
 })
-
-// Difficulty colors
-const difficultyColors = [
-  'hsl(142, 71%, 45%)',  // Easy - green
-  'hsl(45, 93%, 47%)',   // Moderate - yellow
-  'hsl(25, 95%, 53%)',   // Difficult - orange
-  'hsl(0, 84%, 60%)',    // Very Difficult - red
-]
 
 // Signups by difficulty (grouped bar: signups vs checked in)
 const signupsByDifficultyData = computed(() => {
@@ -114,41 +109,33 @@ const signupsByDifficultyTooltip = componentToString(signupsByDifficultyConfig, 
   labelFormatter: (i) => signupsByDifficultyData.value[i]?.label ?? '',
 })
 
-// Attendance rate by difficulty
-const attendanceByDifficultyData = computed(() => {
-  const buckets = {}
-  for (const h of sortedHikes.value) {
-    if (h.trail_difficulty == null) continue
-    const label = difficulties[h.trail_difficulty] || 'Unknown'
-    if (!buckets[label]) buckets[label] = { label, confirmed: 0, checked_in: 0, difficulty: h.trail_difficulty }
-    buckets[label].confirmed += h.num_confirmed
-    buckets[label].checked_in += h.num_checked_in
-  }
-  return Object.values(buckets)
-    .sort((a, b) => a.difficulty - b.difficulty)
-    .map(b => ({
-      label: b.label,
-      attendance: b.confirmed > 0 ? Math.round((b.checked_in / b.confirmed) * 100) : 0,
-    }))
+// Attendance frequency distribution
+const frequencyData = computed(() => {
+  if (!props.attendanceFrequency?.distribution?.length) return []
+  return props.attendanceFrequency.distribution.map(d => ({
+    label: `${d.hikes_attended}`,
+    members: d.num_members,
+  }))
 })
 
-const attendanceByDifficultyConfig = {
-  attendance: { label: 'Attendance %', color: 'hsl(142, 71%, 45%)' },
+const frequencyConfig = {
+  members: { label: 'Members', color: 'hsl(221, 83%, 53%)' },
 }
 
-const attendanceByDifficultyTooltip = componentToString(attendanceByDifficultyConfig, ChartTooltipContent, {
-  labelFormatter: (i) => attendanceByDifficultyData.value[i]?.label ?? '',
+const frequencyTooltip = componentToString(frequencyConfig, ChartTooltipContent, {
+  labelFormatter: (i) => {
+    const n = frequencyData.value[i]?.label
+    return n ? `${n} hike${n === '1' ? '' : 's'}` : ''
+  },
 })
 
 // Capacity utilization over time
-// (num_passengers) / passenger_capacity * 100
-// Over 100% means there was a waitlist
+// checked-in passengers / checked-in driver capacity * 100
 const capacityData = computed(() =>
   sortedHikes.value
-    .filter(h => h.passenger_capacity > 0)
+    .filter(h => h.checked_in_capacity > 0)
     .map(h => {
-      const demand = h.num_passengers + h.num_waitlisted
-      const utilization = Math.round((demand / h.passenger_capacity) * 100)
+      const utilization = Math.round((h.num_checked_in_passengers / h.checked_in_capacity) * 100)
       return {
         label: formatShortDate(h.hike_date),
         utilization,
@@ -297,8 +284,8 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
         </VisXYContainer>
       </ChartContainer>
       <div class="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground justify-center">
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(221, 83%, 53%)" /> Drivers</span>
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(262, 83%, 58%)" /> Passengers</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(220, 100%, 78%)" /> Drivers</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(275, 83%, 58%)" /> Passengers</span>
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(25, 95%, 53%)" /> Self</span>
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background: hsl(0, 84%, 60%)" /> Waitlisted</span>
       </div>
@@ -384,15 +371,19 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
       </div>
     </div>
 
-    <!-- Attendance Rate by Difficulty -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Attendance by Difficulty</h3>
-      <ChartContainer :config="attendanceByDifficultyConfig" class="h-48 aspect-auto" cursor>
-        <VisXYContainer :data="attendanceByDifficultyData" :y-domain="[0, 100]">
+    <!-- Hiker Frequency Distribution -->
+    <div v-if="frequencyData.length" class="border rounded-md p-4">
+      <h3 class="text-lg font-bold mb-1">Hiker Frequency</h3>
+      <p v-if="attendanceFrequency" class="text-xs text-muted-foreground mb-3">
+        {{ Math.round(attendanceFrequency.repeat_rate * 100) }}% repeat rate
+        ({{ attendanceFrequency.total_members }} unique hikers)
+      </p>
+      <ChartContainer :config="frequencyConfig" class="h-48 aspect-auto" cursor>
+        <VisXYContainer :data="frequencyData">
           <VisStackedBar
             :x="(_, i) => i"
-            :y="[(d) => d.attendance]"
-            :color="attendanceByDifficultyData.map((d, i) => difficultyColors[i] || 'hsl(221, 83%, 53%)')"
+            :y="[(d) => d.members]"
+            :color="['hsl(221, 83%, 53%)']"
             :bar-padding="0.35"
             :rounded-corners="2"
           />
@@ -401,20 +392,31 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
             :tick-line="false"
             :domain-line="false"
             :grid-line="false"
-            :num-ticks="attendanceByDifficultyData.length"
-            :tick-format="(i) => attendanceByDifficultyData[i]?.label ?? ''"
+            :num-ticks="frequencyData.length"
+            :tick-format="() => ''"
           />
           <VisAxis
             type="y"
             :num-ticks="4"
             :tick-line="false"
             :domain-line="false"
-            :tick-format="(d) => `${d}%`"
           />
           <ChartTooltip />
-          <ChartCrosshair :template="attendanceByDifficultyTooltip" color="hsl(142, 71%, 45%)" />
+          <ChartCrosshair :template="frequencyTooltip" color="hsl(221, 83%, 53%)" />
         </VisXYContainer>
       </ChartContainer>
+      <div class="flex justify-between mt-1 px-6">
+        <button
+          v-for="d in frequencyData"
+          :key="d.label"
+          class="flex-1 text-center text-xs py-1.5 rounded-sm cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+          @click="emit('select-frequency', parseInt(d.label))"
+        >
+          {{ d.label }}x
+          <span class="block text-[10px] opacity-70">{{ d.members }}</span>
+        </button>
+      </div>
+      <p class="text-[10px] text-muted-foreground text-center mt-0.5">Hikes attended (click to view)</p>
     </div>
   </div>
 </template>

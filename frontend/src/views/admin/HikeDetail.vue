@@ -215,9 +215,9 @@ function exportCSV() {
 
   for (const s of rows) {
     csvRows.push([
-      `"${s.name}"`,
-      `"${s.email}"`,
-      `"${s.phone || ''}"`,
+      `"${(s.name || '').replace(/"/g, '""')}"`,
+      `"${(s.email || '').replace(/"/g, '""')}"`,
+      `"${(s.phone || '').replace(/"/g, '""')}"`,
       s.transport_type,
       s.signup_status,
       s.is_checked_in ? 'Yes' : 'No',
