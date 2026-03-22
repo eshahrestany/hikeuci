@@ -74,7 +74,6 @@ def cancel_hike(hike_id: int):
     MagicLink.query.filter_by(hike_id=ah.id).delete()
 
     # reset any vote candidates that were set for this hike's voting phase
-    # (unused, currently vote phase can't be canceled in the frontend)
     Trail.query.filter_by(is_active_vote_candidate=True).update(
         {Trail.is_active_vote_candidate: False}
     )

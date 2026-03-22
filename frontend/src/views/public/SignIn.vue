@@ -40,8 +40,8 @@
         throw new Error(body.error || 'Authentication failed')
       }
 
-      // 2) Backend sent back JWT
-      setUser({ token: body.token })
+      // 2) Backend sent back JWT + refresh token
+      setUser({ token: body.token, refreshToken: body.refreshToken })
 
       console.log('✅ Logged in, user state is now:', state.user)
       router.replace('/admin')

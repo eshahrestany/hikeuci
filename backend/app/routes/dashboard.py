@@ -141,6 +141,56 @@ def get_active_hike_info():
     return jsonify(return_data), 200
 
 
+@dashboard.route('/hike/vote-trail', methods=['PUT'])
+@admin_required
+def swap_vote_trail():
+    """Swap one of the three voting candidate trails for another, migrating existing votes."""
+    hike = current_active_hike()
+    if not hike:
+        return jsonify(error="No active hike"), 400
+
+    if hike.phase != 'voting':
+        return jsonify(error="Vote trail can only be swapped during voting phase"), 400
+
+    data = request.get_json() or {}
+    old_trail_id = data.get('old_trail_id')
+    new_trail_id = data.get('new_trail_id')
+
+    if old_trail_id is None or new_trail_id is None:
+        return jsonify(error="Missing old_trail_id or new_trail_id"), 400
+
+    if old_trail_id == new_trail_id:
+        return jsonify(error="New trail must be different from old trail"), 400
+
+    old_trail = Trail.query.get(old_trail_id)
+    new_trail = Trail.query.get(new_trail_id)
+
+    if not old_trail or not old_trail.is_active_vote_candidate:
+        return jsonify(error="Old trail is not an active vote candidate"), 400
+    if not new_trail:
+        return jsonify(error="New trail not found"), 404
+    if new_trail.is_active_vote_candidate:
+        return jsonify(error="New trail is already an active vote candidate"), 400
+
+    # Swap candidate status
+    old_trail.is_active_vote_candidate = False
+    new_trail.is_active_vote_candidate = True
+
+    # Migrate existing votes from old trail to new trail
+    votes_updated = Vote.query.filter_by(hike_id=hike.id, trail_id=old_trail_id).update(
+        {Vote.trail_id: new_trail_id}
+    )
+
+    db.session.commit()
+
+    return jsonify(
+        old_trail_id=old_trail.id,
+        new_trail_id=new_trail.id,
+        new_trail_name=new_trail.name,
+        votes_migrated=votes_updated,
+    ), 200
+
+
 @dashboard.route('/hike/trail', methods=['PUT'])
 @admin_required
 def switch_hike_trail():
@@ -342,7 +392,7 @@ def list_emails_not_in_hike():
 
     # Combine unsigned and waitlisted members
     rows = unsigned_members + waitlisted_members
-    return jsonify([{"member_id": m.id, "email": m.email} for m in rows]), 200
+    return jsonify([{"member_id": m.id, "email": m.email, "name": m.name} for m in rows]), 200
 
 
 @dashboard.route('/check-in', methods=['POST', 'DELETE'])

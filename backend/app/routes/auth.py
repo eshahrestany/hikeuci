@@ -9,6 +9,31 @@ from .. import db
 auth: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
+def _create_access_token(admin: AdminUser) -> str:
+    now: datetime = datetime.now(timezone.utc)
+    exp: datetime = now + timedelta(minutes=int(current_app.config["JWT_ACCESS_EXP_MINUTES"]))
+    payload: Dict[str, Any] = {
+        "sub": str(admin.id),
+        "email": admin.email,
+        "type": "access",
+        "iat": now,
+        "exp": exp,
+    }
+    return jwt.encode(payload, current_app.config["JWT_SECRET_KEY"], algorithm=current_app.config["JWT_ALGORITHM"])
+
+
+def _create_refresh_token(admin: AdminUser) -> str:
+    now: datetime = datetime.now(timezone.utc)
+    exp: datetime = now + timedelta(days=int(current_app.config["JWT_REFRESH_EXP_DAYS"]))
+    payload: Dict[str, Any] = {
+        "sub": str(admin.id),
+        "type": "refresh",
+        "iat": now,
+        "exp": exp,
+    }
+    return jwt.encode(payload, current_app.config["JWT_SECRET_KEY"], algorithm=current_app.config["JWT_ALGORITHM"])
+
+
 @auth.route("/google", methods=["POST"])
 def google_login() -> tuple[Response, int]:
     data: Optional[Dict[str, Any]] = request.get_json()
@@ -43,20 +68,38 @@ def google_login() -> tuple[Response, int]:
         admin.provider_user_id = sub
         db.session.commit()
 
-    # 5) Prepare JWT to send to client
-    now: datetime = datetime.now(timezone.utc)
-    exp: datetime = now + timedelta(hours=int(current_app.config.get("JWT_EXP_HOURS")))
-    payload: Dict[str, Any] = {
-        "sub": str(admin.id),
-        "email": admin.email,
-        "iat": now,
-        "exp": exp
-    }
+    # 5) Issue access + refresh tokens
+    access_token: str = _create_access_token(admin)
+    refresh_token: str = _create_refresh_token(admin)
 
-    token: str = jwt.encode(
-        payload,
-        current_app.config.get("JWT_SECRET_KEY"),
-        algorithm=current_app.config.get("JWT_ALGORITHM", "HS256")
-    )
+    return jsonify(token=access_token, refreshToken=refresh_token), 200
 
-    return jsonify(token=token), 200
+
+@auth.route("/refresh", methods=["POST"])
+def refresh() -> tuple[Response, int]:
+    data: Optional[Dict[str, Any]] = request.get_json()
+    refresh_token: Optional[str] = data.get("refreshToken") if data else None
+    if not refresh_token:
+        return jsonify({"error": "Missing refreshToken"}), 400
+
+    try:
+        payload: Dict[str, Any] = jwt.decode(
+            refresh_token,
+            current_app.config["JWT_SECRET_KEY"],
+            algorithms=[current_app.config["JWT_ALGORITHM"]],
+        )
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Refresh token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid refresh token"}), 401
+
+    if payload.get("type") != "refresh":
+        return jsonify({"error": "Invalid token type"}), 401
+
+    admin_id: int = int(payload["sub"])
+    admin: Optional[AdminUser] = db.session.get(AdminUser, admin_id)
+    if not admin:
+        return jsonify({"error": "Admin not found"}), 403
+
+    access_token: str = _create_access_token(admin)
+    return jsonify(token=access_token), 200

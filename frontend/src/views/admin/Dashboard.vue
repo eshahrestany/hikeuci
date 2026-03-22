@@ -30,7 +30,7 @@
 
         <!-- hike phase-specific content -->
         <div v-else-if="response.status === null"><SetHikePanel/></div>
-        <VotingPhase v-else-if="response.status === 'voting'" :voting-data="response"/>
+        <VotingPhase v-else-if="response.status === 'voting'" :voting-data="response" @refresh="loadUpcoming"/>
         <SignupPhase v-else-if="response.status === 'signup'" :signup-data="response" @refresh="loadUpcoming"/>
         <WaiverPhase v-else-if="response.status === 'waiver'" :waiver-data="response" @refresh="loadUpcoming"/>
       </CardContent>

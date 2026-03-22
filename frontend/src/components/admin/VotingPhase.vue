@@ -4,6 +4,14 @@
       Current Phase:
       <Badge class="text-md ml-2">Voting</Badge>
     </p>
+    <div class="flex justify-end mb-4">
+      <DangerZoneDrawer
+        phase="voting"
+        :candidates="votingData.trails"
+        @swapped="$emit('refresh')"
+        @cancelled="$emit('refresh')"
+      />
+    </div>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Card v-for="trail in votingData.trails" :key="trail.trail_id">
         <CardHeader>
@@ -61,10 +69,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChevronDown, ChevronRight } from 'lucide-vue-next'
 import Link from "@/components/common/Link.vue";
+import DangerZoneDrawer from '@/components/admin/DangerZoneDrawer.vue'
 
 const props = defineProps({
   votingData: { type: Object, required: true }
 })
+
+defineEmits(['refresh'])
 
 const showVoters = reactive({})
 const totalVotes = computed(() =>

@@ -6,6 +6,9 @@ const state = reactive({
   user: JSON.parse(localStorage.getItem('auth_user')) || null,
 })
 
+// Track in-flight refresh to avoid duplicate calls
+let refreshPromise = null
+
 export function useAuth() {
   const router = useRouter()
 
@@ -20,7 +23,7 @@ export function useAuth() {
 
   function signOut() {
     setUser(null)
-    router.replace('/login')   // send them back to login
+    router.replace('/login')
   }
 
   // Helper: returns { Authorization: "Bearer …" } or {}
@@ -31,10 +34,45 @@ export function useAuth() {
   }
 
   /**
+   * Attempt to get a new access token using the stored refresh token.
+   * Returns true if successful, false otherwise.
+   */
+  async function refreshAccessToken() {
+    const refreshToken = state.user?.refreshToken
+    if (!refreshToken) return false
+
+    // Deduplicate concurrent refresh attempts
+    if (refreshPromise) return refreshPromise
+
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        })
+
+        if (!res.ok) return false
+
+        const body = await res.json()
+        setUser({ ...state.user, token: body.token })
+        return true
+      } catch {
+        return false
+      } finally {
+        refreshPromise = null
+      }
+    })()
+
+    return refreshPromise
+  }
+
+  /**
    * Fetch wrapper that:
    *  - sets Content-Type: application/json
    *  - injects Authorization header if logged in
-   *  - auto signs out on 401
+   *  - on 401, attempts a silent token refresh and retries once
+   *  - signs out if the refresh also fails
    */
   async function fetchWithAuth(path, opts = {}) {
     const headers = {
@@ -42,37 +80,32 @@ export function useAuth() {
       ...getAuthHeaders(),
       ...opts.headers,
     }
-    const res = await fetch(path, {
-      ...opts,
-      headers,
-    })
+    let res = await fetch(path, { ...opts, headers })
+
     if (res.status === 401) {
-      signOut()
-      throw new Error('Unauthorized')
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        const retryHeaders = {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+          ...opts.headers,
+        }
+        res = await fetch(path, { ...opts, headers: retryHeaders })
+      }
+      if (!refreshed || res.status === 401) {
+        signOut()
+        throw new Error('Unauthorized')
+      }
     }
     return res
   }
 
   async function postWithAuth(path, data = {}, opts = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-      ...opts.headers,
-    };
-
-    const res = await fetch(path, {
-      ...opts,               // allow overriding mode, credentials, etc.
-      method: 'POST',        // force POST
-      headers,
+    return fetchWithAuth(path, {
+      ...opts,
+      method: 'POST',
       body: JSON.stringify(data),
-    });
-
-    if (res.status === 401) {
-      signOut();
-      throw new Error('Unauthorized');
-    }
-
-    return res;
+    })
   }
 
   return { state, setUser, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }
