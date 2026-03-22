@@ -29,6 +29,9 @@ def admin_required(f: F) -> F:
             current_app.logger.error(f"JWT decode error: {e!r}")
             return jsonify(error="Invalid token"), 401
 
+        if data.get("type") != "access":
+            return jsonify(error="Invalid token type"), 401
+
         # Double-check user still exists
         try:
             admin_id: int = int(data["sub"])

@@ -12,6 +12,7 @@ const props = defineProps({
   mode:      { type: String, default: 'single' },
   maxSelect: { type: Number, default: 3 },
   excludeId: { type: Number, default: null },
+  excludeIds: { type: Array, default: () => [] },
   modelValue: { default: null },
 })
 const emit = defineEmits(['update:modelValue'])
@@ -46,8 +47,10 @@ async function load() {
 onMounted(load)
 
 const filteredTrails = computed(() => {
-  let list = props.excludeId != null
-    ? allTrails.value.filter(t => t.id !== props.excludeId)
+  const excluded = new Set(props.excludeIds)
+  if (props.excludeId != null) excluded.add(props.excludeId)
+  let list = excluded.size > 0
+    ? allTrails.value.filter(t => !excluded.has(t.id))
     : allTrails.value
   const q = search.value.trim().toLowerCase()
   if (!q) return list

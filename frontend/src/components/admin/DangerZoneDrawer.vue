@@ -19,17 +19,20 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import SwitchTrailModal from '@/components/admin/SwitchTrailModal.vue'
+import SwapVoteTrailModal from '@/components/admin/SwapVoteTrailModal.vue'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 
 const props = defineProps({
-  currentTrailId: { type: Number, required: true },
-  phase: { type: String, required: true }, // 'signup' | 'waiver'
+  currentTrailId: { type: Number, default: null },
+  phase: { type: String, required: true }, // 'voting' | 'signup' | 'waiver'
+  candidates: { type: Array, default: () => [] }, // voting phase only: array of candidate trail objects
 })
-const emit = defineEmits(['switched', 'cancelled'])
+const emit = defineEmits(['switched', 'swapped', 'cancelled'])
 
 const drawerOpen = ref(false)
 const showSwitchModal = ref(false)
+const showSwapVoteModal = ref(false)
 const showCancelConfirm = ref(false)
 const cancelling = ref(false)
 
@@ -76,8 +79,20 @@ async function confirmCancel() {
       </DrawerHeader>
 
       <div class="flex flex-col gap-3 p-6">
-        <!-- Switch Trail -->
-        <div class="flex items-center justify-between gap-4 rounded-md border p-4">
+        <!-- Swap Vote Trail (voting phase only) -->
+        <div v-if="phase === 'voting'" class="flex items-center justify-between gap-4 rounded-md border p-4">
+          <div class="min-w-0">
+            <p class="font-medium text-sm">Swap Vote Trail</p>
+            <p class="text-sm text-muted-foreground">Replace one of the voting candidate trails. Existing votes will be transferred.</p>
+          </div>
+          <Button variant="outline" size="sm" class="shrink-0" @click="showSwapVoteModal = true">
+            <ArrowLeftRight class="h-4 w-4" />
+            Swap Trail
+          </Button>
+        </div>
+
+        <!-- Switch Trail (signup/waiver only) -->
+        <div v-if="phase !== 'voting'" class="flex items-center justify-between gap-4 rounded-md border p-4">
           <div class="min-w-0">
             <p class="font-medium text-sm">Switch Trail</p>
             <p class="text-sm text-muted-foreground">Replace the trail for this hike.</p>
@@ -111,6 +126,13 @@ async function confirmCancel() {
       :phase="phase"
       @switched="(data) => { emit('switched', data); drawerOpen = false }"
       @close="showSwitchModal = false"
+    />
+
+    <SwapVoteTrailModal
+      v-if="showSwapVoteModal"
+      :candidates="candidates"
+      @swapped="(data) => { emit('swapped', data); drawerOpen = false }"
+      @close="showSwapVoteModal = false"
     />
 
     <Dialog v-model:open="showCancelConfirm">

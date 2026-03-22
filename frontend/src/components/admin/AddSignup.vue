@@ -49,10 +49,16 @@ async function loadEmails() {
   const raw = res.ok ? await res.json() : []
 
   emailOptions.value = raw.map(o => ({
-    ...o,               // keep member_id / email for later use
-    value: o.email,     // required by the example
-    label: o.email,     // displayed & compared against
+    ...o,               // keep member_id / email / name for later use
+    value: o.email,
+    label: `${o.name} (${o.email})`,
+    searchText: `${o.name} ${o.email}`.toLowerCase(),
   }))
+}
+
+function filterMembers(options, term) {
+  const q = term.toLowerCase()
+  return options.filter(o => o.searchText.includes(q))
 }
 
 // ─── Form ───────────────────────────────────────────────────────────────────
@@ -145,7 +151,7 @@ async function submitLate() {
     <DialogContent class="sm:max-w-[450px]" aria-describedby="undefined">
       <DialogHeader>
         <DialogTitle>Add {{modeCapital}} Signup</DialogTitle>
-        <DialogDescription v-if="props.mode === 'new'">Select member by email</DialogDescription>
+        <DialogDescription v-if="props.mode === 'new'">Select member by name or email</DialogDescription>
       </DialogHeader>
 
       <template v-if="props.mode === 'late'">
@@ -161,10 +167,10 @@ async function submitLate() {
       </template>
 
       <!-- Email Combobox -->
-      <Combobox by="email" v-model="selected">
+      <Combobox by="email" v-model="selected" :filter-function="filterMembers">
         <ComboboxAnchor class="w-full">
           <div class="relative w-full items-center">
-            <ComboboxInput class="pl-9" :display-value="(val) => val?.email ?? ''" placeholder="Select email..." />
+            <ComboboxInput class="pl-9" :display-value="(val) => val ? `${val.name} (${val.email})` : ''" placeholder="Search by name or email..." />
             <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
               <Search class="size-4 text-muted-foreground" />
             </span>
@@ -176,7 +182,7 @@ async function submitLate() {
           </ComboboxEmpty>
           <ComboboxGroup>
             <ComboboxItem v-for="opt in emailOptions" :key="opt.value" :value="opt">
-              {{ opt.label }}
+              <span>{{ opt.name }} <span class="text-muted-foreground">({{ opt.email }})</span></span>
               <ComboboxItemIndicator>
                 <Check :class="cn('ml-auto h-4 w-4')" />
               </ComboboxItemIndicator>

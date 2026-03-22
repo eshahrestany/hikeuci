@@ -17,8 +17,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
-    JWT_EXP_HOURS = os.getenv("JWT_EXP_HOURS")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_ACCESS_EXP_MINUTES = int(os.getenv("JWT_ACCESS_EXP_MINUTES", 15))
+    JWT_REFRESH_EXP_DAYS = int(os.getenv("JWT_REFRESH_EXP_DAYS", 7))
 
     CORS_ORIGIN = os.getenv("CORS_ORIGIN")
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
