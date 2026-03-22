@@ -4,6 +4,7 @@ from typing import Callable, Any, TypeVar, Optional, Dict, Union
 import jwt
 from flask import request, jsonify, current_app, g, Response
 
+from .extensions import db
 from .models import AdminUser, Hike
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -38,7 +39,7 @@ def admin_required(f: F) -> F:
         except (KeyError, ValueError):
             return jsonify(error="Bad subject claim"), 401
 
-        admin: Optional[AdminUser] = AdminUser.query.get(admin_id)
+        admin: Optional[AdminUser] = db.session.get(AdminUser, admin_id)
         if not admin:
             return jsonify(error="Admin not found"), 403
 

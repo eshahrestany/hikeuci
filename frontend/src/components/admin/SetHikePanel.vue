@@ -70,7 +70,7 @@ function computeDefaultSchedule(now = new Date()) {
   // Following Saturday @ 8:00 (4 calendar days later, adjust hour)
   const hikeDate = new Date(signupStart);
   hikeDate.setDate(hikeDate.getDate() + 4);       // Sat 18:00
-  hikeDate.setHours(8, 0, 0, 0);                  // Sat 10:00
+  hikeDate.setHours(8, 0, 0, 0);                  // Sat 08:00
 
   return { signupStart, waiverStart, hikeDate }
 }

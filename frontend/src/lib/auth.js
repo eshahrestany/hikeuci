@@ -101,39 +101,11 @@ export function useAuth() {
   }
 
   async function postWithAuth(path, data = {}, opts = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-      ...opts.headers,
-    }
-    let res = await fetch(path, {
+    return fetchWithAuth(path, {
       ...opts,
       method: 'POST',
-      headers,
       body: JSON.stringify(data),
     })
-
-    if (res.status === 401) {
-      const refreshed = await refreshAccessToken()
-      if (refreshed) {
-        const retryHeaders = {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-          ...opts.headers,
-        }
-        res = await fetch(path, {
-          ...opts,
-          method: 'POST',
-          headers: retryHeaders,
-          body: JSON.stringify(data),
-        })
-      }
-      if (!refreshed || res.status === 401) {
-        signOut()
-        throw new Error('Unauthorized')
-      }
-    }
-    return res
   }
 
   return { state, setUser, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }

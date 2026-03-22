@@ -97,7 +97,7 @@ def refresh() -> tuple[Response, int]:
         return jsonify({"error": "Invalid token type"}), 401
 
     admin_id: int = int(payload["sub"])
-    admin: Optional[AdminUser] = AdminUser.query.get(admin_id)
+    admin: Optional[AdminUser] = db.session.get(AdminUser, admin_id)
     if not admin:
         return jsonify({"error": "Admin not found"}), 403
 
