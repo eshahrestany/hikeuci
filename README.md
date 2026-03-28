@@ -313,6 +313,7 @@ It takes a system argument to specify the scenario. Read through the file to see
 and learn what they do, or, if you ever find it convenient for development, make a scenario of your own.
 
 Once the waiver phase is seeded, hit `Refresh data` on the dashboard. You should see the example data displayed.
+
 ## Doing development
 You should now have everything you need to begin doing work. The reason I mentioned the production setup earlier was to
 give an idea of how many concurrent processes need to be running for the entire app to run, however,
@@ -320,6 +321,11 @@ not all of those processes are always needed to be up in development. For exampl
 test email sending, and with dummy email mode enabled, the email content will be simply logged to the worker output.
 If the development you are doing doesn't have anything to do with emails (or the phase-change scripts), then you most 
 likely won't need to run celery. Most of the time, just hosting the frontend and backend are enough. 
+
+This means for most development, you'll have two terminals open. One is running `npm run dev`, and the other `flask run --debug`.
+
+If you want to do work that requires Celery tasks (e.g. sending emails, updating hike phases, or any methods in tasks.py), 
+then you'll need another terminal for your celery worker, and likely another for celery beat.
 
 ### Shadcn
 When doing frontend development, specifically for the dashboard, browse the components available from 
