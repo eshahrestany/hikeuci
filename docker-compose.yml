@@ -1,0 +1,46 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: ./backend/.env
+    expose:
+      - "8000"
+    restart: unless-stopped
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+
+  db-migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: ./backend/.env
+    command: ["flask", "db", "upgrade"]
+    restart: "no"
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-celery
+    env_file: ./backend/.env
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-celery-beat
+    env_file: ./backend/.env
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    args:
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
