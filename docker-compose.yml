@@ -47,8 +47,8 @@ services:
       dockerfile: nginx/Dockerfile
       args:
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     restart: unless-stopped
     networks:
       - coolify
