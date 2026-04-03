@@ -1,4 +1,7 @@
+import io
+import os
 import time
+import zipfile
 from datetime import timedelta
 import pymupdf
 from datetime import datetime, timezone
@@ -14,6 +17,8 @@ from .lib.email_templates import render_email_batch
 from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
 from zoneinfo import ZoneInfo
+
+EXPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "exports")
 
 @celery_app.task(name="app.tasks.start_email_campaign")
 def start_email_campaign(hike_id: int, waitlist=False) -> int:
@@ -311,6 +316,80 @@ def generate_waiver_pdf(waiver_id, email_user=True):
 
     # Call email send task
     send_email.delay("waiver_confirmation", member.id, hike.id, files=files)
+
+
+@celery_app.task(name="app.tasks.export_member_waivers", bind=True)
+def export_member_waivers(self, member_id: int):
+    """Generate filled waiver PDFs for all of a member's signed waivers and bundle into a zip."""
+    member = Member.query.get(member_id)
+    if not member:
+        raise ValueError("invalid member_id")
+
+    waivers = (
+        Waiver.query
+        .filter_by(member_id=member_id)
+        .order_by(Waiver.signed_on.desc())
+        .all()
+    )
+
+    if not waivers:
+        raise ValueError("member has no signed waivers")
+
+    tz = ZoneInfo(current_app.config["SERVER_TIMEZONE"])
+    buf = io.BytesIO()
+
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for waiver in waivers:
+            hike = Hike.query.get(waiver.hike_id)
+            if not hike:
+                continue
+            trail = Trail.query.get(hike.trail_id)
+            if not trail:
+                continue
+
+            doc = pymupdf.open("app/templates/waiver_fillable.pdf")
+            page = doc.load_page(0)
+
+            fill_text_rich(page, "fname", waiver.print_name, font_size=16)
+            fill_text_rich(
+                page, "event_description",
+                f"PARTICIPANT SPORTING EVENT DESCRIPTION: <b>{trail.name.title()}</b>",
+            )
+            fill_text_rich(
+                page, "event_date",
+                f"SPORTING EVENT DATE: <b>{hike.get_localized_time('hike_date').strftime('%A %B %d, %Y')}</b>",
+            )
+
+            signed_on_localized = waiver.signed_on.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+
+            if waiver.is_minor:
+                fill_signature(doc, "sig1_minor", waiver.signature_1_b64.split(",")[1])
+                fill_signature(doc, "sig2_minor", waiver.signature_2_b64.split(",")[1])
+                fill_text_rich(page, "date1_minor", signed_on_localized.strftime("%m/%d/%Y"), font_size=12)
+                fill_text_rich(page, "date2_minor", signed_on_localized.strftime("%m/%d/%Y"), font_size=12)
+                fill_text_rich(page, "age", str(waiver.age))
+            else:
+                fill_signature(doc, "sig1_user", waiver.signature_1_b64.split(",")[1])
+                fill_signature(doc, "sig2_user", waiver.signature_2_b64.split(",")[1])
+                fill_text_rich(page, "date1_user", signed_on_localized.strftime("%m/%d/%Y"), font_size=12)
+                fill_text_rich(page, "date2_user", signed_on_localized.strftime("%m/%d/%Y"), font_size=12)
+
+            doc.bake()
+            pdf_bytes = doc.write(deflate=True, clean=True, garbage=4)
+            doc.close()
+
+            hike_date_str = hike.get_localized_time("hike_date").strftime("%m-%d-%Y")
+            filename = f"{member.name.title()} - {trail.name.title()} {hike_date_str}.pdf"
+            zf.writestr(filename, pdf_bytes)
+
+    # Write zip to exports directory
+    os.makedirs(EXPORTS_DIR, exist_ok=True)
+    task_id = self.request.id
+    out_path = os.path.join(EXPORTS_DIR, f"{task_id}.zip")
+    with open(out_path, "wb") as f:
+        f.write(buf.getvalue())
+
+    return {"status": "done", "path": out_path}
 
 
 @celery_app.task(name="app.tasks.check_and_update_phase")

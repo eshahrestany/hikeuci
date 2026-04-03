@@ -12,14 +12,15 @@ import {ref, h, computed, onMounted, watch} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
 import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
-import {PlusCircle, ListPlus, History, Pencil} from "lucide-vue-next"
+import {PlusCircle, ListPlus, History, Pencil, FileDown, Loader2} from "lucide-vue-next"
+import { toast } from 'vue-sonner'
 import { useRouter } from "vue-router"
 import {Input} from "@/components/ui/input/index.js";
 import { Badge } from "@/components/ui/badge";
 
 
 const router = useRouter()
-const {fetchWithAuth } = useAuth()
+const {fetchWithAuth, postWithAuth } = useAuth()
 
 const loading = ref(true)
 const response = ref([])
@@ -27,6 +28,64 @@ const formIsOpen = ref(false);
 const batchFormOpen = ref(false);
 const editMemberData = ref({});
 const search = ref('')
+const exportingMembers = ref(new Set())
+
+async function exportWaivers(memberId) {
+  if (exportingMembers.value.has(memberId)) return
+  exportingMembers.value = new Set([...exportingMembers.value, memberId])
+
+  try {
+    const res = await postWithAuth('/api/admin/export-waivers', { member_id: memberId })
+    if (!res.ok) {
+      const err = await res.json()
+      toast.error('Export failed', { description: err.error || 'Could not start export' })
+      return
+    }
+    const { task_id, member_name } = await res.json()
+
+    // Poll for completion (timeout after 60s)
+    const maxAttempts = 60
+    let status = 'pending'
+    for (let i = 0; i < maxAttempts && status === 'pending'; i++) {
+      await new Promise(r => setTimeout(r, 1000))
+      const statusRes = await fetchWithAuth(`/api/admin/export-waivers/${task_id}/status`)
+      const statusData = await statusRes.json()
+      status = statusData.status
+      if (status === 'failed') {
+        toast.error('Export failed', { description: statusData.error || 'Task encountered an error' })
+        return
+      }
+    }
+    if (status !== 'done') {
+      toast.error('Export timed out', { description: 'Please try again' })
+      return
+    }
+
+    // Trigger download
+    const dlRes = await fetchWithAuth(`/api/admin/export-waivers/${task_id}/download`)
+    if (!dlRes.ok) {
+      toast.error('Download failed')
+      return
+    }
+    const blob = await dlRes.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${member_name} - Waivers.zip`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    toast.success(`Exported waivers for ${member_name}`)
+  } catch (e) {
+    console.error('Export failed:', e)
+    toast.error('Export failed', { description: 'An unexpected error occurred' })
+  } finally {
+    const next = new Set(exportingMembers.value)
+    next.delete(memberId)
+    exportingMembers.value = next
+  }
+}
 
 async function loadMembers() {
   loading.value = true
@@ -110,6 +169,17 @@ const columns = [
           size: 'sm',
           onClick: () => router.push({ name: 'Member History', params: { memberId: row.original.id } })
         }, () => [h(History, { class: 'h-3.5 w-3.5 mr-1' }), 'Signup History']),
+        h(Button, {
+          variant: 'outline',
+          size: 'sm',
+          disabled: exportingMembers.value.has(row.original.id),
+          onClick: () => exportWaivers(row.original.id)
+        }, () => [
+          exportingMembers.value.has(row.original.id)
+            ? h(Loader2, { class: 'h-3.5 w-3.5 mr-1 animate-spin' })
+            : h(FileDown, { class: 'h-3.5 w-3.5 mr-1' }),
+          exportingMembers.value.has(row.original.id) ? 'Exporting…' : 'Export Waivers'
+        ]),
       ]),
   }
 ];
