@@ -1,4 +1,7 @@
-from flask import Blueprint, jsonify, request, current_app
+import os
+import time
+
+from flask import Blueprint, jsonify, request, current_app, send_file
 from sqlalchemy import and_
 from datetime import datetime, timezone, timedelta
 
@@ -587,3 +590,75 @@ def add_user():
             "vehicle_id": vehicle_id if transport_type == "driver" else None,
         }
         return jsonify(user_obj), 201
+
+
+def _cleanup_stale_exports(max_age_sec=3600):
+    """Remove export zips older than max_age_sec."""
+    if not os.path.isdir(current_app.config["WAIVER_EXPORTS_DIR"]):
+        return
+    now = time.time()
+    for name in os.listdir(current_app.config["WAIVER_EXPORTS_DIR"]):
+        path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], name)
+        try:
+            if now - os.path.getmtime(path) > max_age_sec:
+                os.remove(path)
+        except OSError:
+            pass
+
+
+@dashboard.route('/export-waivers', methods=['POST'])
+@admin_required
+def export_waivers():
+    _cleanup_stale_exports()
+
+    data = request.get_json() or {}
+    member_id = data.get('member_id')
+    if member_id is None:
+        return jsonify(error="Missing member_id"), 400
+
+    member = Member.query.get(member_id)
+    if not member:
+        return jsonify(error="Member not found"), 404
+
+    waiver_count = Waiver.query.filter_by(member_id=member_id).count()
+    if waiver_count == 0:
+        return jsonify(error="Member has no signed waivers"), 404
+
+    result = current_app.extensions["celery"].send_task(
+        "app.tasks.export_member_waivers", args=[member_id]
+    )
+    return jsonify(task_id=result.id, member_name=member.name), 202
+
+
+@dashboard.route('/export-waivers/<task_id>/status', methods=['GET'])
+@admin_required
+def export_waivers_status(task_id):
+    safe_name = os.path.basename(task_id)
+    zip_path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], f"{safe_name}.zip")
+    if os.path.exists(zip_path):
+        return jsonify(status="done"), 200
+
+    # Check if task failed via Celery result backend
+    celery_app = current_app.extensions["celery"]
+    result = celery_app.AsyncResult(task_id)
+    if result.state == "FAILURE":
+        return jsonify(status="failed", error=str(result.result)), 200
+
+    return jsonify(status="pending"), 200
+
+
+@dashboard.route('/export-waivers/<task_id>/download', methods=['GET'])
+@admin_required
+def export_waivers_download(task_id):
+    # Sanitize task_id to prevent path traversal
+    safe_name = os.path.basename(task_id)
+    zip_path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], f"{safe_name}.zip")
+    if not os.path.exists(zip_path):
+        return jsonify(error="Export not found"), 404
+
+    return send_file(
+        zip_path,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"waivers-export-{safe_name[:8]}.zip",
+    )

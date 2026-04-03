@@ -339,16 +339,15 @@ premade shadcn-vue component(s). Be sure to commit these new files.
 
 ## Useful Commands reference
 
-| Task | Command                                                   |
-|------|-----------------------------------------------------------|
-| Seed sample data (from repo root) | `python3 backend/devtools.py signup`                      |
-| Generate a new migration | `flask --app backend/manage.py db migrate -m "message"`   |
-| Apply migrations | `flask --app backend/manage.py db upgrade`                |
-| Front-end dev server | `npm run dev` (in `frontend/`)                            |
-| Production build of SPA | `npm run build` (in `frontend/`)                          |
-| Celery worker | `celery -A backend.make_celery.celery_app worker -l info` |
-| Celery beat | `celery -A backend.make_celery.celery_app beat`           |
-
+| Task | Command                                                               |
+|------|-----------------------------------------------------------------------|
+| Seed sample data (from repo root) | `python3 devtools.py signup` (in `backend/`)                     |
+| Generate a new migration | `flask --app manage.py db migrate -m "message"` (in `backend/`)   |
+| Apply migrations | `flask --app manage.py db upgrade` (in `backend/`)                    |
+| Celery worker | `celery -A make_celery.celery_app worker -l info` (in `backend/`)            |
+| Celery beat | `celery -A make_celery.celery_app beat` (in `backend/`)                      |
+| Front-end dev server | `npm run dev` (in `frontend/`)                                        |
+| Production build of SPA | `npm run build` (in `frontend/`)                                      |
 ---
 
 ## API Quick Peek

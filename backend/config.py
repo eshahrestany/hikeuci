@@ -37,6 +37,7 @@ class Config:
     TEMPLATE_FOLDER = FRONTEND_DIST
     STATIC_URL_PATH = '/assets'
 
+    WAIVER_EXPORTS_DIR = os.path.join(BASE_DIR, 'exports')
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
     ALLOWED_UPLOAD_EXTENSIONS = {'png'}
 
