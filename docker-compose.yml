@@ -6,6 +6,8 @@ services:
     env_file: .env
     expose:
       - "8000"
+    volumes:
+      - /data/coolify/applications/backend-prod-static:/python-docker/static
     restart: unless-stopped
     networks:
       - coolify
