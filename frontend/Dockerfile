@@ -18,8 +18,8 @@ FROM nginx:1.27-alpine
 # Copy built static files
 COPY --from=build /frontend/dist /usr/share/nginx/html
 
-# Copy nginx.conf from repo's ./nginx folder (host path!)
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx.conf (host path relative to build context = repo root)
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 
 RUN mkdir -p /sock

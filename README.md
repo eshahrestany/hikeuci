@@ -57,6 +57,8 @@ hikeuci/
 │  │  ├─ lib/                 # JS helpers
 │  │  ├─ router/              # The Vue router to configure frontend routing
 │  │  ├─ App.vue              # The root component which contains the router view
+│  ├─ Dockerfile              # Multi-stage build: Vue + Nginx
+│  ├─ nginx.conf              # Nginx config (SPA serving + API proxy)
 │  ├─ package.json            # Node dependencies
 │  └─ vite.config.ts          # Vite configuration
 ```
