@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file: ./backend/.env
+    env_file: .env
     expose:
       - "8000"
     restart: unless-stopped
@@ -15,7 +15,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file: ./backend/.env
+    env_file: .env
     command: ["flask", "db", "upgrade"]
     restart: "no"
 
@@ -23,14 +23,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile-celery
-    env_file: ./backend/.env
+    env_file: .env
     restart: unless-stopped
 
   celery-beat:
     build:
       context: ./backend
       dockerfile: Dockerfile-celery-beat
-    env_file: ./backend/.env
+    env_file: .env
     restart: unless-stopped
 
   nginx:
