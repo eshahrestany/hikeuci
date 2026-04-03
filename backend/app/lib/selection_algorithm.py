@@ -1,6 +1,6 @@
 from typing import List
 
-from ..models import Hike, Member, Signup, Vehicle
+from ..models import Hike, Signup, Vehicle
 
 
 

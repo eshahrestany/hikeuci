@@ -11,8 +11,6 @@ from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hi
 from ..lib.model_utils import current_active_hike, get_current_ay_start, update_waitlist
 from ..lib import phases
 
-EXPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "exports")
-
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
 
@@ -596,11 +594,11 @@ def add_user():
 
 def _cleanup_stale_exports(max_age_sec=3600):
     """Remove export zips older than max_age_sec."""
-    if not os.path.isdir(EXPORTS_DIR):
+    if not os.path.isdir(current_app.config["WAIVER_EXPORTS_DIR"]):
         return
     now = time.time()
-    for name in os.listdir(EXPORTS_DIR):
-        path = os.path.join(EXPORTS_DIR, name)
+    for name in os.listdir(current_app.config["WAIVER_EXPORTS_DIR"]):
+        path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], name)
         try:
             if now - os.path.getmtime(path) > max_age_sec:
                 os.remove(path)
@@ -635,7 +633,8 @@ def export_waivers():
 @dashboard.route('/export-waivers/<task_id>/status', methods=['GET'])
 @admin_required
 def export_waivers_status(task_id):
-    zip_path = os.path.join(EXPORTS_DIR, f"{task_id}.zip")
+    safe_name = os.path.basename(task_id)
+    zip_path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], f"{safe_name}.zip")
     if os.path.exists(zip_path):
         return jsonify(status="done"), 200
 
@@ -653,7 +652,7 @@ def export_waivers_status(task_id):
 def export_waivers_download(task_id):
     # Sanitize task_id to prevent path traversal
     safe_name = os.path.basename(task_id)
-    zip_path = os.path.join(EXPORTS_DIR, f"{safe_name}.zip")
+    zip_path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], f"{safe_name}.zip")
     if not os.path.exists(zip_path):
         return jsonify(error="Export not found"), 404
 

@@ -18,8 +18,6 @@ from .lib.email_utils import get_personalization, EmailFile
 from .lib.pdftools import fill_signature, fill_text_rich
 from zoneinfo import ZoneInfo
 
-EXPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "exports")
-
 @celery_app.task(name="app.tasks.start_email_campaign")
 def start_email_campaign(hike_id: int, waitlist=False) -> int:
     """
@@ -383,9 +381,9 @@ def export_member_waivers(self, member_id: int):
             zf.writestr(filename, pdf_bytes)
 
     # Write zip to exports directory
-    os.makedirs(EXPORTS_DIR, exist_ok=True)
+    os.makedirs(current_app.config["WAIVER_EXPORTS_DIR"], exist_ok=True)
     task_id = self.request.id
-    out_path = os.path.join(EXPORTS_DIR, f"{task_id}.zip")
+    out_path = os.path.join(current_app.config["WAIVER_EXPORTS_DIR"], f"{task_id}.zip")
     with open(out_path, "wb") as f:
         f.write(buf.getvalue())
 
