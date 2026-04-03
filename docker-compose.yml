@@ -46,7 +46,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: nginx/Dockerfile
+      dockerfile: frontend/Dockerfile
       args:
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     expose:
