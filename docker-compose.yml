@@ -8,6 +8,7 @@ services:
       - "8000"
     volumes:
       - /data/coolify/applications/backend-prod-static:/python-docker/static
+      - waiver-exports:/python-docker/exports
     restart: unless-stopped
     networks:
       - coolify
@@ -30,6 +31,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile-celery
     env_file: .env
+    volumes:
+      - waiver-exports:/python-docker/exports
     restart: unless-stopped
     networks:
       - coolify
@@ -56,6 +59,9 @@ services:
       - coolify
     depends_on:
       - backend
+
+volumes:
+  waiver-exports:
 
 networks:
   coolify:
