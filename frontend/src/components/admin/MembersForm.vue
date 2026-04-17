@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
-import {Checkbox} from "@/components/ui/checkbox/index.js";
 import {PlusCircle, Save} from "lucide-vue-next"
 
 const props = defineProps({
@@ -35,7 +34,6 @@ const defaultMemberState = {
   name: '',
   email: '',
   tel: '',
-  is_officer: false,
 }
 
 
@@ -124,11 +122,6 @@ const handleClose = (openState) => {
             <Label for="tel">Member Phone #</Label>
             <Input id="tel" type="tel" v-model="formData.tel" placeholder="123 867 5309" />
          </div>
-
-          <div class="space-y-2">
-            <Label for="is_officer">Is Officer</Label>
-            <Checkbox id="is_officer" type="checkbox" v-model="formData.is_officer" />
-          </div>
 
         </div>
       </form>

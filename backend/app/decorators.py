@@ -48,6 +48,15 @@ def admin_required(f: F) -> F:
         return f(*args, **kwargs)
     return wrapped
 
+def owner_required(f: F) -> F:
+    @wraps(f)
+    def wrapped(*args: Any, **kwargs: Any) -> Union[Response, Any]:
+        admin: Optional[AdminUser] = getattr(g, "current_admin", None)
+        if admin is None or not admin.is_owner:
+            return jsonify(error="Owner privileges required"), 403
+        return f(*args, **kwargs)
+    return wrapped
+
 def waiver_phase_required(f: F) -> F:
     @wraps(f)
     def wrapped(*args: Any, **kwargs: Any) -> Union[Response, Any]:

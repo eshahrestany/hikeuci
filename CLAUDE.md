@@ -17,6 +17,7 @@ pip install -r backend/requirements.txt           # install dependencies
 flask --app backend/manage.py run --debug          # Flask dev server at http://127.0.0.1:5000
 flask --app backend/manage.py db upgrade           # apply migrations
 flask --app backend/manage.py db migrate -m "msg"  # generate new migration
+flask --app backend/manage.py set-owner <email>    # promote an existing admin to sole owner (first-owner bootstrap / recovery)
 ```
 
 ### Celery (run from repo root, needed for email sending and phase transitions)

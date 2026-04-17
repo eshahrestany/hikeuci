@@ -10,7 +10,6 @@ class Member(db.Model):
     email      = db.Column(db.String(120), nullable=False)
     tel        = db.Column(db.String(15), nullable=True)
     joined_on  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    is_officer = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class Trail(db.Model):
@@ -108,6 +107,19 @@ class AdminUser(db.Model):
     provider_user_id = db.Column(db.String(255), unique=True, nullable=True)
     email            = db.Column(db.String(120), unique=True, nullable=False)
     created_on       = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    is_owner         = db.Column(db.Boolean, nullable=False, default=False)
+    member_id        = db.Column(db.Integer, db.ForeignKey('members.id'), unique=True, nullable=False)
+
+    member = db.relationship('Member', lazy='joined')
+
+    __table_args__ = (
+        db.Index(
+            'ix_admin_users_single_owner',
+            'is_owner',
+            unique=True,
+            postgresql_where=db.text('is_owner IS TRUE'),
+        ),
+    )
 
 
 class Vote(db.Model):

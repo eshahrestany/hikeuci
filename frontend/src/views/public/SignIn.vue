@@ -33,15 +33,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken: response.credential })
       })
-      const body = await res.json()
+      const body = await res.json().catch(() => null)
 
       if (!res.ok) {
-        // backend will send { error: "..." }
-        throw new Error(body.error || 'Authentication failed')
+        throw new Error(body?.error || 'Server error when attempting to log in')
+      }
+      if (!body) {
+        throw new Error('Server error when attempting to log in')
       }
 
       // 2) Backend sent back JWT + refresh token
-      setUser({ token: body.token, refreshToken: body.refreshToken })
+      setUser({ token: body.token, refreshToken: body.refreshToken, is_owner: !!body.is_owner })
 
       console.log('✅ Logged in, user state is now:', state.user)
       router.replace('/admin')

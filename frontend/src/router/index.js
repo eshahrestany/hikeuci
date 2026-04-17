@@ -62,6 +62,12 @@ const routes = [
         component: () => import('../views/admin/DashboardMembers.vue'),
       },
       {
+        path: 'officers',
+        name: 'Dashboard Officers',
+        meta: { title: 'HikeUCI Dashboard Officers', requiresOwner: true },
+        component: () => import('../views/admin/DashboardOfficers.vue'),
+      },
+      {
         path: 'history',
         name: 'Dashboard History',
         meta: { title: 'HikeUCI Dashboard History' },
@@ -100,6 +106,8 @@ router.beforeEach((to, from, next) => {
   const {state} = useAuth()
   if (to.meta.requiresAuth && !state.user) {
     next({name: 'SignIn', query: {redirect: to.fullPath}})
+  } else if (to.meta.requiresOwner && !state.user?.is_owner) {
+    next({name: 'Dashboard'})
   } else {
     next()
   }
