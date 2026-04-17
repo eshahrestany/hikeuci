@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from jinja2 import ChoiceLoader, FileSystemLoader
 
+from .commands import register_commands
 from .extensions import db, migrate, celery_init_app
 from .lib.magic_link import MagicLinkManager
 from .routes import register_routes
@@ -42,6 +43,9 @@ def create_app(config_object="config.Config"):
 
     # blueprints / routes
     register_routes(app)
+
+    # CLI commands
+    register_commands(app)
 
     @app.shell_context_processor
     def _shell():

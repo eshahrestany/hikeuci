@@ -12,3 +12,4 @@
 !/backend/app/templates/.j2cache/readme.txt
 /backend/static/
 /backend/exports
+**/__pycache__/

@@ -72,7 +72,7 @@ def google_login() -> tuple[Response, int]:
     access_token: str = _create_access_token(admin)
     refresh_token: str = _create_refresh_token(admin)
 
-    return jsonify(token=access_token, refreshToken=refresh_token), 200
+    return jsonify(token=access_token, refreshToken=refresh_token, is_owner=admin.is_owner), 200
 
 
 @auth.route("/refresh", methods=["POST"])
@@ -102,4 +102,4 @@ def refresh() -> tuple[Response, int]:
         return jsonify({"error": "Admin not found"}), 403
 
     access_token: str = _create_access_token(admin)
-    return jsonify(token=access_token), 200
+    return jsonify(token=access_token, is_owner=admin.is_owner), 200

@@ -1,29 +1,35 @@
 import re
 from flask import Blueprint, request, jsonify
+from sqlalchemy.exc import IntegrityError
 from ..decorators import admin_required
 from ..extensions import db
-from ..models import Member
+from ..models import Member, AdminUser
 from ..lib.model_utils import get_current_ay_start
 
 members = Blueprint("members", __name__, url_prefix="members")
 email_pattern = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
-def _serialize_member(member):
+def _serialize_member(member, is_officer=False):
     return {
         'id': member.id,
         'name': member.name,
         'email': member.email,
         'tel': member.tel,
         'joined_on': member.joined_on.isoformat(),
-        'is_officer': member.is_officer
+        'is_officer': is_officer,
     }
+
+
+def _officer_member_ids():
+    return {mid for (mid,) in db.session.query(AdminUser.member_id).all()}
 
 @members.route("", methods=['GET'])
 @admin_required
 def list_members():
     ay_start = get_current_ay_start()
     all_members = Member.query.filter(Member.joined_on >= ay_start).order_by(Member.name.asc()).all()
-    return jsonify([_serialize_member(member) for member in all_members])
+    officer_ids = _officer_member_ids()
+    return jsonify([_serialize_member(m, m.id in officer_ids) for m in all_members])
 
 @members.route("", methods=['POST'])
 @admin_required
@@ -42,18 +48,16 @@ def create_member():
     tel = data.get('tel', None)
     if tel == "":
         tel = None
-    is_officer = data.get('is_officer', False)
 
     new_member = Member(
         name = name,
         email = email,
         tel = tel,
-        is_officer = is_officer,
     )
     db.session.add(new_member)
     db.session.commit()
 
-    return jsonify(_serialize_member(new_member)), 201
+    return jsonify(_serialize_member(new_member, False)), 201
 
 @members.route("/<int:member_id>", methods=["PUT"])
 @admin_required
@@ -65,20 +69,30 @@ def update_member(member_id):
     if not new_email or not email_pattern.match(new_email):
         return {"error": "invalid email address"}, 400
 
+    email_changed = new_email != member.email
     member.email = new_email if new_email else member.email
     member.tel = data.get('tel', member.tel)
     if member.tel == "":
         member.tel = None
-    member.is_officer = data.get('is_officer', member.is_officer)
 
-    db.session.commit()
+    admin = AdminUser.query.filter_by(member_id=member.id).first()
+    if admin is not None and email_changed:
+        admin.email = new_email
 
-    return jsonify(_serialize_member(member))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return {"error": "That email is already in use by another officer."}, 409
+
+    return jsonify(_serialize_member(member, admin is not None))
 
 @members.route("/<int:member_id>", methods=["DELETE"])
 @admin_required
 def delete(member_id):
     member = Member.query.get_or_404(member_id)
+    if AdminUser.query.filter_by(member_id=member.id).first() is not None:
+        return jsonify(error="This member is an officer; remove them from Officers first."), 409
     db.session.delete(member)
     db.session.commit()
     return "Deleted Successfully", 200

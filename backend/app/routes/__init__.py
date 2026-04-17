@@ -9,6 +9,7 @@ from .members import members
 from .mail import mail
 from .trails import trails
 from .dashboard_history import dashboard_history
+from .officers import officers
 
 
 def register_routes(app):
@@ -17,6 +18,7 @@ def register_routes(app):
     app.register_blueprint(dashboard_history, url_prefix="/api/admin/history")
     app.register_blueprint(trails, url_prefix="/api/admin/trails")
     app.register_blueprint(members, url_prefix="/api/admin/members")
+    app.register_blueprint(officers, url_prefix="/api/admin/officers")
     app.register_blueprint(images, url_prefix="/api/images")
     app.register_blueprint(hike_vote, url_prefix="/api/hike-vote")
     app.register_blueprint(hike_signup, url_prefix="/api/hike-signup")

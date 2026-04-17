@@ -7,23 +7,17 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
-  Combobox, ComboboxAnchor, ComboboxInput,
-  ComboboxList, ComboboxItem, ComboboxItemIndicator,
-  ComboboxGroup, ComboboxEmpty
-} from '@/components/ui/combobox'
-import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from '@/components/ui/select'
 import {
   NumberField, NumberFieldContent, NumberFieldDecrement,
   NumberFieldInput, NumberFieldIncrement
 } from '@/components/ui/number-field'
-import { Check, Search } from 'lucide-vue-next'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
 import {Input} from "@/components/ui/input";
-import {cn} from "@/lib/utils.js";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+import MemberPicker from "@/components/admin/MemberPicker.vue";
 
 const emit  = defineEmits(['close', 'added'])
 const open  = ref(true)
@@ -39,26 +33,14 @@ const modeCapital = props.mode.charAt(0).toUpperCase() + props.mode.slice(1)
 
 const lateMode = ref('userlink') // 'userlink' or 'manual'
 
-// ─── Emails ─────────────────────────────────────────────────────────────────
-const emailOptions = ref([])           // [{member_id, email}]
-const selected    = ref(null)          // whole option object
+// ─── Members ────────────────────────────────────────────────────────────────
+const memberOptions = ref([])          // [{ member_id, email, name }]
+const selected      = ref(null)        // selected option
 
-onMounted(loadEmails)
-async function loadEmails() {
+onMounted(loadMembers)
+async function loadMembers() {
   const res = await fetchWithAuth(`/api/admin/list-emails-not-in-hike`)
-  const raw = res.ok ? await res.json() : []
-
-  emailOptions.value = raw.map(o => ({
-    ...o,               // keep member_id / email / name for later use
-    value: o.email,
-    label: `${o.name} (${o.email})`,
-    searchText: `${o.name} ${o.email}`.toLowerCase(),
-  }))
-}
-
-function filterMembers(options, term) {
-  const q = term.toLowerCase()
-  return options.filter(o => o.searchText.includes(q))
+  memberOptions.value = res.ok ? await res.json() : []
 }
 
 // ─── Form ───────────────────────────────────────────────────────────────────
@@ -166,30 +148,7 @@ async function submitLate() {
         </p>
       </template>
 
-      <!-- Email Combobox -->
-      <Combobox by="email" v-model="selected" :filter-function="filterMembers">
-        <ComboboxAnchor class="w-full">
-          <div class="relative w-full items-center">
-            <ComboboxInput class="pl-9" :display-value="(val) => val ? `${val.name} (${val.email})` : ''" placeholder="Search by name or email..." />
-            <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
-              <Search class="size-4 text-muted-foreground" />
-            </span>
-          </div>
-        </ComboboxAnchor>
-        <ComboboxList>
-          <ComboboxEmpty>
-            No members found.
-          </ComboboxEmpty>
-          <ComboboxGroup>
-            <ComboboxItem v-for="opt in emailOptions" :key="opt.value" :value="opt">
-              <span>{{ opt.name }} <span class="text-muted-foreground">({{ opt.email }})</span></span>
-              <ComboboxItemIndicator>
-                <Check :class="cn('ml-auto h-4 w-4')" />
-              </ComboboxItemIndicator>
-            </ComboboxItem>
-          </ComboboxGroup>
-        </ComboboxList>
-      </Combobox>
+      <MemberPicker v-model="selected" :options="memberOptions" />
 
 
       <template v-if="props.mode === 'late'">

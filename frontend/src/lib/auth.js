@@ -55,7 +55,9 @@ export function useAuth() {
         if (!res.ok) return false
 
         const body = await res.json()
-        setUser({ ...state.user, token: body.token })
+        const next = { ...state.user, token: body.token }
+        if (typeof body.is_owner === 'boolean') next.is_owner = body.is_owner
+        setUser(next)
         return true
       } catch {
         return false
