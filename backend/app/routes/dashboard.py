@@ -22,7 +22,7 @@ def get_active_hike_info():
     if hike is None:
         return jsonify(status=None), 200
 
-    return_data = {}
+    return_data = {"hike_id": hike.id}
     phase = (hike.phase or "").lower()
     if not phase:
         return_data["status"] = 'awaiting_vote_start'

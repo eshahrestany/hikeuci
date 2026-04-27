@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Button } from "@/components/ui/button"
 import ThemeToggle from "@/components/admin/ThemeToggle.vue";
+import SignedInAs from "@/components/admin/SignedInAs.vue";
 import { LogOut } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useAuth } from '@/lib/auth.js'
@@ -27,6 +28,7 @@ const data = computed(() => ({
         { title: 'Manage Members', route: {name: 'Dashboard Members'} },
         { title: 'Manage Trails', route: {name: 'Dashboard Trails'} },
         { title: 'Hike History', route: {name: 'Dashboard History'} },
+        { title: 'Email Campaigns', route: {name: 'Dashboard Emails'} },
         ...(state.user?.is_owner
           ? [{ title: 'Manage Officers', route: {name: 'Dashboard Officers'} }]
           : []),
@@ -58,6 +60,9 @@ const data = computed(() => ({
 
     <SidebarFooter>
       <SidebarMenu>
+        <SidebarMenuItem>
+          <SignedInAs :user="state.user" />
+        </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton as-child>
             <Button variant="ghost" @click="signOut()">

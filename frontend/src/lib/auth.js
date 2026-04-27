@@ -21,6 +21,19 @@ export function useAuth() {
     }
   }
 
+  // Single source of truth for shaping user state from any auth response
+  // (sign-in, refresh). Merges with existing user so partial responses
+  // (e.g. refresh, which omits refreshToken) don't blow away identity.
+  function setAuthFromResponse(body) {
+    const next = { ...(state.user || {}) }
+    if (body.token) next.token = body.token
+    if (body.refreshToken) next.refreshToken = body.refreshToken
+    if (typeof body.is_owner === 'boolean') next.is_owner = body.is_owner
+    if (body.name) next.name = body.name
+    if (body.email) next.email = body.email
+    setUser(next)
+  }
+
   function signOut() {
     setUser(null)
     router.replace('/login')
@@ -55,9 +68,7 @@ export function useAuth() {
         if (!res.ok) return false
 
         const body = await res.json()
-        const next = { ...state.user, token: body.token }
-        if (typeof body.is_owner === 'boolean') next.is_owner = body.is_owner
-        setUser(next)
+        setAuthFromResponse(body)
         return true
       } catch {
         return false
@@ -110,5 +121,5 @@ export function useAuth() {
     })
   }
 
-  return { state, setUser, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }
+  return { state, setUser, setAuthFromResponse, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }
 }

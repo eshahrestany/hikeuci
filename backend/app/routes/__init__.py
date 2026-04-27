@@ -10,6 +10,7 @@ from .mail import mail
 from .trails import trails
 from .dashboard_history import dashboard_history
 from .officers import officers
+from .email_campaigns import email_campaigns
 
 
 def register_routes(app):
@@ -25,3 +26,4 @@ def register_routes(app):
     app.register_blueprint(hike_waiver, url_prefix="/api/hike-waiver")
     app.register_blueprint(vehicles, url_prefix="/api/vehicles")
     app.register_blueprint(mail, url_prefix="/api/mail")
+    app.register_blueprint(email_campaigns, url_prefix="/api/admin/email-campaigns")

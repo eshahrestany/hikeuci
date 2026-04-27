@@ -22,7 +22,7 @@
   import background from "../../assets/bg_2.jpg"
 
   const router = useRouter()
-  const { state, setUser } = useAuth()
+  const { state, setAuthFromResponse } = useAuth()
   const error = ref(null)
 
   async function handleCredentialResponse(response) {
@@ -43,7 +43,7 @@
       }
 
       // 2) Backend sent back JWT + refresh token
-      setUser({ token: body.token, refreshToken: body.refreshToken, is_owner: !!body.is_owner })
+      setAuthFromResponse(body)
 
       console.log('✅ Logged in, user state is now:', state.user)
       router.replace('/admin')

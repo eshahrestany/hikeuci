@@ -74,6 +74,12 @@ const routes = [
         component: () => import('../views/admin/HikeHistory.vue'),
       },
       {
+        path: 'emails',
+        name: 'Dashboard Emails',
+        meta: { title: 'HikeUCI Dashboard Emails' },
+        component: () => import('../views/admin/DashboardEmails.vue'),
+      },
+      {
         path: 'history/hikes/:hikeId',
         name: 'Hike Detail',
         meta: { title: 'HikeUCI Hike Detail' },

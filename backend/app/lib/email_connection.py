@@ -1,5 +1,6 @@
 import smtplib
 import ssl
+import time
 from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formataddr
@@ -76,6 +77,7 @@ class EmailConnection:
 
             # Send via SMTP
             if cfg.get("DUMMY_EMAIL_MODE"):
+                time.sleep(5)
                 current_app.logger.info("Dummy email mode: Not sending email content:\n%s", msg)
                 return True
             with self.connect() as server:
