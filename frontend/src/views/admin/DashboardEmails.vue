@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
+import { useRealtime } from '@/lib/realtime.js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -15,7 +16,6 @@ import EmailTaskTable from '@/components/admin/EmailTaskTable.vue'
 import ActiveHikePanel from '@/components/admin/ActiveHikePanel.vue'
 
 const VALID_TYPES = ['voting', 'signup', 'waiver', 'waitlist']
-const POLL_MS = 5000
 
 const { fetchWithAuth } = useAuth()
 const route = useRoute()
@@ -35,7 +35,6 @@ const refreshTick = ref(0)
 const activeCampaign = computed(() =>
   campaigns.value.find(c => c.type === campaignType.value) || null
 )
-const isInProgress = computed(() => activeCampaign.value?.in_progress === true)
 const isCurrent = computed(() =>
   !!(activeHike.value && hikeId.value && activeHike.value.id === hikeId.value)
 )
@@ -88,12 +87,12 @@ async function loadActiveHike() {
   }
 }
 
-async function loadCampaigns() {
+async function loadCampaigns({ background = false } = {}) {
   if (!hikeId.value) {
     campaigns.value = []
     return
   }
-  campaignsLoading.value = true
+  if (!background) campaignsLoading.value = true
   try {
     const res = await fetchWithAuth(`/api/admin/email-campaigns/hikes/${hikeId.value}/campaigns`)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -108,7 +107,7 @@ async function loadCampaigns() {
     console.error(e)
     toast.error('Failed to load campaigns')
   } finally {
-    campaignsLoading.value = false
+    if (!background) campaignsLoading.value = false
   }
 }
 
@@ -118,35 +117,26 @@ function refresh() {
   refreshTick.value += 1
 }
 
-let pollInterval = null
-function startPolling() {
-  stopPolling()
-  pollInterval = setInterval(() => {
-    if (document.visibilityState !== 'visible') return
-    if (!isInProgress.value) return
-    refresh()
-  }, POLL_MS)
-}
-function stopPolling() {
-  if (pollInterval) {
-    clearInterval(pollInterval)
-    pollInterval = null
-  }
-}
-
 watch(hikeId, () => { loadCampaigns() })
 watch(campaignType, syncHikeAndType)
-watch(isInProgress, (val) => {
-  if (val) startPolling()
-  else stopPolling()
+
+const topics = computed(() => {
+  const t = []
+  if (hikeId.value) t.push(`email-campaigns:hike:${hikeId.value}`)
+  if (activeCampaign.value?.id) t.push(`campaign:${activeCampaign.value.id}`)
+  return t
+})
+useRealtime(topics, {
+  campaign_started:   () => loadCampaigns(),
+  campaign_progress:  () => loadCampaigns({ background: true }),
+  campaign_completed: () => { loadCampaigns(); refreshTick.value += 1 },
+  tasks_updated:      { debounceMs: 0, fn: () => { loadCampaigns({ background: true }); refreshTick.value += 1 } },
 })
 
 onMounted(async () => {
   await Promise.all([loadHikes(), loadActiveHike()])
   await loadCampaigns()
-  if (isInProgress.value) startPolling()
 })
-onUnmounted(stopPolling)
 
 const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending: 0, sent: 0, failed: 0 })
 </script>
@@ -249,6 +239,7 @@ const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending
             <EmailTaskTable
               v-if="activeCampaign"
               :campaign-id="activeCampaign.id"
+              :campaign-type="activeCampaign.type"
               :refresh-tick="refreshTick"
             />
           </template>

@@ -23,9 +23,11 @@ const STATUS_CLASS = {
 
 const props = defineProps({
   campaignId: { type: Number, required: true },
-  // refreshTick changes whenever the parent wants to force a refetch (e.g., poll tick or refresh button)
+  campaignType: { type: String, default: null },
   refreshTick: { type: Number, default: 0 },
 })
+
+const isManual = computed(() => props.campaignType === 'manual')
 
 const { fetchWithAuth } = useAuth()
 const route = useRoute()
@@ -44,6 +46,7 @@ const items = ref([])
 const total = ref(0)
 const hasNext = ref(false)
 const maxAttempts = ref(3)
+const initialLoaded = ref(false)
 
 let searchTimer = null
 let inFlightController = null
@@ -58,12 +61,13 @@ function syncUrl() {
   router.replace({ query: next })
 }
 
-async function load() {
+async function load({ background = false } = {}) {
   if (!props.campaignId) return
   if (inFlightController) inFlightController.abort()
   inFlightController = new AbortController()
 
-  loading.value = true
+  const showSkeleton = !background && !initialLoaded.value
+  if (showSkeleton) loading.value = true
   error.value = ''
   try {
     const params = new URLSearchParams({ page: String(page.value) })
@@ -77,27 +81,40 @@ async function load() {
     )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const body = await res.json()
-    items.value = body.items
+    if (background && initialLoaded.value) {
+      // Merge in-place so unchanged rows aren't recreated in the DOM.
+      const newById = new Map(body.items.map(i => [i.id, i]))
+      items.value = items.value
+        .map(item => newById.has(item.id) ? { ...item, ...newById.get(item.id) } : item)
+        .filter(item => newById.has(item.id))
+      for (const newItem of body.items) {
+        if (!items.value.some(i => i.id === newItem.id)) items.value.push(newItem)
+      }
+    } else {
+      items.value = body.items
+    }
     total.value = body.total
     hasNext.value = body.has_next
     maxAttempts.value = body.max_attempts
+    initialLoaded.value = true
   } catch (e) {
     if (e.name === 'AbortError') return
     console.error('Failed to load tasks:', e)
     error.value = 'Failed to load tasks.'
     toast.error('Failed to load tasks')
   } finally {
-    loading.value = false
+    if (showSkeleton) loading.value = false
   }
 }
 
 watch(() => props.campaignId, () => {
+  initialLoaded.value = false
   page.value = 1
   syncUrl()
   load()
 })
 
-watch(() => props.refreshTick, () => { load() })
+watch(() => props.refreshTick, () => { load({ background: true }) })
 
 watch(q, () => {
   if (searchTimer) clearTimeout(searchTimer)
@@ -161,6 +178,18 @@ function attemptsClass(task) {
     : ''
 }
 
+const EMAIL_TYPE_LABEL = {
+  voting:      'Voting',
+  signup:      'Signup',
+  waiver:      'Waiver',
+  waitlist:    'Waitlist',
+  late_signup: 'Late Signup',
+}
+
+function emailTypeLabel(type) {
+  return EMAIL_TYPE_LABEL[type] || type || '—'
+}
+
 onMounted(load)
 onUnmounted(() => {
   if (searchTimer) clearTimeout(searchTimer)
@@ -200,6 +229,7 @@ onUnmounted(() => {
           <TableRow>
             <TableHead>Member</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead v-if="isManual">Type</TableHead>
             <TableHead>
               <button
                 class="inline-flex items-center gap-1 hover:text-foreground"
@@ -234,6 +264,7 @@ onUnmounted(() => {
             <TableRow v-for="n in 8" :key="n">
               <TableCell><Skeleton class="h-4 w-32" /></TableCell>
               <TableCell><Skeleton class="h-4 w-48" /></TableCell>
+              <TableCell v-if="isManual"><Skeleton class="h-5 w-20" /></TableCell>
               <TableCell><Skeleton class="h-5 w-16" /></TableCell>
               <TableCell><Skeleton class="h-4 w-10" /></TableCell>
               <TableCell><Skeleton class="h-4 w-32" /></TableCell>
@@ -241,7 +272,7 @@ onUnmounted(() => {
           </template>
           <template v-else-if="error">
             <TableRow>
-              <TableCell :colspan="5" class="h-24 text-center">
+              <TableCell :colspan="isManual ? 6 : 5" class="h-24 text-center">
                 <div class="flex flex-col items-center gap-2">
                   <span class="text-destructive">{{ error }}</span>
                   <Button variant="outline" size="sm" @click="load">Retry</Button>
@@ -251,8 +282,16 @@ onUnmounted(() => {
           </template>
           <template v-else-if="items.length">
             <TableRow v-for="task in items" :key="task.id">
-              <TableCell class="font-medium">{{ task.member.name }}</TableCell>
+              <TableCell class="font-medium">
+                <router-link
+                  :to="{ name: 'Member History', params: { memberId: task.member.id } }"
+                  class="hover:underline"
+                >{{ task.member.name }}</router-link>
+              </TableCell>
               <TableCell class="text-muted-foreground">{{ task.member.email }}</TableCell>
+              <TableCell v-if="isManual">
+                <Badge variant="secondary">{{ emailTypeLabel(task.email_type) }}</Badge>
+              </TableCell>
               <TableCell>
                 <Badge variant="outline" :class="STATUS_CLASS[task.status]">
                   {{ task.status }}
@@ -266,7 +305,7 @@ onUnmounted(() => {
           </template>
           <template v-else>
             <TableRow>
-              <TableCell :colspan="5" class="h-24 text-center text-muted-foreground">
+              <TableCell :colspan="isManual ? 6 : 5" class="h-24 text-center text-muted-foreground">
                 No tasks match these filters.
               </TableCell>
             </TableRow>

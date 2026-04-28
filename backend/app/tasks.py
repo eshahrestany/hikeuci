@@ -11,6 +11,7 @@ from flask import current_app
 from . import db
 from .lib import phases
 from .lib.email_connection import EmailConnection
+from .lib.realtime import publish_event
 from .models import EmailCampaign, EmailTask, Member, MagicLink, Trail, Signup, Hike, Waiver
 from .lib.model_utils import get_current_ay_start
 from .lib.email_templates import render_email_batch
@@ -96,12 +97,22 @@ def start_email_campaign(hike_id: int, waitlist=False) -> int:
         db.session.add_all(tasks)
         db.session.commit()
 
+    publish_event(
+        f"email-campaigns:hike:{hike_id}",
+        "campaign_started",
+        {"campaign_id": campaign.id, "type": campaign.type},
+    )
+
     # 4) Kick off Celery
     batch_send_emails.delay(campaign_id=campaign.id, hike_id=hike_id)
     return campaign.id
 
 
-@celery_app.task(name="app.tasks.batch_send_emails")
+@celery_app.task(
+    name="app.tasks.batch_send_emails",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
 def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     """
     Process pending EmailTask rows for this campaign in batches.
@@ -171,6 +182,14 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
                         member.id, email_task.attempts, max_attempts
                     )
 
+                publish_event(f"campaign:{campaign_id}", "tasks_updated", {})
+
+        publish_event(
+            f"email-campaigns:hike:{hike_id}",
+            "campaign_progress",
+            {"campaign_id": campaign_id},
+        )
+
         if batch_pause_sec > 0:
             time.sleep(batch_pause_sec)
 
@@ -178,49 +197,72 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     hike.email_campaign_completed = True
     db.session.commit()
 
+    publish_event(f"campaign:{campaign_id}", "tasks_updated", {})
+    publish_event(
+        f"email-campaigns:hike:{hike_id}",
+        "campaign_completed",
+        {"campaign_id": campaign_id},
+    )
+
     return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total}
 
 
 @celery_app.task(name="app.tasks.send_email")
-def send_email(email_type: str, member_id: int, hike_id, files=None):
+def send_email(email_type: str, member_id: int, hike_id, files=None, task_id=None):
     """
     Task to send a singular email. Much of the code is re-used from the batch send function.
     This previously said I *wasn't* going to abstract it to save time, but the code stank, so I did.
 
     -GD
     """
-    hike = Hike.query.get(hike_id)
-    member = Member.query.get(member_id)
-    if not hike:
-        raise ValueError("invalid hike_id")
-    if not member:
-        raise ValueError("invalid member_id")
+    try:
+        hike = Hike.query.get(hike_id)
+        member = Member.query.get(member_id)
+        if not hike:
+            raise ValueError("invalid hike_id")
+        if not member:
+            raise ValueError("invalid member_id")
 
-    if files:  # deserialize files back to EmailFile classes
-        files = [EmailFile.from_dict(file) for file in files]
+        if files:  # deserialize files back to EmailFile classes
+            files = [EmailFile.from_dict(file) for file in files]
 
-    # modularize email template w/ static batch data
-    subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
+        # modularize email template w/ static batch data
+        subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
 
-    # render modules
-    # magic link is generated in get_personalization(), in the future I would like to factor this out to here
-    # and pass the magic link id into get_personalization.
-    personalization = get_personalization(email_type, hike, member)
-    text_body = text_body_mod.email(personalization, batch_text)
-    html_body = html_body_mod.email(personalization, batch_text)
+        # magic link is generated in get_personalization(), in the future I would like to factor this out to here
+        # and pass the magic link id into get_personalization.
+        personalization = get_personalization(email_type, hike, member)
+        text_body = text_body_mod.email(personalization, batch_text)
+        html_body = html_body_mod.email(personalization, batch_text)
 
-    conn = EmailConnection()
+        conn = EmailConnection()
 
-    with conn.connect() as server:
-        to_email = getattr(member, "email", None)
+        with conn.connect() as server:
+            to_email = getattr(member, "email", None)
+            res = conn.send(to_email, subj, text_body, html_body, files=files)
+            if not res:
+                current_app.logger.exception(
+                    f"{email_type} email send failed for member_id=%s (attempt 1/1)",
+                    member.id
+                )
 
-        res = conn.send(to_email, subj, text_body, html_body, files=files)
+        if task_id:
+            task = EmailTask.query.get(task_id)
+            if task:
+                task.attempts += 1
+                task.status = "sent" if res else "failed"
+                if res:
+                    task.sent_at = datetime.now(timezone.utc)
+                db.session.commit()
 
-        if not res:
-            current_app.logger.exception(
-                f"{email_type} email send failed for member_id=%s (attempt 1/1)",
-                member.id
-            )
+    except Exception:
+        if task_id:
+            task = EmailTask.query.get(task_id)
+            if task:
+                task.attempts += 1
+                task.status = "failed"
+                db.session.commit()
+        raise
 
 
 @celery_app.task(name="app.tasks.generate_waiver_pdf")

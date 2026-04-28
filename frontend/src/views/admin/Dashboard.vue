@@ -3,7 +3,7 @@
   <section class="px-0 py-4 sm:p-6 overflow-x-hidden">
     <Card class="max-w-4xl mx-auto md:space-y-6 border-0 sm:border-1">
       <CardHeader class="flex items-center">
-        <CardTitle class="text-2xl">Upcoming Hike</CardTitle>
+        <CardTitle class="text-2xl">Current Hike</CardTitle>
         <Button size="sm" class="ml-auto" @click="loadUpcoming"><RefreshCcw/>Refresh data</Button>
       </CardHeader>
       <hr class="h-px mx-6 bg-gray-200 border-0 dark:bg-gray-700"/>
@@ -39,8 +39,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '@/lib/auth.js'
+import { useRealtime } from '@/lib/realtime.js'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -70,6 +71,15 @@ async function loadUpcoming() {
     loading.value = false
   }
 }
+
+const topics = computed(() => response.value?.hike_id ? [`hike:${response.value.hike_id}`] : [])
+useRealtime(topics, {
+  phase_changed:    () => loadUpcoming(),
+  roster_updated:   () => loadUpcoming(),
+  checkin_updated:  () => loadUpcoming(),
+  vote_updated:     () => loadUpcoming(),
+  waiver_updated:   () => loadUpcoming(),
+})
 
 onMounted(loadUpcoming)
 

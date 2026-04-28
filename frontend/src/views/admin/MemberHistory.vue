@@ -24,6 +24,8 @@ const { fetchWithAuth } = useAuth()
 
 const loading = ref(true)
 const data = ref(null)
+const emailHistory = ref([])
+const emailHistoryLoading = ref(true)
 
 async function loadMemberHistory() {
   loading.value = true
@@ -36,6 +38,20 @@ async function loadMemberHistory() {
     data.value = null
   } finally {
     loading.value = false
+  }
+}
+
+async function loadEmailHistory() {
+  emailHistoryLoading.value = true
+  try {
+    const res = await fetchWithAuth(`/api/admin/email-campaigns/members/${route.params.memberId}`)
+    if (!res.ok) throw Error(res.status)
+    emailHistory.value = await res.json()
+  } catch (e) {
+    console.error('Failed to load email history:', e)
+    emailHistory.value = []
+  } finally {
+    emailHistoryLoading.value = false
   }
 }
 
@@ -178,7 +194,33 @@ const table = useVueTable({
   },
 })
 
-onMounted(loadMemberHistory)
+const EMAIL_TYPE_LABEL = {
+  voting:      'Voting',
+  signup:      'Signup',
+  waiver:      'Waiver',
+  waitlist:    'Waitlist',
+  late_signup: 'Late Signup',
+  manual:      'Manual',
+}
+
+const STATUS_CLASS = {
+  sent:    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  failed:  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+}
+
+function formatSentAt(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  })
+}
+
+onMounted(() => {
+  loadMemberHistory()
+  loadEmailHistory()
+})
 </script>
 
 <template>
@@ -294,6 +336,48 @@ onMounted(loadMemberHistory)
         </p>
         <p v-else class="text-sm text-muted-foreground text-center py-8">
           Member not found.
+        </p>
+      </CardContent>
+
+      <CardContent>
+        <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700 mb-6" />
+        <h2 class="text-lg font-semibold mb-4">Email History</h2>
+        <Skeleton v-if="emailHistoryLoading" class="h-40 w-full" />
+        <template v-else-if="emailHistory.length">
+          <div class="border rounded-sm">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Hike Date</TableHead>
+                  <TableHead>Trail</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Sent At</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="entry in emailHistory" :key="entry.id">
+                  <TableCell>{{ formatDate(entry.hike.hike_date) }}</TableCell>
+                  <TableCell>{{ entry.hike.trail_name || '—' }}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {{ EMAIL_TYPE_LABEL[entry.email_type] || entry.email_type || '—' }}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" :class="STATUS_CLASS[entry.status]">
+                      {{ entry.status }}
+                    </Badge>
+                  </TableCell>
+                  <TableCell class="text-muted-foreground">{{ formatSentAt(entry.sent_at) }}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <p class="text-sm text-muted-foreground mt-2">{{ emailHistory.length }} email{{ emailHistory.length !== 1 ? 's' : '' }}</p>
+        </template>
+        <p v-else class="text-sm text-muted-foreground text-center py-8">
+          No email history for this member.
         </p>
       </CardContent>
     </Card>

@@ -10,4 +10,4 @@ RUN pip3 install -r requirements.txt
 COPY . .
 
 EXPOSE 8000
-CMD ["gunicorn", "-w", "6", "--worker-class", "gevent", "--bind", "0.0.0.0:8000", "app:create_app()"]
+CMD ["gunicorn", "-w", "6", "--worker-class", "gevent", "--timeout", "0", "--bind", "0.0.0.0:8000", "app:create_app()"]

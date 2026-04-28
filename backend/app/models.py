@@ -159,6 +159,8 @@ class EmailTask(db.Model):
     status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed'
     attempts          = db.Column(db.Integer, nullable=False, default=0)
     sent_at           = db.Column(db.DateTime, nullable=True)
+    # Only set for manual-campaign tasks; bulk campaign type is implied by EmailCampaign.type
+    email_type        = db.Column(db.String(50), nullable=True)
 
     def __repr__(self):
         return f'<MagicLink {self.token}>'

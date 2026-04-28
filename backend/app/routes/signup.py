@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, current_app, Response, request
 
 from ..lib.model_utils import update_waitlist
+from ..lib.realtime import publish_event
+from ..lib.email_record import create_manual_task
 from ..models import Hike, Member, MagicLink, Trail, Vehicle, Signup
 from .. import db
 
@@ -138,7 +140,13 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a passenger", "success": True}), 200
 
         elif transport_type == "is_self-transport":
@@ -154,7 +162,13 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a self-transport", "success": True}), 200
 
         elif transport_type == "is_driver":
@@ -208,7 +222,13 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a driver", "success": True}), 200
 
 
@@ -243,5 +263,6 @@ def cancel_signup():
 
     db.session.delete(existing_signup)
     db.session.commit()
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
 
     return jsonify({"success": True}, 200)

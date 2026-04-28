@@ -24,11 +24,11 @@ const data = computed(() => ({
   navMain: [
     {
       items: [
-        { title: 'Home', route: {name: 'Dashboard'} },
+        { title: 'Current Hike', route: {name: 'Dashboard'} },
         { title: 'Manage Members', route: {name: 'Dashboard Members'} },
         { title: 'Manage Trails', route: {name: 'Dashboard Trails'} },
         { title: 'Hike History', route: {name: 'Dashboard History'} },
-        { title: 'Email Campaigns', route: {name: 'Dashboard Emails'} },
+        { title: 'Emails', route: {name: 'Dashboard Emails'} },
         ...(state.user?.is_owner
           ? [{ title: 'Manage Officers', route: {name: 'Dashboard Officers'} }]
           : []),

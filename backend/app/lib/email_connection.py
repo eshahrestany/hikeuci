@@ -77,7 +77,7 @@ class EmailConnection:
 
             # Send via SMTP
             if cfg.get("DUMMY_EMAIL_MODE"):
-                time.sleep(5)
+                time.sleep(0.1)
                 current_app.logger.info("Dummy email mode: Not sending email content:\n%s", msg)
                 return True
             with self.connect() as server:

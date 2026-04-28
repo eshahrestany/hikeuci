@@ -137,6 +137,7 @@ def list_campaign_tasks(campaign_id: int):
                 "status": task.status,
                 "attempts": task.attempts,
                 "sent_at": task.sent_at.replace(tzinfo=None).isoformat() + "Z" if task.sent_at else None,
+                "email_type": task.email_type,
                 "member": {
                     "id": member.id,
                     "name": member.name,
@@ -146,3 +147,34 @@ def list_campaign_tasks(campaign_id: int):
             for task, member in rows
         ],
     })
+
+
+@email_campaigns.route("/members/<int:member_id>", methods=["GET"])
+@admin_required
+def member_email_history(member_id: int):
+    from sqlalchemy import nullslast
+    rows = (
+        db.session.query(EmailTask, EmailCampaign, Hike, Trail)
+        .join(EmailCampaign, EmailTask.campaign_id == EmailCampaign.id)
+        .join(Hike, EmailCampaign.hike_id == Hike.id)
+        .outerjoin(Trail, Hike.trail_id == Trail.id)
+        .filter(EmailTask.member_id == member_id)
+        .order_by(nullslast(EmailTask.sent_at.desc()), EmailTask.id.desc())
+        .all()
+    )
+    return jsonify([
+        {
+            "id": task.id,
+            "email_type": task.email_type or campaign.type,
+            "campaign_type": campaign.type,
+            "status": task.status,
+            "attempts": task.attempts,
+            "sent_at": task.sent_at.replace(tzinfo=None).isoformat() + "Z" if task.sent_at else None,
+            "hike": {
+                "id": hike.id,
+                "hike_date": hike.get_localized_time("hike_date").isoformat(),
+                "trail_name": trail.name if trail else None,
+            },
+        }
+        for task, campaign, hike, trail in rows
+    ])

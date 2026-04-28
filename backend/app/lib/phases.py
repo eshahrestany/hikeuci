@@ -4,6 +4,7 @@ import random
 from ..models import Hike, Trail, Vote, Signup, MagicLink
 from .. import db
 from . import selection_algorithm
+from .realtime import publish_event
 
 
 def initiate_signup_phase(hike_id: int):
@@ -27,6 +28,7 @@ def initiate_signup_phase(hike_id: int):
     ah.phase = "signup"
     ah.email_campaign_completed = False
     db.session.commit()
+    publish_event(f"hike:{ah.id}", "phase_changed", {"phase": "signup"})
 
 
 def initiate_waiver_phase(hike_id: int):
@@ -49,6 +51,7 @@ def initiate_waiver_phase(hike_id: int):
         s.waitlist_pos = pos
 
     db.session.commit()
+    publish_event(f"hike:{ah.id}", "phase_changed", {"phase": "waiver"})
 
 
 def complete_hike(hike_id: int):
@@ -62,6 +65,7 @@ def complete_hike(hike_id: int):
     ah.status = "past"
     ah.phase = None
     db.session.commit()
+    publish_event(f"hike:{ah.id}", "phase_changed", {"phase": None, "status": "past"})
 
 
 def cancel_hike(hike_id: int):
@@ -81,3 +85,4 @@ def cancel_hike(hike_id: int):
     ah.status = "cancelled"
     ah.phase = None
     db.session.commit()
+    publish_event(f"hike:{ah.id}", "phase_changed", {"phase": None, "status": "cancelled"})

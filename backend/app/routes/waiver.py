@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app, render_template
 
 from ..lib.model_utils import update_waitlist
+from ..lib.realtime import publish_event
 from ..models import Member, Hike, Trail, MagicLink, Waiver, Signup
 from .. import db
 
@@ -80,6 +81,11 @@ def hike_waiver_page():
         )
         db.session.add(waiver)
         db.session.commit()
+        publish_event(
+            f"hike:{hike.id}",
+            "waiver_updated",
+            {"signup_id": signup.id, "member_id": member.id},
+        )
 
         current_app.extensions["celery"].send_task("app.tasks.generate_waiver_pdf", args=[waiver.id])
 
@@ -117,5 +123,6 @@ def cancel():
     db.session.commit()
 
     update_waitlist(hike.id)
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
 
     return jsonify({"status": "Cancelled successfully", "success": True}), 200

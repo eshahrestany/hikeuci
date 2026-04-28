@@ -121,5 +121,5 @@ export function useAuth() {
     })
   }
 
-  return { state, setUser, setAuthFromResponse, signOut, fetchWithAuth, postWithAuth, getAuthHeaders }
+  return { state, setUser, setAuthFromResponse, signOut, fetchWithAuth, postWithAuth, getAuthHeaders, refreshAccessToken }
 }

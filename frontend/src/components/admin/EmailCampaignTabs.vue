@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 
-const TYPE_ORDER = ['voting', 'signup', 'waiver', 'waitlist']
-const TYPE_LABEL = { voting: 'Voting', signup: 'Signup', waiver: 'Waiver', waitlist: 'Waitlist' }
+const TYPE_ORDER = ['voting', 'signup', 'waiver', 'waitlist', 'manual']
+const TYPE_LABEL = { voting: 'Voting', signup: 'Signup', waiver: 'Waiver', waitlist: 'Waitlist', manual: 'Manual' }
 
 const props = defineProps({
   campaigns: { type: Array, required: true },
