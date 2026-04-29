@@ -121,3 +121,312 @@
     @apply bg-background text-foreground;
     }
 }
+
+/* ============================================================
+ * Admin Dashboard Design System
+ * Light defaults in .admin-layout; dark overrides in .dark .admin-layout
+ * ============================================================ */
+
+/* --- Light mode tokens + shadcn var overrides --- */
+.admin-layout {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius: 0.625rem;
+
+  /* Palette */
+  --background:        #eef2fb;
+  --foreground:        #1a2535;
+  --card:              #ffffff;
+  --card-foreground:   #1a2535;
+  --popover:           #ffffff;
+  --popover-foreground:#1a2535;
+  --primary:           #255799;
+  --primary-foreground:#ffffff;
+  --secondary:         rgba(0,0,0,0.05);
+  --secondary-foreground:#1a2535;
+  --muted:             rgba(0,0,0,0.04);
+  --muted-foreground:  #6b7a90;
+  --accent:            rgba(0,0,0,0.04);
+  --accent-foreground: #1a2535;
+  --destructive:       #dc2626;
+  --destructive-foreground:#ffffff;
+  --border:            rgba(0,0,0,0.09);
+  --input:             rgba(0,0,0,0.08);
+  --ring:              rgba(37,87,153,0.40);
+
+  --sidebar:           #e6ecf8;
+  --sidebar-foreground:#374151;
+  --sidebar-primary:   #255799;
+  --sidebar-primary-foreground:#ffffff;
+  --sidebar-accent:    rgba(168,124,5,0.12);
+  --sidebar-accent-foreground:#7a5a03;
+  --sidebar-border:    rgba(0,0,0,0.08);
+  --sidebar-ring:      rgba(37,87,153,0.40);
+
+  /* Mode-specific tokens used throughout the component CSS */
+  --admin-dot:         rgba(0,0,0,0.055);
+  --admin-gold:        #7a5a03;
+  --admin-gold-bg:     rgba(168,124,5,0.10);
+  --admin-gold-border: rgba(168,124,5,0.25);
+  --admin-hover:       rgba(0,0,0,0.045);
+}
+
+/* --- Dark mode tokens + shadcn var overrides --- */
+.dark .admin-layout {
+  color-scheme: dark;
+
+  --background:        #0a0f1c;
+  --foreground:        #dce6f5;
+  --card:              #0f1829;
+  --card-foreground:   #dce6f5;
+  --popover:           #16223a;
+  --popover-foreground:#dce6f5;
+  --primary:           #255799;
+  --primary-foreground:#ffffff;
+  --secondary:         rgba(255,255,255,0.07);
+  --secondary-foreground:#dce6f5;
+  --muted:             rgba(255,255,255,0.05);
+  --muted-foreground:  #7a90b3;
+  --accent:            rgba(255,255,255,0.06);
+  --accent-foreground: #dce6f5;
+  --destructive:       #b91c1c;
+  --destructive-foreground:#ffffff;
+  --border:            rgba(255,255,255,0.08);
+  --input:             rgba(255,255,255,0.08);
+  --ring:              rgba(37,87,153,0.55);
+
+  --sidebar:           #070c18;
+  --sidebar-foreground:#a8bbd8;
+  --sidebar-primary:   #255799;
+  --sidebar-primary-foreground:#ffffff;
+  --sidebar-accent:    rgba(254,204,7,0.10);
+  --sidebar-accent-foreground:#FECC07;
+  --sidebar-border:    rgba(255,255,255,0.06);
+  --sidebar-ring:      rgba(254,204,7,0.50);
+
+  --admin-dot:         rgba(255,255,255,0.025);
+  --admin-gold:        #FECC07;
+  --admin-gold-bg:     rgba(254,204,7,0.09);
+  --admin-gold-border: rgba(254,204,7,0.20);
+  --admin-hover:       rgba(255,255,255,0.05);
+}
+
+/* Main content — dot grid --------------------------------------- */
+.admin-layout [data-slot="sidebar-inset"] {
+  background-color: var(--background) !important;
+  background-image: radial-gradient(var(--admin-dot) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+.admin-layout [data-slot="sidebar-wrapper"] {
+  background: var(--background) !important;
+}
+
+/* Sidebar panel ------------------------------------------------- */
+.admin-layout [data-sidebar="sidebar"] {
+  border-right: 1px solid var(--sidebar-border) !important;
+}
+
+/* Active nav item — gold pill ----------------------------------- */
+.admin-layout [data-sidebar="menu-button"]:has(.router-link-exact-active),
+.admin-layout [data-sidebar="menu-button"]:has(.router-link-active) {
+  background: var(--admin-gold-bg) !important;
+  border: 1px solid var(--admin-gold-border) !important;
+}
+.admin-layout [data-sidebar="menu-button"]:has(.router-link-exact-active) *,
+.admin-layout [data-sidebar="menu-button"]:has(.router-link-active) * {
+  color: var(--admin-gold) !important;
+  font-weight: 500;
+}
+
+/* Sidebar hover (non-active) */
+.admin-layout [data-sidebar="menu-button"]:hover:not(:has(.router-link-exact-active)):not(:has(.router-link-active)) {
+  background: var(--admin-hover) !important;
+}
+
+/* Cards --------------------------------------------------------- */
+.admin-layout [data-slot="card"] {
+  border-color: var(--border) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px var(--border) !important;
+}
+.dark .admin-layout [data-slot="card"] {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) !important;
+}
+
+/* Popovers / dropdowns / selects -------------------------------- */
+.admin-layout [data-slot="popover-content"],
+.admin-layout [data-slot="dropdown-menu-content"],
+.admin-layout [data-slot="select-content"],
+.admin-layout [data-slot="command"],
+.admin-layout [data-slot="hover-card-content"] {
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px var(--border) !important;
+}
+.dark .admin-layout [data-slot="popover-content"],
+.dark .admin-layout [data-slot="dropdown-menu-content"],
+.dark .admin-layout [data-slot="select-content"],
+.dark .admin-layout [data-slot="command"],
+.dark .admin-layout [data-slot="hover-card-content"] {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) !important;
+}
+
+/* Dialogs and sheets -------------------------------------------- */
+.admin-layout [data-slot="dialog-content"],
+.admin-layout [data-slot="sheet-content"] {
+  border-color: var(--border) !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 0 0 1px var(--border) !important;
+}
+.dark .admin-layout [data-slot="dialog-content"],
+.dark .admin-layout [data-slot="sheet-content"] {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05) !important;
+}
+.dark .admin-layout [data-slot="dialog-overlay"],
+.dark .admin-layout [data-slot="sheet-overlay"] {
+  background: rgba(2,6,20,0.80) !important;
+}
+
+/* Separators — override hard-coded bg-gray-200 / dark:bg-gray-700 */
+.admin-layout hr {
+  background: var(--border) !important;
+  border-color: transparent !important;
+  height: 1px !important;
+}
+
+/* Table rows hover ---------------------------------------------- */
+.admin-layout [data-slot="table-row"]:hover {
+  background: var(--admin-hover) !important;
+}
+
+/* Sticky page header -------------------------------------------- */
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 54px;
+  padding: 0 1.5rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+/* Sidebar brand ------------------------------------------------- */
+.admin-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0.75rem 0.75rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 0.25rem;
+}
+
+.admin-brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FECC07 0%, #e8a800 100%);
+  box-shadow: 0 2px 8px rgba(254,204,7,0.25), 0 0 0 1px rgba(254,204,7,0.15);
+  flex-shrink: 0;
+}
+
+.admin-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.admin-brand-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sidebar-foreground);
+  letter-spacing: -0.01em;
+}
+
+.admin-brand-sub {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--admin-gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Sidebar footer ------------------------------------------------ */
+.admin-sidebar-footer {
+  border-top: 1px solid var(--sidebar-border);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Scrollbar ----------------------------------------------------- */
+.admin-layout ::-webkit-scrollbar { width: 5px; height: 5px; }
+.admin-layout ::-webkit-scrollbar-track { background: transparent; }
+.admin-layout ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.admin-layout ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+
+/* Card component refinements ------------------------------------ */
+.admin-layout [data-slot="card-title"] {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+.admin-layout [data-slot="card-header"] {
+  padding-bottom: 0;
+}
+
+/* Table refinements --------------------------------------------- */
+.admin-layout [data-slot="table-head"] {
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--muted-foreground) !important;
+}
+.admin-layout [data-slot="table-cell"] {
+  font-size: 0.875rem;
+}
+
+/* Progress bar -------------------------------------------------- */
+.admin-layout [data-slot="progress"] {
+  height: 5px;
+  border-radius: 99px;
+}
+
+/* Badge --------------------------------------------------------- */
+.admin-layout [data-slot="badge"] {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Tabs ---------------------------------------------------------- */
+.admin-layout [data-slot="tabs-list"] {
+  border-radius: var(--radius);
+}
+.admin-layout [data-slot="tabs-trigger"] {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Input / textarea ---------------------------------------------- */
+.admin-layout [data-slot="input"],
+.admin-layout [data-slot="textarea"] {
+  font-size: 0.875rem;
+}
+
+/* Button size tightening ---------------------------------------- */
+.admin-layout [data-slot="button"] {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}

@@ -5,11 +5,11 @@ import ExportEmailButton from "@/components/admin/ExportEmailButton.vue";
 </script>
 
 <template>
-  <section class="p-6">
-    <Card class="mx-auto space-y-6">
+  <section class="p-4 md:p-6">
+    <Card class="mx-auto">
       <CardHeader>
         <div class="inline-flex">
-          <CardTitle class="text-2xl">Members</CardTitle>
+          <CardTitle>Members</CardTitle>
           <ExportEmailButton mode="all" class="ml-auto"/>
         </div>
         <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />

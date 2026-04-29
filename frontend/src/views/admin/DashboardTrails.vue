@@ -4,10 +4,10 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card/ind
 </script>
 
 <template>
-  <section class="p-6">
-    <Card class="mx-auto space-y-6">
+  <section class="p-4 md:p-6">
+    <Card class="mx-auto">
       <CardHeader>
-        <CardTitle class="text-2xl">Trails</CardTitle>
+        <CardTitle>Trails</CardTitle>
         <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
       </CardHeader>
       <CardContent>

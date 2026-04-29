@@ -22,22 +22,22 @@ const hasIdentity = computed(() => !!(name.value || email.value))
 <template>
   <div
     v-if="hasIdentity"
-    class="flex items-center gap-2.5 rounded-md border border-sidebar-border/60 bg-sidebar-accent/40 px-2 py-1.5"
+    class="flex items-center gap-2.5 rounded-lg border border-sidebar-border bg-sidebar-accent/30 px-2.5 py-2"
   >
     <div
-      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-uci-gold to-amber-600 text-[11px] font-semibold text-black shadow-sm ring-1 ring-black/5"
+      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-uci-gold to-amber-500 text-[10px] font-bold text-midnight shadow-sm ring-1 ring-black/10"
       aria-hidden="true"
     >
       {{ initials }}
     </div>
     <div class="min-w-0 flex-1 leading-tight">
-      <div v-if="name" class="truncate text-sm font-medium text-sidebar-foreground">
+      <div v-if="name" class="truncate text-xs font-semibold text-sidebar-foreground">
         {{ name }}
       </div>
       <div
         v-if="email"
         :title="email"
-        class="truncate text-xs text-sidebar-foreground/60"
+        class="truncate text-[11px] text-sidebar-foreground/50"
       >
         {{ email }}
       </div>
