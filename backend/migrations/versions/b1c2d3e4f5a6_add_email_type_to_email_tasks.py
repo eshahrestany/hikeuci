@@ -1,7 +1,7 @@
 """add email_type to email_tasks
 
 Revision ID: b1c2d3e4f5a6
-Revises: f203d5b4919d
+Revises: 95168b57b2e0
 Create Date: 2026-04-28 00:00:00.000000
 
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = 'b1c2d3e4f5a6'
-down_revision = 'e7d9a0f1c642'
+down_revision = '95168b57b2e0'
 branch_labels = None
 depends_on = None
 
