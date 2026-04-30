@@ -52,14 +52,21 @@ def start_email_campaign(hike_id: int, waitlist=False) -> int:
 
     if email_type in ("voting", "signup"):
         ay_start = get_current_ay_start()
-        members: List[Member] = Member.query.filter(Member.joined_on >= ay_start).all()
+        members: List[Member] = Member.query.filter(
+            Member.joined_on >= ay_start,
+            Member.subscribed_to_mailing_list == True,
+        ).all()
     else:
         if waitlist:
             # send waitlist email only to waitlisted hikers
             members: List[Member] = (
                 Member.query
                 .join(Signup, Signup.member_id == Member.id)
-                .filter(Signup.hike_id == hike_id, Signup.status == "waitlisted")
+                .filter(
+                    Signup.hike_id == hike_id,
+                    Signup.status == "waitlisted",
+                    Member.subscribed_to_mailing_list == True,
+                )
                 .distinct()
                 .all()
             )
@@ -70,7 +77,11 @@ def start_email_campaign(hike_id: int, waitlist=False) -> int:
             members: List[Member] = (
                 Member.query
                 .join(Signup, Signup.member_id == Member.id)
-                .filter(Signup.hike_id == hike_id, Signup.status == "confirmed")
+                .filter(
+                    Signup.hike_id == hike_id,
+                    Signup.status == "confirmed",
+                    Member.subscribed_to_mailing_list == True,
+                )
                 .distinct()
                 .all()
             )

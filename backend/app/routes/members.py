@@ -1,15 +1,16 @@
 import re
 from flask import Blueprint, request, jsonify
+from sqlalchemy import or_, exists
 from sqlalchemy.exc import IntegrityError
 from ..decorators import admin_required
 from ..extensions import db
-from ..models import Member, AdminUser
+from ..models import Member, AdminUser, Signup, Waiver, Vehicle, MagicLink, EmailTask
 from ..lib.model_utils import get_current_ay_start
 
 members = Blueprint("members", __name__, url_prefix="members")
 email_pattern = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
-def _serialize_member(member, is_officer=False):
+def _serialize_member(member, is_officer=False, can_delete=True):
     return {
         'id': member.id,
         'name': member.name,
@@ -17,7 +18,22 @@ def _serialize_member(member, is_officer=False):
         'tel': member.tel,
         'joined_on': member.joined_on.isoformat(),
         'is_officer': is_officer,
+        'subscribed_to_mailing_list': member.subscribed_to_mailing_list,
+        'can_delete': can_delete,
     }
+
+def _referenced_member_ids() -> set:
+    """Return member IDs that have any FK reference preventing deletion."""
+    rows = db.session.query(Member.id).filter(
+        or_(
+            exists().where(Signup.member_id == Member.id),
+            exists().where(Waiver.member_id == Member.id),
+            exists().where(Vehicle.member_id == Member.id),
+            exists().where(MagicLink.member_id == Member.id),
+            exists().where(EmailTask.member_id == Member.id),
+        )
+    ).all()
+    return {r[0] for r in rows}
 
 
 def _officer_member_ids():
@@ -29,7 +45,11 @@ def list_members():
     ay_start = get_current_ay_start()
     all_members = Member.query.filter(Member.joined_on >= ay_start).order_by(Member.name.asc()).all()
     officer_ids = _officer_member_ids()
-    return jsonify([_serialize_member(m, m.id in officer_ids) for m in all_members])
+    referenced_ids = _referenced_member_ids()
+    return jsonify([
+        _serialize_member(m, m.id in officer_ids, m.id not in referenced_ids)
+        for m in all_members
+    ])
 
 @members.route("", methods=['POST'])
 @admin_required
@@ -94,8 +114,27 @@ def delete(member_id):
     if AdminUser.query.filter_by(member_id=member.id).first() is not None:
         return jsonify(error="This member is an officer; remove them from Officers first."), 409
     db.session.delete(member)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="Cannot delete member with existing records (signups, waivers, vehicles, etc.)."), 409
     return "Deleted Successfully", 200
+
+
+@members.route("/<int:member_id>/mailing-list", methods=["PATCH"])
+@admin_required
+def toggle_mailing_list(member_id):
+    member = Member.query.get_or_404(member_id)
+    data = request.get_json(silent=True) or {}
+    subscribed = data.get("subscribed")
+    if not isinstance(subscribed, bool):
+        return jsonify(error="'subscribed' must be a boolean."), 400
+    member.subscribed_to_mailing_list = subscribed
+    db.session.commit()
+    officer_ids = _officer_member_ids()
+    referenced_ids = _referenced_member_ids()
+    return jsonify(_serialize_member(member, member.id in officer_ids, member.id not in referenced_ids))
 
 
 @members.route("/batch", methods=["POST"])

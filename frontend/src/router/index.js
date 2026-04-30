@@ -39,6 +39,11 @@ const routes = [
     component: () => import('../views/public/PrivacyPolicy.vue'),
   },
   {
+    path: '/unsubscribe',
+    name: 'Unsubscribe',
+    component: () => import('../views/public/Unsubscribe.vue'),
+  },
+  {
     path: '/admin',
     component: () => import('../views/admin/DashboardLayout.vue'),
     meta: { requiresAuth: true },

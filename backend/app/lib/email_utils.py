@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ..models import Member, MagicLink, Signup, Hike, Vote
 from flask import current_app
+from .unsubscribe_token import generate_token
 
 endpoint_dict = {
     "voting": "vote",
@@ -79,8 +80,7 @@ def get_personalization(email_type, hike: Hike, member: Member):
     personalization["magic_url"] = f"{base_url}/{endpoint_dict[email_type]}?token={token}"
 
     if email_type in ["voting", "signup", "late_signup"]:
-        # good to go (member_name, magic_url)
-        pass
+        personalization["unsubscribe_url"] = f"{base_url}/unsubscribe?token={generate_token(member.id)}"
 
     elif email_type == "waiver":
         # Add signup transport data to waivers
