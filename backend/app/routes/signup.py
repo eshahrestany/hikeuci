@@ -40,7 +40,7 @@ def signup() -> tuple[Response, int]:
 
         trail = Trail.query.get(hike.trail_id)
 
-        vehicles = Vehicle.query.filter_by(member_id=member.id).all()
+        vehicles = Vehicle.query.filter_by(member_id=member.id, deleted=False).all()
         vehicles_data = [{
             "id": v.id,
             "make": v.make,
@@ -244,11 +244,15 @@ def delete_vehicle(vehicle_id):
         return jsonify({"error": "Token is invalid"}), 400
 
     member_id = result["magic_link"].member_id
-    vehicle = Vehicle.query.filter_by(id=vehicle_id, member_id=member_id).first()
+    vehicle = Vehicle.query.filter_by(id=vehicle_id, member_id=member_id, deleted=False).first()
     if not vehicle:
         return jsonify({"error": "Vehicle not found"}), 404
 
-    db.session.delete(vehicle)
+    has_references = Signup.query.filter_by(vehicle_id=vehicle_id).first() is not None
+    if has_references:
+        vehicle.deleted = True
+    else:
+        db.session.delete(vehicle)
     db.session.commit()
     return jsonify({"success": True}), 200
 

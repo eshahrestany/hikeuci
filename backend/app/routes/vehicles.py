@@ -12,7 +12,7 @@ def list_vehicles():
     if not member_id:
         return jsonify(error="Missing 'member_id'"), 400
 
-    qs = Vehicle.query.filter_by(member_id=member_id).all()
+    qs = Vehicle.query.filter_by(member_id=member_id, deleted=False).all()
     result = []
     for v in qs:
         # build the same “description” the front‐end expects

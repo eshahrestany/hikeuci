@@ -99,6 +99,7 @@ class Vehicle(db.Model):
     make            = db.Column(db.String(50), nullable=False)
     model           = db.Column(db.String(50), nullable=False)
     passenger_seats = db.Column(db.Integer, nullable=False)
+    deleted         = db.Column(db.Boolean, nullable=False, default=False, server_default='false')
 
 
 class AdminUser(db.Model):
