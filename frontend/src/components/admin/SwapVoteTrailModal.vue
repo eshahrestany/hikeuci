@@ -8,9 +8,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
+import { ArrowLeftRight, TriangleAlert } from 'lucide-vue-next'
 import TrailPicker from '@/components/admin/TrailPicker.vue'
 
 const props = defineProps({
@@ -29,7 +29,6 @@ const submitting = ref(false)
 const { fetchWithAuth } = useAuth()
 
 const excludeIds = props.candidates.map(c => c.trail_id)
-
 const selectedOldTrail = ref(null)
 
 function selectOld(id) {
@@ -70,73 +69,104 @@ async function confirm() {
 
       <!-- Step 1: Pick which candidate to replace -->
       <template v-if="step === 1">
-        <div class="overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 p-6">
+        <div class="shrink-0 border-b px-6 py-4">
           <DialogHeader>
-            <DialogTitle>Swap Vote Trail</DialogTitle>
-            <DialogDescription>Select which candidate trail to replace.</DialogDescription>
+            <div class="flex items-center gap-2.5">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0">
+                <ArrowLeftRight class="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <DialogTitle class="text-base">Swap Vote Trail</DialogTitle>
+                <DialogDescription class="text-xs mt-0.5">Select which candidate trail to replace.</DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+        </div>
+        <div class="overflow-y-auto flex-1 min-h-0 p-6">
           <div class="flex flex-col gap-2">
             <button
               v-for="c in candidates"
               :key="c.trail_id"
-              class="flex items-center justify-between rounded-md border p-3 text-left text-sm transition-colors"
+              class="flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors"
               :class="selectedOldTrailId === c.trail_id
-                ? 'border-primary bg-primary/5'
-                : 'hover:bg-muted/50'"
+                ? 'border-primary bg-primary/5 text-foreground'
+                : 'border-border hover:bg-muted/50 text-foreground'"
               @click="selectOld(c.trail_id)"
             >
               <span class="font-medium">{{ c.trail_name }}</span>
-              <span class="text-muted-foreground text-xs">{{ c.trail_num_votes }} vote(s)</span>
+              <span class="text-muted-foreground text-xs tabular-nums">{{ c.trail_num_votes }} vote(s)</span>
             </button>
           </div>
         </div>
-        <div class="shrink-0 border-t flex justify-end gap-2 px-6 py-4">
-          <Button variant="outline" @click="open = false">Cancel</Button>
-          <Button :disabled="!selectedOldTrailId" @click="step = 2">Next</Button>
+        <div class="shrink-0 border-t bg-muted/20 flex justify-end gap-2 px-6 py-3">
+          <Button variant="outline" size="sm" @click="open = false">Cancel</Button>
+          <Button size="sm" :disabled="!selectedOldTrailId" @click="step = 2">Next</Button>
         </div>
       </template>
 
       <!-- Step 2: Pick the replacement trail -->
       <template v-else-if="step === 2">
-        <div class="overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 p-6">
+        <div class="shrink-0 border-b px-6 py-4">
           <DialogHeader>
-            <DialogTitle>Select Replacement Trail</DialogTitle>
-            <DialogDescription>
-              Choose a trail to replace <strong>{{ selectedOldTrail?.trail_name }}</strong>.
-            </DialogDescription>
+            <div class="flex items-center gap-2.5">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0">
+                <ArrowLeftRight class="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <DialogTitle class="text-base">Select Replacement Trail</DialogTitle>
+                <DialogDescription class="text-xs mt-0.5">
+                  Choose a trail to replace <strong class="text-foreground">{{ selectedOldTrail?.trail_name }}</strong>.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <Label>Trail</Label>
+        </div>
+        <div class="overflow-y-auto flex-1 min-h-0 p-6">
           <TrailPicker
             mode="single"
             :exclude-ids="excludeIds"
             v-model="selectedNewTrail"
           />
         </div>
-        <div class="shrink-0 border-t flex justify-end gap-2 px-6 py-4">
-          <Button variant="outline" @click="step = 1; selectedNewTrail = null">Back</Button>
-          <Button :disabled="!selectedNewTrail" @click="step = 3">Next</Button>
+        <div class="shrink-0 border-t bg-muted/20 flex justify-end gap-2 px-6 py-3">
+          <Button variant="outline" size="sm" @click="step = 1; selectedNewTrail = null">Back</Button>
+          <Button size="sm" :disabled="!selectedNewTrail" @click="step = 3">Next</Button>
         </div>
       </template>
 
       <!-- Step 3: Confirm -->
       <template v-else>
-        <div class="overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 p-6">
+        <div class="shrink-0 border-b px-6 py-4">
           <DialogHeader>
-            <DialogTitle>Confirm Trail Swap</DialogTitle>
-            <DialogDescription>
-              Replace <strong>{{ selectedOldTrail?.trail_name }}</strong> with <strong>{{ selectedNewTrail?.name }}</strong>?
-            </DialogDescription>
+            <div class="flex items-center gap-2.5">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 shrink-0">
+                <ArrowLeftRight class="h-4 w-4 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle class="text-base">Confirm Trail Swap</DialogTitle>
+                <DialogDescription class="text-xs mt-0.5">
+                  Replace <strong class="text-foreground">{{ selectedOldTrail?.trail_name }}</strong> with
+                  <strong class="text-foreground">{{ selectedNewTrail?.name }}</strong>?
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div class="rounded-md border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/30 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-200">
-            All existing votes for <strong>{{ selectedOldTrail?.trail_name }}</strong>
-            ({{ selectedOldTrail?.trail_num_votes }}) will be transferred to
-            <strong>{{ selectedNewTrail?.name }}</strong>.
-            Members will <strong>not</strong> be notified of this change.
+        </div>
+        <div class="overflow-y-auto flex-1 min-h-0 p-6">
+          <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2.5">
+            <TriangleAlert class="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              All existing votes for <strong>{{ selectedOldTrail?.trail_name }}</strong>
+              ({{ selectedOldTrail?.trail_num_votes }}) will be transferred to
+              <strong>{{ selectedNewTrail?.name }}</strong>.
+              Members will <strong>not</strong> be notified of this change.
+            </span>
           </div>
         </div>
-        <div class="shrink-0 border-t flex justify-end gap-2 px-6 py-4">
-          <Button variant="outline" @click="step = 2">Back</Button>
-          <Button variant="destructive" :disabled="submitting" @click="confirm">
+        <div class="shrink-0 border-t bg-muted/20 flex justify-end gap-2 px-6 py-3">
+          <Button variant="outline" size="sm" @click="step = 2">Back</Button>
+          <Button variant="destructive" size="sm" :disabled="submitting" @click="confirm">
+            <ArrowLeftRight class="h-3.5 w-3.5" />
             {{ submitting ? 'Swapping…' : 'Swap Trail' }}
           </Button>
         </div>

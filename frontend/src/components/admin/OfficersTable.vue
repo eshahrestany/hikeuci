@@ -141,76 +141,74 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
-    <Button variant="outline" @click="openAdd"><PlusCircle/>Add Officer</Button>
-  </div>
-  <div v-if="!loading" class="text-sm text-gray-500 py-2">
-    {{ officers.length }} officer{{ officers.length === 1 ? '' : 's' }}
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center gap-2 pb-3">
+    <Button size="sm" variant="outline" @click="openAdd"><PlusCircle class="h-4 w-4"/>Add Officer</Button>
+    <span v-if="!loading" class="ml-auto text-xs text-muted-foreground">
+      {{ officers.length }} officer{{ officers.length === 1 ? '' : 's' }}
+    </span>
   </div>
 
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>Name</TableHead>
-        <TableHead>Email</TableHead>
-        <TableHead>Role</TableHead>
-        <TableHead>Added</TableHead>
-        <TableHead class="text-right">Actions</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <template v-if="officers.length">
-        <TableRow v-for="o in officers" :key="o.id">
-          <TableCell>
-            {{ o.name || '—' }}
-            <Badge v-if="!o.has_logged_in" variant="secondary" class="ml-2">Pending first sign-in</Badge>
-          </TableCell>
-          <TableCell>{{ o.email }}</TableCell>
-          <TableCell>
-            <Badge v-if="o.is_owner" variant="default">Owner</Badge>
-            <Badge v-else variant="secondary">Officer</Badge>
-          </TableCell>
-          <TableCell>{{ new Date(o.created_on).toLocaleDateString() }}</TableCell>
-          <TableCell class="text-right">
-            <div class="flex justify-end gap-2">
-              <TooltipProvider v-if="!o.is_owner">
-                <Tooltip :disabled="o.has_logged_in">
-                  <TooltipTrigger as-child>
-                    <span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        :disabled="!o.has_logged_in"
-                        @click="askTransfer(o)"
-                      >
-                        <Crown class="h-3.5 w-3.5 mr-1"/>Transfer Ownership
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent v-if="!o.has_logged_in">
-                    Officer must sign in at least once before ownership can be transferred.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                v-if="!o.is_owner"
-                variant="outline"
-                size="sm"
-                @click="askDelete(o)"
-              >
-                <Trash2 class="h-3.5 w-3.5 mr-1"/>Remove
-              </Button>
-            </div>
+  <!-- Table -->
+  <div class="rounded-lg border overflow-hidden">
+    <Table>
+      <TableHeader class="bg-muted/50">
+        <TableRow class="border-b">
+          <TableHead class="px-3 py-2 text-xs font-semibold">Name</TableHead>
+          <TableHead class="px-3 py-2 text-xs font-semibold">Email</TableHead>
+          <TableHead class="px-3 py-2 text-xs font-semibold">Role</TableHead>
+          <TableHead class="px-3 py-2 text-xs font-semibold">Added</TableHead>
+          <TableHead class="px-3 py-2 text-xs font-semibold text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <template v-if="officers.length">
+          <TableRow
+            v-for="o in officers"
+            :key="o.id"
+            class="odd:bg-muted/20 hover:bg-muted/40 transition-colors"
+          >
+            <TableCell class="px-3 py-2.5 text-sm font-medium">
+              {{ o.name || '—' }}
+              <Badge v-if="!o.has_logged_in" variant="secondary" class="ml-2 text-xs">Pending sign-in</Badge>
+            </TableCell>
+            <TableCell class="px-3 py-2.5 text-sm text-muted-foreground">{{ o.email }}</TableCell>
+            <TableCell class="px-3 py-2.5">
+              <Badge v-if="o.is_owner" class="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 border text-xs">Owner</Badge>
+              <Badge v-else variant="secondary" class="text-xs">Officer</Badge>
+            </TableCell>
+            <TableCell class="px-3 py-2.5 text-xs text-muted-foreground">{{ new Date(o.created_on).toLocaleDateString() }}</TableCell>
+            <TableCell class="px-3 py-2.5 text-right">
+              <div class="flex justify-end gap-2">
+                <TooltipProvider v-if="!o.is_owner">
+                  <Tooltip :disabled="o.has_logged_in">
+                    <TooltipTrigger as-child>
+                      <span>
+                        <Button variant="outline" size="sm" :disabled="!o.has_logged_in" @click="askTransfer(o)">
+                          <Crown class="h-3.5 w-3.5 mr-1"/>Transfer Ownership
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent v-if="!o.has_logged_in">
+                      Officer must sign in at least once before ownership can be transferred.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button v-if="!o.is_owner" variant="outline" size="sm" @click="askDelete(o)">
+                  <Trash2 class="h-3.5 w-3.5 mr-1"/>Remove
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </template>
+        <TableRow v-else>
+          <TableCell colspan="5" class="h-24 text-center text-sm text-muted-foreground">
+            {{ loading ? 'Loading…' : 'No officers.' }}
           </TableCell>
         </TableRow>
-      </template>
-      <TableRow v-else>
-        <TableCell colspan="5" class="h-24 text-center">
-          {{ loading ? 'Loading…' : 'No officers.' }}
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
+      </TableBody>
+    </Table>
+  </div>
 
   <!-- Add Officer -->
   <Dialog v-model:open="addOpen">

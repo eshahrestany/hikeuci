@@ -232,6 +232,27 @@ def signup() -> tuple[Response, int]:
             return jsonify({"message": "Successfully signed up as a driver", "success": True}), 200
 
 
+@hike_signup.route("/vehicle/<int:vehicle_id>", methods=["DELETE"])
+def delete_vehicle(vehicle_id):
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token is missing"}), 400
+
+    mlm = current_app.extensions.get("magic_link_manager")
+    result = mlm.validate(token)
+    if result["status"] != "valid":
+        return jsonify({"error": "Token is invalid"}), 400
+
+    member_id = result["magic_link"].member_id
+    vehicle = Vehicle.query.filter_by(id=vehicle_id, member_id=member_id).first()
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    db.session.delete(vehicle)
+    db.session.commit()
+    return jsonify({"success": True}), 200
+
+
 @hike_signup.route("/cancel", methods=["GET", "POST"])
 def cancel_signup():
     # token and hike validations

@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/number-field/index.js";
 import {Skeleton} from '@/components/ui/skeleton'
 import {parsePhoneNumberFromString} from 'libphonenumber-js'
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select/index.js";
 import {SPhoneInput} from "@/components/ui/phone-input";
-import {PlusCircle} from "lucide-vue-next";
+import {PlusCircle, X, ChevronDown, Check} from "lucide-vue-next";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip/index.js";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
 
 const props = defineProps({
   title: {
@@ -70,6 +70,8 @@ const validNewVehicle = computed(() =>
 )
 const isDriver = computed(() => transportation.value === 'is_driver')
 const addingNewVehicle = ref(false)
+const vehicleDropdownOpen = ref(false)
+const selectedVehicle = computed(() => vehicles.value.find(v => v.id === selectedVehicleId.value) ?? null)
 const driverInfoValid = computed(() => {
   if (driverConfirmationName.value !== name.value) return false
   if (hasVehicles.value && !addingNewVehicle.value) {
@@ -109,6 +111,22 @@ function startAddVehicle() {
 
 function cancelAddVehicle() {
   addingNewVehicle.value = false
+}
+
+const deletingVehicleId = ref(null)
+
+async function deleteVehicle(vehicleId) {
+  deletingVehicleId.value = vehicleId
+  try {
+    const res = await fetch(`/api/hike-signup/vehicle/${vehicleId}?token=${tokenRef.value}`, {
+      method: 'DELETE',
+    })
+    if (!res.ok) return
+    vehicles.value = vehicles.value.filter(v => v.id !== vehicleId)
+    if (selectedVehicleId.value === vehicleId) selectedVehicleId.value = null
+  } finally {
+    deletingVehicleId.value = null
+  }
 }
 
 // Fetch signup data
@@ -378,20 +396,54 @@ async function submitCancelRequest() {
                 <div v-if="hasVehicles" class="grid grid-cols-2">
                   <div class="space-y-2">
                     <Label for="vehicleSelect" class="font-semibold text-midnight">Choose your vehicle</Label>
-                    <Select v-model="selectedVehicleId" :disabled="addingNewVehicle">
-                      <SelectTrigger id="vehicleSelect">
-                        <SelectValue placeholder="Select Vehicle…"/>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem v-for="v in vehicles" :key="v.id" :value="v.id">
-                          {{ v.description || `${v.year} ${v.make} ${v.model}` }}
-                          ({{ v.passenger_seats }} passengers)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover v-model:open="vehicleDropdownOpen">
+                      <PopoverTrigger as-child>
+                        <button
+                          id="vehicleSelect"
+                          type="button"
+                          :disabled="addingNewVehicle"
+                          class="border-input flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 h-9"
+                        >
+                          <span :class="!selectedVehicle ? 'text-muted-foreground' : ''">
+                            {{ selectedVehicle
+                              ? `${selectedVehicle.description || `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`} (${selectedVehicle.passenger_seats} passengers)`
+                              : 'Select Vehicle…' }}
+                          </span>
+                          <ChevronDown class="size-4 opacity-50 flex-shrink-0" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        :side-offset="4"
+                        class="p-1 w-[var(--reka-popover-trigger-width,16rem)] min-w-[8rem]"
+                      >
+                        <div
+                          v-for="v in vehicles"
+                          :key="v.id"
+                          class="flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm cursor-pointer select-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                          @click="selectedVehicleId = v.id; vehicleDropdownOpen = false"
+                        >
+                          <Check v-if="selectedVehicleId === v.id" class="h-4 w-4 flex-shrink-0" />
+                          <span v-else class="h-4 w-4 flex-shrink-0" />
+                          <span class="flex-1 min-w-0 truncate">
+                            {{ v.description || `${v.year} ${v.make} ${v.model}` }}
+                            ({{ v.passenger_seats }} passengers)
+                          </span>
+                          <button
+                            type="button"
+                            class="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-40"
+                            :disabled="deletingVehicleId === v.id"
+                            @click.stop="deleteVehicle(v.id)"
+                            :aria-label="`Remove ${v.description || v.model}`"
+                          >
+                            <X class="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div class="space-y-2">
-                    <Label for="vehicleSelect" class="font-semibold text-midnight">Or add a new one</Label>
+                    <Label class="font-semibold text-midnight">Or add a new one</Label>
                     <Button class="items-center" type="button" variant="outline" @click="startAddVehicle">
                       <PlusCircle/>
                       Add new vehicle

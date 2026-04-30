@@ -63,6 +63,13 @@ def list_trails():
         "items": [_serialize_trail(t) for t in items],
     })
 
+@trails.route("/<int:trail_id>", methods=["GET"])
+@admin_required
+def get_trail(trail_id):
+    trail = Trail.query.get_or_404(trail_id)
+    return jsonify(_serialize_trail(trail))
+
+
 @trails.route("", methods=["POST"])
 @admin_required
 def create_trail():

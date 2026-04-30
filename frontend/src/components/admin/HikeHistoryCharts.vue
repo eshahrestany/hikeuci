@@ -112,10 +112,13 @@ const signupsByDifficultyTooltip = componentToString(signupsByDifficultyConfig, 
 // Attendance frequency distribution
 const frequencyData = computed(() => {
   if (!props.attendanceFrequency?.distribution?.length) return []
-  return props.attendanceFrequency.distribution.map(d => ({
+  const rows = props.attendanceFrequency.distribution.map(d => ({
     label: `${d.hikes_attended}`,
     members: d.num_members,
   }))
+  const zeroCount = props.attendanceFrequency.zero_count ?? 0
+  if (zeroCount > 0) rows.unshift({ label: '0', members: zeroCount })
+  return rows
 })
 
 const frequencyConfig = {
@@ -153,11 +156,11 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
 </script>
 
 <template>
-  <div v-if="sortedHikes.length >= 2" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <div v-if="sortedHikes.length >= 2" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 min-w-0">
     <!-- Signups Over Time -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Signups</h3>
-      <ChartContainer :config="signupsOverTimeConfig" class="h-48 aspect-auto" cursor>
+    <div class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
+      <h3 class="text-sm font-semibold mb-3 text-foreground">Signups</h3>
+      <ChartContainer :config="signupsOverTimeConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="signupsOverTimeData">
           <VisArea
             :x="(_, i) => i"
@@ -204,9 +207,9 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
     </div>
 
     <!-- Attendance Rate Over Time -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Attendance Rate</h3>
-      <ChartContainer :config="attendanceConfig" class="h-48 aspect-auto" cursor>
+    <div class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
+      <h3 class="text-sm font-semibold mb-3 text-foreground">Attendance Rate</h3>
+      <ChartContainer :config="attendanceConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="attendanceData" :y-domain="[0, 100]">
           <VisArea
             :x="(_, i) => i"
@@ -254,9 +257,9 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
     </div>
 
     <!-- Transport Breakdown -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Transport Breakdown</h3>
-      <ChartContainer :config="transportConfig" class="h-48 aspect-auto" cursor>
+    <div class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
+      <h3 class="text-sm font-semibold mb-3 text-foreground">Transport Breakdown</h3>
+      <ChartContainer :config="transportConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="transportData">
           <VisStackedBar
             :x="(_, i) => i"
@@ -291,9 +294,9 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
       </div>
     </div>
     <!-- Capacity Utilization Over Time -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Capacity Utilization</h3>
-      <ChartContainer :config="capacityConfig" class="h-48 aspect-auto" cursor>
+    <div class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
+      <h3 class="text-sm font-semibold mb-3 text-foreground">Capacity Utilization</h3>
+      <ChartContainer :config="capacityConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="capacityData">
           <VisArea
             :x="(_, i) => i"
@@ -336,9 +339,9 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
     </div>
 
     <!-- Signups by Difficulty -->
-    <div class="border rounded-md p-4">
-      <h3 class="text-lg font-bold mb-3">Signups by Difficulty</h3>
-      <ChartContainer :config="signupsByDifficultyConfig" class="h-48 aspect-auto" cursor>
+    <div class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
+      <h3 class="text-sm font-semibold mb-3 text-foreground">Signups by Difficulty</h3>
+      <ChartContainer :config="signupsByDifficultyConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="signupsByDifficultyData">
           <VisGroupedBar
             :x="(_, i) => i"
@@ -372,13 +375,13 @@ const capacityTooltip = componentToString(capacityConfig, ChartTooltipContent, {
     </div>
 
     <!-- Hiker Frequency Distribution -->
-    <div v-if="frequencyData.length" class="border rounded-md p-4">
+    <div v-if="frequencyData.length" class="rounded-lg border bg-card p-4 min-w-0 overflow-hidden">
       <h3 class="text-lg font-bold mb-1">Hiker Frequency</h3>
       <p v-if="attendanceFrequency" class="text-xs text-muted-foreground mb-3">
         {{ Math.round(attendanceFrequency.repeat_rate * 100) }}% repeat rate
         ({{ attendanceFrequency.total_members }} unique hikers)
       </p>
-      <ChartContainer :config="frequencyConfig" class="h-48 aspect-auto" cursor>
+      <ChartContainer :config="frequencyConfig" class="h-48 w-full" cursor>
         <VisXYContainer :data="frequencyData">
           <VisStackedBar
             :x="(_, i) => i"

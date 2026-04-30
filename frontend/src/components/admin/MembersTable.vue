@@ -208,69 +208,55 @@ onMounted(loadMembers)
       :member-data="editMemberData"
       @submitted="handleFormSuccess"
   />
-  <div class="flex flex-wrap gap-2">
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center gap-2 pb-3">
     <Input
       v-model="search"
-      class="max-w-[300px]"
+      class="h-8 max-w-xs text-sm"
       placeholder="Search name, email, phone…"
     />
-    <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Member</Button>
-    <Button variant="outline" @click="batchFormOpen=true"><ListPlus/>Batch Add Members</Button>
+    <Button size="sm" variant="outline" @click="openForm(null)"><PlusCircle class="h-4 w-4"/>Add Member</Button>
+    <Button size="sm" variant="outline" @click="batchFormOpen=true"><ListPlus class="h-4 w-4"/>Batch Add</Button>
+    <span v-if="!loading" class="ml-auto text-xs text-muted-foreground">{{ response.length }} members</span>
   </div>
-  <div v-if="!loading" class="text-sm text-gray-500 py-2">
-    {{ response.length }} members
-  </div>
-  <Table>
-    <TableHeader>
-      <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-        <TableHead v-for="h in hg.headers" :key="h.id">
-          <FlexRender
-            v-if="!h.isPlaceholder"
-            :render="h.column.columnDef.header"
-            :props="h.getContext()"
-          />
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <template v-if="table.getRowModel().rows.length">
-        <template v-for="row in table.getRowModel().rows" :key="row.id">
-          <TableRow>
-            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-              <FlexRender
-                :render="cell.column.columnDef.cell"
-                :props="cell.getContext()"
-              />
+
+  <!-- Table -->
+  <div class="rounded-lg border overflow-hidden">
+    <Table>
+      <TableHeader class="bg-muted/50">
+        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id" class="border-b">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="px-3 py-2 text-xs font-semibold">
+            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <template v-if="table.getRowModel().rows.length">
+          <TableRow
+            v-for="row in table.getRowModel().rows"
+            :key="row.id"
+            class="odd:bg-muted/20 hover:bg-muted/40 transition-colors"
+          >
+            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" class="px-3 py-2.5 text-sm">
+              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
             </TableCell>
           </TableRow>
         </template>
-      </template>
-      <TableRow v-else>
-        <TableCell colspan="5" class="h-24 text-center">
-          No results.
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
-  <div class="flex items-center py-1 mx-2 space-x-2">
-    <Button
-      variant="outline"
-      size="sm"
-      :disabled="!table.getCanPreviousPage()"
-      @click="table.previousPage()"
-      >
-      Previous
-    </Button>
-    <Button
-        variant="outline"
-        size="sm"
-        :disabled="!table.getCanNextPage()"
-        @click="table.nextPage()"
-      >
-      Next
-    </Button>
-    <span class="ml-auto text-sm text-muted-foreground">
-      Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
-    </span>
+        <TableRow v-else>
+          <TableCell colspan="5" class="h-24 text-center text-sm text-muted-foreground">
+            No members found.
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+
+    <!-- Pagination -->
+    <div class="flex items-center gap-2 px-3 py-2 border-t bg-muted/20">
+      <Button variant="outline" size="sm" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">Previous</Button>
+      <Button variant="outline" size="sm" :disabled="!table.getCanNextPage()" @click="table.nextPage()">Next</Button>
+      <span class="ml-auto text-xs text-muted-foreground">
+        Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
+      </span>
+    </div>
   </div>
 </template>

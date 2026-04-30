@@ -16,9 +16,9 @@ import { ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const STATUS_CLASS = {
-  sent: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  sent:    'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30',
+  pending: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30',
+  failed:  'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30',
 }
 
 const props = defineProps({
@@ -34,7 +34,8 @@ const route = useRoute()
 const router = useRouter()
 
 // Initialize from URL so deep-links restore state
-const status = ref(route.query.status || 'all')
+const VALID_STATUSES = ['pending', 'sent', 'failed']
+const status = ref(VALID_STATUSES.includes(route.query.status) ? route.query.status : 'all')
 const q = ref(route.query.q || '')
 const sort = ref(['sent_at', 'status', 'attempts'].includes(route.query.sort) ? route.query.sort : 'sent_at')
 const dir = ref(route.query.dir === 'asc' ? 'asc' : 'desc')
@@ -223,89 +224,81 @@ onUnmounted(() => {
     </div>
 
     <!-- Table -->
-    <div class="rounded-md border">
+    <div class="rounded-lg border overflow-hidden">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead v-if="isManual">Type</TableHead>
-            <TableHead>
-              <button
-                class="inline-flex items-center gap-1 hover:text-foreground"
-                @click="toggleSort('status')"
-              >
-                Status
-                <component :is="sortIcon('status')" class="h-3.5 w-3.5" />
+        <TableHeader class="bg-muted/50">
+          <TableRow class="border-b">
+            <TableHead class="px-3 py-2 text-xs font-semibold">Member</TableHead>
+            <TableHead class="px-3 py-2 text-xs font-semibold">Email</TableHead>
+            <TableHead v-if="isManual" class="px-3 py-2 text-xs font-semibold">Type</TableHead>
+            <TableHead class="px-3 py-2 text-xs font-semibold">
+              <button class="inline-flex items-center gap-1 hover:text-foreground" @click="toggleSort('status')">
+                Status <component :is="sortIcon('status')" class="h-3 w-3" />
               </button>
             </TableHead>
-            <TableHead>
-              <button
-                class="inline-flex items-center gap-1 hover:text-foreground"
-                @click="toggleSort('attempts')"
-              >
-                Attempts
-                <component :is="sortIcon('attempts')" class="h-3.5 w-3.5" />
+            <TableHead class="px-3 py-2 text-xs font-semibold">
+              <button class="inline-flex items-center gap-1 hover:text-foreground" @click="toggleSort('attempts')">
+                Attempts <component :is="sortIcon('attempts')" class="h-3 w-3" />
               </button>
             </TableHead>
-            <TableHead>
-              <button
-                class="inline-flex items-center gap-1 hover:text-foreground"
-                @click="toggleSort('sent_at')"
-              >
-                Sent At
-                <component :is="sortIcon('sent_at')" class="h-3.5 w-3.5" />
+            <TableHead class="px-3 py-2 text-xs font-semibold">
+              <button class="inline-flex items-center gap-1 hover:text-foreground" @click="toggleSort('sent_at')">
+                Sent At <component :is="sortIcon('sent_at')" class="h-3 w-3" />
               </button>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <template v-if="loading">
-            <TableRow v-for="n in 8" :key="n">
-              <TableCell><Skeleton class="h-4 w-32" /></TableCell>
-              <TableCell><Skeleton class="h-4 w-48" /></TableCell>
-              <TableCell v-if="isManual"><Skeleton class="h-5 w-20" /></TableCell>
-              <TableCell><Skeleton class="h-5 w-16" /></TableCell>
-              <TableCell><Skeleton class="h-4 w-10" /></TableCell>
-              <TableCell><Skeleton class="h-4 w-32" /></TableCell>
+            <TableRow v-for="n in 8" :key="n" class="odd:bg-muted/20">
+              <TableCell class="px-3 py-2"><Skeleton class="h-4 w-32" /></TableCell>
+              <TableCell class="px-3 py-2"><Skeleton class="h-4 w-48" /></TableCell>
+              <TableCell v-if="isManual" class="px-3 py-2"><Skeleton class="h-5 w-20" /></TableCell>
+              <TableCell class="px-3 py-2"><Skeleton class="h-5 w-16" /></TableCell>
+              <TableCell class="px-3 py-2"><Skeleton class="h-4 w-10" /></TableCell>
+              <TableCell class="px-3 py-2"><Skeleton class="h-4 w-32" /></TableCell>
             </TableRow>
           </template>
           <template v-else-if="error">
             <TableRow>
               <TableCell :colspan="isManual ? 6 : 5" class="h-24 text-center">
                 <div class="flex flex-col items-center gap-2">
-                  <span class="text-destructive">{{ error }}</span>
+                  <span class="text-destructive text-sm">{{ error }}</span>
                   <Button variant="outline" size="sm" @click="load">Retry</Button>
                 </div>
               </TableCell>
             </TableRow>
           </template>
           <template v-else-if="items.length">
-            <TableRow v-for="task in items" :key="task.id">
-              <TableCell class="font-medium">
+            <TableRow
+              v-for="task in items"
+              :key="task.id"
+              class="odd:bg-muted/20 hover:bg-muted/40 transition-colors"
+            >
+              <TableCell class="px-3 py-2 text-sm font-medium">
                 <router-link
                   :to="{ name: 'Member History', params: { memberId: task.member.id } }"
                   class="hover:underline"
                 >{{ task.member.name }}</router-link>
               </TableCell>
-              <TableCell class="text-muted-foreground">{{ task.member.email }}</TableCell>
-              <TableCell v-if="isManual">
-                <Badge variant="secondary">{{ emailTypeLabel(task.email_type) }}</Badge>
+              <TableCell class="px-3 py-2 text-xs text-muted-foreground">{{ task.member.email }}</TableCell>
+              <TableCell v-if="isManual" class="px-3 py-2">
+                <Badge variant="secondary" class="text-xs">{{ emailTypeLabel(task.email_type) }}</Badge>
               </TableCell>
-              <TableCell>
-                <Badge variant="outline" :class="STATUS_CLASS[task.status]">
+              <TableCell class="px-3 py-2">
+                <Badge variant="outline" class="text-xs" :class="STATUS_CLASS[task.status]">
                   {{ task.status }}
                 </Badge>
               </TableCell>
-              <TableCell :class="attemptsClass(task)">
+              <TableCell class="px-3 py-2 text-xs tabular-nums" :class="attemptsClass(task)">
                 {{ task.attempts }} / {{ maxAttempts }}
               </TableCell>
-              <TableCell class="text-muted-foreground">{{ formatSentAt(task.sent_at) }}</TableCell>
+              <TableCell class="px-3 py-2 text-xs text-muted-foreground">{{ formatSentAt(task.sent_at) }}</TableCell>
             </TableRow>
           </template>
           <template v-else>
             <TableRow>
-              <TableCell :colspan="isManual ? 6 : 5" class="h-24 text-center text-muted-foreground">
+              <TableCell :colspan="isManual ? 6 : 5" class="h-24 text-center text-sm text-muted-foreground">
                 No tasks match these filters.
               </TableCell>
             </TableRow>

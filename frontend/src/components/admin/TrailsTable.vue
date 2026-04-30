@@ -10,6 +10,7 @@ import {
 import {Button} from "@/components/ui/button/index.js";
 import {ref, h, computed, onMounted} from "vue";
 import {useAuth} from "@/lib/auth.js";
+import {useRouter} from "vue-router";
 import TrailsForm from "@/components/admin/TrailsForm.vue";
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
 import Link from "@/components/common/Link.vue";
@@ -18,11 +19,11 @@ import {PlusCircle, Pencil} from "lucide-vue-next"
 import {Input} from "@/components/ui/input/index.js";
 
 const { fetchWithAuth } = useAuth()
+const router = useRouter()
 
 const loading = ref(true)
 const response = ref([])
-const formIsOpen = ref(false);
-const editTrailData = ref({});
+const formIsOpen = ref(false)
 const search = ref('')
 
 
@@ -39,16 +40,6 @@ async function loadTrails() {
   } finally {
     loading.value = false
   }
-}
-
-function openForm(trailData= null)
-{
-    editTrailData.value = trailData
-    formIsOpen.value = true;
-}
-function handleFormSuccess()
-{
-    loadTrails();
 }
 
 const data = computed(() => {
@@ -123,8 +114,8 @@ const columns = [
       h(Button, {
         variant: 'outline',
         size: 'sm',
-        onClick: () => openForm(row.original)
-      }, () => [h(Pencil, { class: 'h-3.5 w-3.5 mr-1' }), 'Edit Trail']),
+        onClick: () => router.push({ name: 'Trail Detail', params: { trailId: String(row.original.id) } })
+      }, () => [h(Pencil, { class: 'h-3.5 w-3.5 mr-1' }), 'Edit']),
   }
 ];
 
@@ -146,70 +137,58 @@ onMounted(loadTrails)
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
+  <!-- Toolbar -->
+  <div class="flex flex-wrap items-center gap-2 pb-3">
     <Input
       v-model="search"
-      class="max-w-[300px]"
+      class="h-8 max-w-xs text-sm"
       placeholder="Search name, location, difficulty…"
     />
-    <Button variant="outline" @click="openForm(null)"><PlusCircle/>Add Trail</Button>
+    <Button size="sm" variant="outline" @click="formIsOpen = true">
+      <PlusCircle class="h-4 w-4"/>Add Trail
+    </Button>
+    <span v-if="!loading" class="ml-auto text-xs text-muted-foreground">{{ response.length }} trails</span>
   </div>
-  <TrailsForm
-      v-model:isOpen="formIsOpen"
-      :trail-data="editTrailData"
-      @submitted="handleFormSuccess"
-  />
-  <Table>
-    <TableHeader>
-      <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-        <TableHead v-for="h in hg.headers" :key="h.id">
-          <FlexRender
-            v-if="!h.isPlaceholder"
-            :render="h.column.columnDef.header"
-            :props="h.getContext()"
-          />
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <template v-if="table.getRowModel().rows.length">
-        <template v-for="row in table.getRowModel().rows" :key="row.id">
-          <TableRow>
-            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-              <FlexRender
-                :render="cell.column.columnDef.cell"
-                :props="cell.getContext()"
-              />
+
+  <TrailsForm v-model:isOpen="formIsOpen" :trail-data="null" @submitted="loadTrails" />
+
+  <!-- Table -->
+  <div class="rounded-lg border overflow-x-auto">
+    <Table>
+      <TableHeader class="bg-muted/50">
+        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id" class="border-b">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="px-3 py-2 text-xs font-semibold">
+            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <template v-if="table.getRowModel().rows.length">
+          <TableRow
+            v-for="row in table.getRowModel().rows"
+            :key="row.id"
+            class="odd:bg-muted/20 hover:bg-muted/40 transition-colors"
+          >
+            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" class="px-3 py-2.5 text-sm">
+              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
             </TableCell>
           </TableRow>
         </template>
-      </template>
-      <TableRow v-else>
-        <TableCell colspan="5" class="h-24 text-center">
-          No results.
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
-  <div class="flex items-center py-1 mx-2 space-x-2">
-    <Button
-        variant="outline"
-        size="sm"
-        :disabled="!table.getCanPreviousPage()"
-        @click="table.previousPage()"
-        >
-        Previous
-      </Button>
-      <Button
-          variant="outline"
-          size="sm"
-          :disabled="!table.getCanNextPage()"
-          @click="table.nextPage()"
-        >
-        Next
-      </Button>
-      <span class="ml-auto text-sm text-muted-foreground">
+        <TableRow v-else>
+          <TableCell colspan="7" class="h-24 text-center text-sm text-muted-foreground">
+            No trails found.
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+
+    <!-- Pagination -->
+    <div class="flex items-center gap-2 px-3 py-2 border-t bg-muted/20">
+      <Button variant="outline" size="sm" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">Previous</Button>
+      <Button variant="outline" size="sm" :disabled="!table.getCanNextPage()" @click="table.nextPage()">Next</Button>
+      <span class="ml-auto text-xs text-muted-foreground">
         Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
       </span>
     </div>
+  </div>
 </template>

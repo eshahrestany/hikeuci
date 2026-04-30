@@ -4,11 +4,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 import { useRealtime } from '@/lib/realtime.js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RefreshCw } from 'lucide-vue-next'
+import { Mail } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import EmailHikePicker from '@/components/admin/EmailHikePicker.vue'
 import EmailCampaignTabs from '@/components/admin/EmailCampaignTabs.vue'
@@ -97,7 +97,6 @@ async function loadCampaigns({ background = false } = {}) {
     const res = await fetchWithAuth(`/api/admin/email-campaigns/hikes/${hikeId.value}/campaigns`)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     campaigns.value = await res.json()
-    // Pick a sensible default: keep current type if it exists for this hike, else first.
     const types = campaigns.value.map(c => c.type)
     if (!campaignType.value || !types.includes(campaignType.value)) {
       campaignType.value = types[0] ?? null
@@ -109,12 +108,6 @@ async function loadCampaigns({ background = false } = {}) {
   } finally {
     if (!background) campaignsLoading.value = false
   }
-}
-
-function refresh() {
-  loadCampaigns()
-  loadActiveHike()
-  refreshTick.value += 1
 }
 
 watch(hikeId, () => { loadCampaigns() })
@@ -142,38 +135,31 @@ const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending
 </script>
 
 <template>
-  <section class="p-6">
-    <Card class="mx-auto space-y-6">
-      <CardHeader>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle class="text-2xl">Email Campaigns</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="hikesLoading || !hikeId"
-            @click="refresh"
-          >
-            <RefreshCw class="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
+  <section class="p-4 md:p-6">
+    <Card class="mx-auto">
+      <CardHeader class="pb-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Mail class="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle class="text-xl">Email Campaigns</CardTitle>
+            <p class="text-xs text-muted-foreground mt-0.5">Track and manage member email delivery</p>
+          </div>
         </div>
-        <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
       </CardHeader>
+      <hr class="h-px mx-6 bg-border border-0" />
 
-      <CardContent class="space-y-6">
+      <CardContent class="pt-5 space-y-6">
         <!-- Hike picker -->
         <div class="flex flex-wrap items-center gap-3">
           <Label class="text-sm text-muted-foreground whitespace-nowrap">Hike</Label>
           <Skeleton v-if="hikesLoading" class="h-9 w-[320px]" />
-          <EmailHikePicker
-            v-else-if="hikes.length"
-            :hikes="hikes"
-            v-model="hikeId"
-          />
+          <EmailHikePicker v-else-if="hikes.length" :hikes="hikes" v-model="hikeId" />
           <Badge
             v-if="isCurrent"
             variant="outline"
-            class="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+            class="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30"
           >
             Current
           </Badge>
@@ -186,14 +172,15 @@ const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending
           :existing-types="existingTypes"
         />
 
-        <!-- Loading initial state -->
+        <!-- Loading -->
         <div v-if="hikesLoading" class="space-y-4">
           <Skeleton class="h-10 w-full max-w-xl" />
           <Skeleton class="h-32 w-full" />
         </div>
 
-        <!-- No campaigns at all across the system -->
+        <!-- Empty state -->
         <div v-else-if="!hikes.length" class="py-12 text-center text-muted-foreground">
+          <Mail class="h-8 w-8 mx-auto mb-3 opacity-30" />
           <p>No email campaigns yet.</p>
           <p class="text-sm mt-1">They appear after the first vote, signup, or waiver send.</p>
         </div>
@@ -204,38 +191,31 @@ const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending
           <Button variant="outline" size="sm" class="mt-3" @click="loadHikes">Retry</Button>
         </div>
 
-        <!-- Campaign tabs + body -->
         <template v-else>
           <Skeleton v-if="campaignsLoading" class="h-10 w-full max-w-md" />
           <template v-else-if="campaigns.length">
             <EmailCampaignTabs :campaigns="campaigns" v-model="campaignType" />
 
             <!-- Stats row -->
-            <div class="flex flex-wrap gap-2">
-              <Badge variant="outline" class="px-3 py-1">
-                Total: <span class="ml-1 font-semibold">{{ stats.total }}</span>
-              </Badge>
-              <Badge
-                variant="outline"
-                class="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-              >
-                Pending: <span class="ml-1 font-semibold">{{ stats.pending }}</span>
-              </Badge>
-              <Badge
-                variant="outline"
-                class="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              >
-                Sent: <span class="ml-1 font-semibold">{{ stats.sent }}</span>
-              </Badge>
-              <Badge
-                variant="outline"
-                class="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-              >
-                Failed: <span class="ml-1 font-semibold">{{ stats.failed }}</span>
-              </Badge>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="rounded-lg border bg-muted/30 px-3 py-2.5 text-center">
+                <p class="text-xs text-muted-foreground mb-0.5">Total</p>
+                <p class="text-xl font-bold tabular-nums">{{ stats.total }}</p>
+              </div>
+              <div class="rounded-lg border bg-amber-500/10 border-amber-500/20 px-3 py-2.5 text-center">
+                <p class="text-xs text-amber-700 dark:text-amber-400 mb-0.5">Pending</p>
+                <p class="text-xl font-bold tabular-nums text-amber-700 dark:text-amber-400">{{ stats.pending }}</p>
+              </div>
+              <div class="rounded-lg border bg-green-500/10 border-green-500/20 px-3 py-2.5 text-center">
+                <p class="text-xs text-green-700 dark:text-green-400 mb-0.5">Sent</p>
+                <p class="text-xl font-bold tabular-nums text-green-700 dark:text-green-400">{{ stats.sent }}</p>
+              </div>
+              <div class="rounded-lg border bg-red-500/10 border-red-500/20 px-3 py-2.5 text-center">
+                <p class="text-xs text-red-700 dark:text-red-400 mb-0.5">Failed</p>
+                <p class="text-xl font-bold tabular-nums text-red-700 dark:text-red-400">{{ stats.failed }}</p>
+              </div>
             </div>
 
-            <!-- Task table -->
             <EmailTaskTable
               v-if="activeCampaign"
               :campaign-id="activeCampaign.id"

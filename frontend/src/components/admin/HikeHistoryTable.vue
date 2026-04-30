@@ -67,10 +67,10 @@ function formatDate(isoStr) {
 function attendanceBadge(rate) {
   const pct = Math.round(rate * 100)
   const colorClass = pct >= 80
-    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30'
     : pct >= 50
-      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
+      : 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30'
 
   return h(Badge, { variant: 'outline', class: colorClass }, () => `${pct}%`)
 }
@@ -115,7 +115,7 @@ const columns = [
       if (row.original.status === 'cancelled') {
         parts.push(h(Badge, {
           variant: 'outline',
-          class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 ml-2',
+          class: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30 ml-2 text-xs',
         }, () => 'Cancelled'))
       }
       return h('span', { class: 'inline-flex items-center' }, parts)
@@ -201,38 +201,35 @@ const table = useVueTable({
 </script>
 
 <template>
-  <div class="border rounded-sm">
+  <div class="rounded-lg border overflow-x-auto">
     <Table>
-      <TableHeader>
-        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id">
-          <TableHead v-for="h in hg.headers" :key="h.id">
-            <FlexRender
-              v-if="!h.isPlaceholder"
-              :render="h.column.columnDef.header"
-              :props="h.getContext()"
-            />
+      <TableHeader class="bg-muted/50">
+        <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id" class="border-b">
+          <TableHead v-for="h in hg.headers" :key="h.id" class="px-3 py-2 text-xs font-semibold">
+            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
           </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <template v-if="table.getRowModel().rows.length">
-          <TableRow v-for="row in table.getRowModel().rows" :key="row.id">
-            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
-              <FlexRender
-                :render="cell.column.columnDef.cell"
-                :props="cell.getContext()"
-              />
+          <TableRow
+            v-for="row in table.getRowModel().rows"
+            :key="row.id"
+            class="odd:bg-muted/20 hover:bg-muted/40 transition-colors"
+          >
+            <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" class="px-3 py-2.5 text-sm">
+              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
             </TableCell>
           </TableRow>
         </template>
         <TableRow v-else>
-          <TableCell :colspan="columns.length" class="h-24 text-center">
+          <TableCell :colspan="columns.length" class="h-24 text-center text-sm text-muted-foreground">
             No past hikes found for this academic year.
           </TableCell>
         </TableRow>
       </TableBody>
     </Table>
-    <div class="flex items-center py-1 mx-2 space-x-2">
+    <div class="flex items-center gap-2 px-3 py-2 border-t bg-muted/20">
       <Button
         variant="outline"
         size="sm"
@@ -249,7 +246,7 @@ const table = useVueTable({
       >
         Next
       </Button>
-      <span class="ml-auto text-sm text-muted-foreground">
+      <span class="ml-auto text-xs text-muted-foreground">
         Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }}
       </span>
     </div>

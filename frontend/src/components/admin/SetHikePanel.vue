@@ -9,6 +9,7 @@ import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useAuth } from "@/lib/auth.js"
 import TrailPicker from "@/components/admin/TrailPicker.vue"
+import { CalendarPlus, Info } from 'lucide-vue-next'
 
 const { postWithAuth } = useAuth()
 
@@ -221,78 +222,109 @@ watch(mode, () => {
 </script>
 
 <template>
-  <div v-if="!showSetNextHike">
-    <p class="text-center text-sm text-gray-500 mb-4">No upcoming hikes found.</p>
-    <Button class="block mx-auto" @click="openFormWithDefaults">Set Next Hike</Button>
+  <!-- Empty state: no upcoming hike -->
+  <div v-if="!showSetNextHike" class="flex flex-col items-center py-10 gap-4">
+    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+      <CalendarPlus class="h-6 w-6 text-muted-foreground" />
+    </div>
+    <div class="text-center">
+      <p class="font-medium">No upcoming hike scheduled</p>
+      <p class="text-sm text-muted-foreground mt-1">Set up the next hike to start the registration process</p>
+    </div>
+    <Button @click="openFormWithDefaults">
+      <CalendarPlus class="h-4 w-4" />
+      Schedule Next Hike
+    </Button>
   </div>
 
+  <!-- Hike setup form -->
   <div v-else class="space-y-6">
-    <!-- Mode -->
-    <div class="space-y-2">
-      <Label class="text-sm font-medium">Flow</Label>
-      <RadioGroup v-model="mode" class="flex gap-6">
-        <div class="flex items-center space-x-2">
+    <!-- Mode selector -->
+    <div class="space-y-3">
+      <Label class="text-sm font-semibold">Flow</Label>
+      <RadioGroup v-model="mode" class="flex flex-col sm:flex-row gap-3">
+        <label
+          for="mode-vote"
+          class="flex items-center gap-3 flex-1 rounded-lg border p-3 cursor-pointer transition-colors"
+          :class="mode === 'vote' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'"
+        >
           <RadioGroupItem id="mode-vote" value="vote" />
-          <Label for="mode-vote" class="cursor-pointer">Start a vote</Label>
-        </div>
-        <div class="flex items-center space-x-2">
+          <div>
+            <p class="text-sm font-medium">Start a vote</p>
+            <p class="text-xs text-muted-foreground">Members vote on 3 trail options</p>
+          </div>
+        </label>
+        <label
+          for="mode-signup"
+          class="flex items-center gap-3 flex-1 rounded-lg border p-3 cursor-pointer transition-colors"
+          :class="mode === 'signup' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'"
+        >
           <RadioGroupItem id="mode-signup" value="signup" />
-          <Label for="mode-signup" class="cursor-pointer">Go straight to signup phase</Label>
-        </div>
+          <div>
+            <p class="text-sm font-medium">Skip to signup</p>
+            <p class="text-xs text-muted-foreground">Go straight to signup phase</p>
+          </div>
+        </label>
       </RadioGroup>
     </div>
 
-    <p class="text-sm text-stone">Your local timezone will be ignored and the server will interpret these times as PST (America/Los_Angeles)</p>
+    <div class="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground flex items-start gap-2">
+      <Info class="h-3.5 w-3.5 mt-0.5 shrink-0" />
+      Times are interpreted as PST (America/Los_Angeles), regardless of your local timezone.
+    </div>
 
     <!-- Timestamps -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div v-if="mode === 'vote'" class="space-y-2">
-        <Label for="signupStart">Signup start</Label>
-        <VueDatePicker
-          id="signupStart"
-          v-model="form.signupStart"
-          :is-24="false"
-          :dark="dark"
-          :flow="dateTimeFlow"
-          auto-apply
-          :minutes-increment="minuteStep"
-          placeholder="Pick date & time"
-        />
-      </div>
+    <div class="space-y-3">
+      <Label class="text-sm font-semibold">Schedule</Label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="mode === 'vote'" class="space-y-1.5">
+          <Label for="signupStart" class="text-xs text-muted-foreground">Signup start</Label>
+          <VueDatePicker
+            id="signupStart"
+            v-model="form.signupStart"
+            :is-24="false"
+            :dark="dark"
+            :flow="dateTimeFlow"
+            auto-apply
+            :minutes-increment="minuteStep"
+            placeholder="Pick date & time"
+          />
+        </div>
 
-      <div class="space-y-2">
-        <Label for="waiverStart">Waiver start</Label>
-        <VueDatePicker
-          id="waiverStart"
-          v-model="form.waiverStart"
-          :is-24="false"
-          :dark="dark"
-          :flow="dateTimeFlow"
-          auto-apply
-          :minutes-increment="minuteStep"
-          placeholder="Pick date & time"
-        />
-      </div>
+        <div class="space-y-1.5">
+          <Label for="waiverStart" class="text-xs text-muted-foreground">Waiver start</Label>
+          <VueDatePicker
+            id="waiverStart"
+            v-model="form.waiverStart"
+            :is-24="false"
+            :dark="dark"
+            :flow="dateTimeFlow"
+            auto-apply
+            :minutes-increment="minuteStep"
+            placeholder="Pick date & time"
+          />
+        </div>
 
-      <div class="space-y-2">
-        <Label for="hikeDate">Hike date</Label>
-        <VueDatePicker
-          id="hikeDate"
-          v-model="form.hikeDate"
-          :is-24="false"
-          :dark="dark"
-          :flow="dateTimeFlow"
-          auto-apply
-          :minutes-increment="minuteStep"
-          placeholder="Pick date & time"
-        />
+        <div class="space-y-1.5">
+          <Label for="hikeDate" class="text-xs text-muted-foreground">Hike date</Label>
+          <VueDatePicker
+            id="hikeDate"
+            v-model="form.hikeDate"
+            :is-24="false"
+            :dark="dark"
+            :flow="dateTimeFlow"
+            auto-apply
+            :minutes-increment="minuteStep"
+            placeholder="Pick date & time"
+          />
+        </div>
       </div>
     </div>
 
-    <!-- Trails -->
+    <!-- Trail picker -->
     <div class="space-y-3">
-      <Label>
-        {{ mode === 'vote' ? 'Trails for voting (choose 3)' : 'Trail (choose 1)' }}
+      <Label class="text-sm font-semibold">
+        {{ mode === 'vote' ? 'Trails for voting (select 3)' : 'Trail (select 1)' }}
       </Label>
       <TrailPicker
         :mode="mode === 'vote' ? 'multi' : 'single'"
@@ -302,13 +334,16 @@ watch(mode, () => {
       />
     </div>
 
-    <!-- submit -->
-    <div class="flex items-center justify-end gap-3">
-      <p v-if="!isFormValid" class="text-xs text-red-500 mr-auto">
+    <!-- Footer -->
+    <div class="flex items-center justify-end gap-3 pt-2 border-t">
+      <p v-if="!isFormValid" class="text-xs text-destructive mr-auto">
         {{ validation.messages[0] }}
       </p>
       <Button variant="ghost" @click="resetAndClose">Cancel</Button>
-      <Button :disabled="!isFormValid" @click="submit">Submit</Button>
+      <Button :disabled="!isFormValid" @click="submit">
+        <CalendarPlus class="h-4 w-4" />
+        Schedule Hike
+      </Button>
     </div>
   </div>
 </template>
