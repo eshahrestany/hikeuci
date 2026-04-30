@@ -133,11 +133,11 @@
   --radius: 0.625rem;
 
   /* Palette */
-  --background:        #eef2fb;
+  --background:        #c4d4eb;
   --foreground:        #1a2535;
-  --card:              #ffffff;
+  --card:              #dce8f7;
   --card-foreground:   #1a2535;
-  --popover:           #ffffff;
+  --popover:           #dce8f7;
   --popover-foreground:#1a2535;
   --primary:           #255799;
   --primary-foreground:#ffffff;
@@ -153,7 +153,7 @@
   --input:             rgba(0,0,0,0.08);
   --ring:              rgba(37,87,153,0.40);
 
-  --sidebar:           #e6ecf8;
+  --sidebar:           #b3c7e0;
   --sidebar-foreground:#374151;
   --sidebar-primary:   #255799;
   --sidebar-primary-foreground:#ffffff;
@@ -174,47 +174,45 @@
 .dark .admin-layout {
   color-scheme: dark;
 
-  --background:        #0a0f1c;
+  --background:        #01010a;
   --foreground:        #dce6f5;
-  --card:              #0f1829;
+  --card:              #020416;
   --card-foreground:   #dce6f5;
-  --popover:           #16223a;
+  --popover:           #03071e;
   --popover-foreground:#dce6f5;
   --primary:           #255799;
   --primary-foreground:#ffffff;
-  --secondary:         rgba(255,255,255,0.07);
+  --secondary:         rgba(255,255,255,0.05);
   --secondary-foreground:#dce6f5;
-  --muted:             rgba(255,255,255,0.05);
+  --muted:             rgba(255,255,255,0.10);
   --muted-foreground:  #7a90b3;
-  --accent:            rgba(255,255,255,0.06);
+  --accent:            rgba(255,255,255,0.04);
   --accent-foreground: #dce6f5;
   --destructive:       #b91c1c;
   --destructive-foreground:#ffffff;
-  --border:            rgba(255,255,255,0.08);
-  --input:             rgba(255,255,255,0.08);
+  --border:            rgba(255,255,255,0.07);
+  --input:             rgba(255,255,255,0.07);
   --ring:              rgba(37,87,153,0.55);
 
-  --sidebar:           #070c18;
+  --sidebar:           #010109;
   --sidebar-foreground:#a8bbd8;
   --sidebar-primary:   #255799;
   --sidebar-primary-foreground:#ffffff;
   --sidebar-accent:    rgba(254,204,7,0.10);
   --sidebar-accent-foreground:#FECC07;
-  --sidebar-border:    rgba(255,255,255,0.06);
+  --sidebar-border:    rgba(255,255,255,0.05);
   --sidebar-ring:      rgba(254,204,7,0.50);
 
-  --admin-dot:         rgba(255,255,255,0.025);
+  --admin-dot:         rgba(255,255,255,0.018);
   --admin-gold:        #FECC07;
   --admin-gold-bg:     rgba(254,204,7,0.09);
   --admin-gold-border: rgba(254,204,7,0.20);
-  --admin-hover:       rgba(255,255,255,0.05);
+  --admin-hover:       rgba(255,255,255,0.04);
 }
 
 /* Main content — dot grid --------------------------------------- */
 .admin-layout [data-slot="sidebar-inset"] {
   background-color: var(--background) !important;
-  background-image: radial-gradient(var(--admin-dot) 1px, transparent 1px) !important;
-  background-size: 28px 28px !important;
 }
 .admin-layout [data-slot="sidebar-wrapper"] {
   background: var(--background) !important;
@@ -248,7 +246,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px var(--border) !important;
 }
 .dark .admin-layout [data-slot="card"] {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05) !important;
 }
 
 /* Popovers / dropdowns / selects -------------------------------- */
@@ -265,7 +263,7 @@
 .dark .admin-layout [data-slot="select-content"],
 .dark .admin-layout [data-slot="command"],
 .dark .admin-layout [data-slot="hover-card-content"] {
-  box-shadow: 0 8px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06) !important;
 }
 
 /* Dialogs and sheets -------------------------------------------- */
@@ -276,11 +274,11 @@
 }
 .dark .admin-layout [data-slot="dialog-content"],
 .dark .admin-layout [data-slot="sheet-content"] {
-  box-shadow: 0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.90), 0 0 0 1px rgba(255,255,255,0.06) !important;
 }
 .dark .admin-layout [data-slot="dialog-overlay"],
 .dark .admin-layout [data-slot="sheet-overlay"] {
-  background: rgba(2,6,20,0.80) !important;
+  background: rgba(0,1,8,0.90) !important;
 }
 
 /* Separators — override hard-coded bg-gray-200 / dark:bg-gray-700 */
