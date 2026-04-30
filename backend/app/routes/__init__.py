@@ -12,6 +12,7 @@ from .dashboard_history import dashboard_history
 from .officers import officers
 from .email_campaigns import email_campaigns
 from .stream import stream_bp
+from .unsubscribe import unsubscribe
 
 
 def register_routes(app):
@@ -29,3 +30,4 @@ def register_routes(app):
     app.register_blueprint(mail, url_prefix="/api/mail")
     app.register_blueprint(email_campaigns, url_prefix="/api/admin/email-campaigns")
     app.register_blueprint(stream_bp, url_prefix="/api/admin/stream")
+    app.register_blueprint(unsubscribe, url_prefix="/api/unsubscribe")

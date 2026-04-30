@@ -155,6 +155,16 @@ const columns = [
         String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
   },
   {
+    id: 'subscribed_to_mailing_list',
+    header: 'Mailing List',
+    accessorFn: row => row.subscribed_to_mailing_list,
+    cell: info => info.getValue()
+      ? h(Badge, {variant: 'default'}, 'Subscribed')
+      : h(Badge, {variant: 'secondary'}, 'Unsubscribed'),
+    filterFn: (row, colId, filter) =>
+        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
+  },
+  {
     id: 'edit',
     header: '',
     cell: ({ row }) =>

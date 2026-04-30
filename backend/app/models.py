@@ -5,11 +5,12 @@ from .extensions import db
 
 class Member(db.Model):
     __tablename__ = 'members'
-    id         = db.Column(db.Integer, primary_key=True)
-    name       = db.Column(db.String(100), nullable=False)
-    email      = db.Column(db.String(120), nullable=False)
-    tel        = db.Column(db.String(15), nullable=True)
-    joined_on  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    id                        = db.Column(db.Integer, primary_key=True)
+    name                      = db.Column(db.String(100), nullable=False)
+    email                     = db.Column(db.String(120), nullable=False)
+    tel                       = db.Column(db.String(15), nullable=True)
+    joined_on                 = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    subscribed_to_mailing_list = db.Column(db.Boolean, nullable=False, default=True)
 
 
 class Trail(db.Model):

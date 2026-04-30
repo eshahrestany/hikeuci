@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch, computed } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
-import {PlusCircle, Save} from "lucide-vue-next"
+import {PlusCircle, Save, MailCheck, MailX} from "lucide-vue-next"
 
 const props = defineProps({
   isOpen: {
@@ -38,10 +38,15 @@ const defaultMemberState = {
 
 
 const formData = reactive({ ...defaultMemberState })
+const localMeta = ref({ subscribed_to_mailing_list: true, can_delete: true })
 
 watch(() => props.memberData, (newMember) => {
   if (newMember) {
     Object.assign(formData, newMember)
+    localMeta.value = {
+      subscribed_to_mailing_list: newMember.subscribed_to_mailing_list,
+      can_delete: newMember.can_delete,
+    }
   } else {
     Object.assign(formData, defaultMemberState)
   }
@@ -91,6 +96,26 @@ const deleteMember = async () => {
     }
 }
 
+const toggleMailingList = async () => {
+  try {
+    const subscribed = !localMeta.value.subscribed_to_mailing_list
+    const response = await fetchWithAuth(`/api/admin/members/${props.memberData.id}/mailing-list`, {
+      method: 'PATCH',
+      body: JSON.stringify({ subscribed }),
+    })
+    if (!response.ok) throw new Error(response.status)
+    const updated = await response.json()
+    localMeta.value = {
+      subscribed_to_mailing_list: updated.subscribed_to_mailing_list,
+      can_delete: updated.can_delete,
+    }
+    toast.success(subscribed ? 'Added to mailing list' : 'Removed from mailing list')
+    emit('submitted')
+  } catch (error) {
+    toast.error('Failed to update mailing list', { description: error.message })
+  }
+}
+
 const handleClose = (openState) => {
   emit('update:isOpen', openState)
 }
@@ -133,7 +158,24 @@ const handleClose = (openState) => {
           <PlusCircle v-else/>
         </Button>
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
-        <Button v-if="isEditing" type="button" variant="destructive" @click="deleteMember()">Delete</Button>
+        <Button
+          v-if="isEditing"
+          type="button"
+          :variant="localMeta.subscribed_to_mailing_list ? 'outline' : 'secondary'"
+          @click="toggleMailingList()"
+        >
+          <MailX v-if="localMeta.subscribed_to_mailing_list" class="h-3.5 w-3.5 mr-1" />
+          <MailCheck v-else class="h-3.5 w-3.5 mr-1" />
+          {{ localMeta.subscribed_to_mailing_list ? 'Remove from Mailing List' : 'Add to Mailing List' }}
+        </Button>
+        <Button
+          v-if="isEditing"
+          type="button"
+          variant="destructive"
+          :disabled="!localMeta.can_delete"
+          :title="!localMeta.can_delete ? 'Cannot delete: member has existing records (signups, waivers, etc.)' : ''"
+          @click="deleteMember()"
+        >Delete</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
