@@ -122,14 +122,10 @@ const props = defineProps({
   users: { type: Array, required: true },
   passengerCapacity: { type: Number, required: true },
   overCapacityPassengers: { type: Number, required: false, default: 0 },
-  hikeDate: { type: String, default: null },
+  showCheckin: { type: Boolean, default: false },
 })
 
-const showCheckinStats = computed(() => {
-  if (!props.hikeDate) return false
-  const hikeTime = new Date(props.hikeDate).getTime()
-  return Date.now() >= hikeTime - 30 * 60 * 1000
-})
+const showCheckinStats = computed(() => props.showCheckin)
 
 const numSignups = computed(() => props.users.length)
 const numCheckedInSignups = computed(() => props.users.filter(u => u.is_checked_in).length)
