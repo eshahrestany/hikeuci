@@ -7,7 +7,7 @@
 
 @theme {
     --color-uci-blue: #255799;
-    --color-uci-gold: #fecc07;
+    --color-forest-deep: #1a3931;
     --color-forest: #3f9c35;
     --color-sky: #6aa2b8;
     --color-earth: #5d473a;
@@ -16,9 +16,9 @@
 }
 
 :root {
-  --uci-blue: 37 87 153;   /* #255799 */
-  --uci-gold: 254 204 7;   /* #FECC07 */
-  --forest:   63 156 53;   /* #3F9C35 */
+  --uci-blue:    37 87 153;   /* #255799 */
+  --forest-deep: 26 57 49;    /* #1A3931 — dark conifer; secondary brand */
+  --forest:      63 156 53;   /* #3F9C35 */
   --sky:      106 162 184; /* #6AA2B8 */
   --earth:    93 71 58;    /* #5D473A */
   --stone:    198 190 181; /* #C6BEB5 */
@@ -123,116 +123,174 @@
 }
 
 /* ============================================================
- * Admin Dashboard Design System
- * Light defaults in .admin-layout; dark overrides in .dark .admin-layout
+ * Admin Dashboard — Liquid Glass Design System
  * ============================================================ */
 
-/* --- Light mode tokens + shadcn var overrides --- */
+/* --- Light mode tokens --- */
 .admin-layout {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --radius: 0.625rem;
 
-  /* Palette */
-  --background:        #c4d4eb;
+  /* Core palette */
+  --background:        #c5d4c9;
   --foreground:        #1a2535;
-  --card:              #dce8f7;
   --card-foreground:   #1a2535;
-  --popover:           #dce8f7;
   --popover-foreground:#1a2535;
-  --primary:           #255799;
+  --primary:           #3f9c35;
   --primary-foreground:#ffffff;
   --secondary:         rgba(0,0,0,0.05);
   --secondary-foreground:#1a2535;
-  --muted:             rgba(0,0,0,0.04);
+  --muted:             rgba(0,0,0,0.06);
   --muted-foreground:  #6b7a90;
-  --accent:            rgba(0,0,0,0.04);
+  --accent:            rgba(0,0,0,0.05);
   --accent-foreground: #1a2535;
   --destructive:       #dc2626;
   --destructive-foreground:#ffffff;
   --border:            rgba(0,0,0,0.09);
-  --input:             rgba(0,0,0,0.08);
-  --ring:              rgba(37,87,153,0.40);
+  --input:             rgba(255,255,255,0.60);
+  --ring:              rgba(63,156,53,0.40);
 
-  --sidebar:           #b3c7e0;
+  /* Glass-aware card/popover/sidebar — transparent so backdrop-filter shows through */
+  --card:              rgba(255,255,255,0.52);
+  --popover:           rgba(240,250,244,0.88);
+  --sidebar:           rgba(255,255,255,0.62);
   --sidebar-foreground:#374151;
-  --sidebar-primary:   #255799;
+  --sidebar-primary:   #3f9c35;
   --sidebar-primary-foreground:#ffffff;
-  --sidebar-accent:    rgba(168,124,5,0.12);
-  --sidebar-accent-foreground:#7a5a03;
-  --sidebar-border:    rgba(0,0,0,0.08);
-  --sidebar-ring:      rgba(37,87,153,0.40);
+  --sidebar-accent:    rgba(63,156,53,0.12);
+  --sidebar-accent-foreground:#1a3931;
+  --sidebar-border:    rgba(255,255,255,0.55);
+  --sidebar-ring:      rgba(63,156,53,0.40);
 
-  /* Mode-specific tokens used throughout the component CSS */
-  --admin-dot:         rgba(0,0,0,0.055);
-  --admin-gold:        #7a5a03;
-  --admin-gold-bg:     rgba(168,124,5,0.10);
-  --admin-gold-border: rgba(168,124,5,0.25);
-  --admin-hover:       rgba(0,0,0,0.045);
+  /* Semantic tokens — primary forest green */
+  --admin-accent:        #1a3931;
+  --admin-accent-bg:     rgba(63,156,53,0.12);
+  --admin-accent-border: rgba(63,156,53,0.30);
+  --admin-forest:        #1a3931;
+  --admin-forest-bg:     rgba(26,57,49,0.12);
+  --admin-forest-border: rgba(26,57,49,0.32);
+  --admin-hover:         rgba(255,255,255,0.30);
+
+  /* Liquid glass primitives — light */
+  --lg-bg:             rgba(255,255,255,0.52);
+  --lg-bg-strong:      rgba(255,255,255,0.88);
+  --lg-border:         rgba(255,255,255,0.64);
+  --lg-blur:           blur(20px) saturate(1.80);
+  --lg-blur-strong:    blur(40px) saturate(1.70);
+  /* Specular: inset top-edge highlight — light catching the glass rim */
+  --lg-specular:       inset 0 1px 0 rgba(255,255,255,0.95);
+  /* Floor shadow: subtle darkening at the bottom-inside edge */
+  --lg-floor:          inset 0 -1px 0 rgba(0,34,68,0.06);
+  /* Surface gradient: brighter top-left fading to dimmer bottom-right (curved glass) */
+  --lg-surface:        linear-gradient(155deg,
+                         rgba(255,255,255,0.72) 0%,
+                         rgba(255,255,255,0.50) 35%,
+                         rgba(255,255,255,0.38) 100%);
 }
 
-/* --- Dark mode tokens + shadcn var overrides --- */
+/* --- Dark mode tokens --- */
 .dark .admin-layout {
   color-scheme: dark;
 
   --background:        #01010a;
   --foreground:        #dce6f5;
-  --card:              #020416;
   --card-foreground:   #dce6f5;
-  --popover:           #03071e;
   --popover-foreground:#dce6f5;
-  --primary:           #255799;
+  --primary:           #3f9c35;
   --primary-foreground:#ffffff;
   --secondary:         rgba(255,255,255,0.05);
   --secondary-foreground:#dce6f5;
-  --muted:             rgba(255,255,255,0.10);
+  --muted:             rgba(255,255,255,0.08);
   --muted-foreground:  #7a90b3;
   --accent:            rgba(255,255,255,0.04);
   --accent-foreground: #dce6f5;
   --destructive:       #b91c1c;
   --destructive-foreground:#ffffff;
-  --border:            rgba(255,255,255,0.07);
-  --input:             rgba(255,255,255,0.07);
-  --ring:              rgba(37,87,153,0.55);
+  --border:            rgba(255,255,255,0.08);
+  --input:             rgba(255,255,255,0.08);
+  --ring:              rgba(63,156,53,0.55);
 
-  --sidebar:           #010109;
+  --card:              rgba(255,255,255,0.055);
+  --popover:           rgba(6,18,10,0.88);
+  --sidebar:           rgba(4,14,6,0.72);
   --sidebar-foreground:#a8bbd8;
-  --sidebar-primary:   #255799;
+  --sidebar-primary:   #3f9c35;
   --sidebar-primary-foreground:#ffffff;
-  --sidebar-accent:    rgba(254,204,7,0.10);
-  --sidebar-accent-foreground:#FECC07;
-  --sidebar-border:    rgba(255,255,255,0.05);
-  --sidebar-ring:      rgba(254,204,7,0.50);
+  --sidebar-accent:    rgba(63,156,53,0.16);
+  --sidebar-accent-foreground:#86c97a;
+  --sidebar-border:    rgba(255,255,255,0.09);
+  --sidebar-ring:      rgba(63,156,53,0.50);
 
-  --admin-dot:         rgba(255,255,255,0.018);
-  --admin-gold:        #FECC07;
-  --admin-gold-bg:     rgba(254,204,7,0.09);
-  --admin-gold-border: rgba(254,204,7,0.20);
-  --admin-hover:       rgba(255,255,255,0.04);
+  --admin-accent:        #86c97a;
+  --admin-accent-bg:     rgba(63,156,53,0.16);
+  --admin-accent-border: rgba(80,160,65,0.32);
+  --admin-forest:        #76b9a4;
+  --admin-forest-bg:     rgba(40,90,76,0.20);
+  --admin-forest-border: rgba(70,140,118,0.36);
+  --admin-hover:         rgba(255,255,255,0.05);
+
+  /* Liquid glass primitives — dark */
+  --lg-bg:             rgba(14,26,58,0.52);
+  --lg-bg-strong:      rgba(10,18,46,0.88);
+  --lg-border:         rgba(255,255,255,0.10);
+  --lg-blur:           blur(24px) saturate(1.55);
+  --lg-blur-strong:    blur(40px) saturate(1.50);
+  --lg-specular:       inset 0 1px 0 rgba(255,255,255,0.13);
+  --lg-floor:          inset 0 -1px 0 rgba(0,0,0,0.35);
+  --lg-surface:        linear-gradient(155deg,
+                         rgba(255,255,255,0.10) 0%,
+                         rgba(255,255,255,0.055) 40%,
+                         rgba(255,255,255,0.03) 100%);
 }
 
-/* Main content — dot grid --------------------------------------- */
-.admin-layout [data-slot="sidebar-inset"] {
-  background-color: var(--background) !important;
+/* ── Ambient mesh background ──────────────────────────────── */
+/* Forest green + dark forest blobs give the glass something to refract */
+.admin-layout {
+  background:
+    radial-gradient(ellipse 62% 48% at 14% 24%, rgba(63,156,53,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 48% 62% at 86% 78%, rgba(26,57,49,0.20) 0%, transparent 62%),
+    radial-gradient(ellipse 72% 50% at 64% 4%,  rgba(106,184,120,0.18) 0%, transparent 65%),
+    #c5d4c9;
+  min-height: 100svh;
 }
+.dark .admin-layout {
+  background:
+    radial-gradient(ellipse 55% 48% at 12% 22%, rgba(63,156,53,0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 46% 60% at 88% 80%, rgba(26,57,49,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 68% 50% at 66% 3%,  rgba(80,160,65,0.12) 0%, transparent 62%),
+    #01010a;
+}
+
+/* Transparent wrappers — reveal mesh through glass panels */
+.admin-layout [data-slot="sidebar-inset"],
 .admin-layout [data-slot="sidebar-wrapper"] {
-  background: var(--background) !important;
+  background: transparent !important;
 }
 
-/* Sidebar panel ------------------------------------------------- */
+/* ── Sidebar — thick glass panel ──────────────────────────── */
 .admin-layout [data-sidebar="sidebar"] {
-  border-right: 1px solid var(--sidebar-border) !important;
+  background: var(--lg-bg-strong) !important;
+  backdrop-filter: var(--lg-blur-strong);
+  -webkit-backdrop-filter: var(--lg-blur-strong);
+  border-right: 1px solid var(--lg-border) !important;
+  box-shadow: var(--lg-specular) !important;
 }
 
-/* Active nav item — gold pill ----------------------------------- */
+/* ── Active nav item — glass capsule with navy tint ──────── */
 .admin-layout [data-sidebar="menu-button"]:has(.router-link-exact-active),
 .admin-layout [data-sidebar="menu-button"]:has(.router-link-active) {
-  background: var(--admin-gold-bg) !important;
-  border: 1px solid var(--admin-gold-border) !important;
+  background: var(--admin-accent-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--admin-accent-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.60),
+    inset 0 -1px 0 rgba(0,0,0,0.06);
 }
 .admin-layout [data-sidebar="menu-button"]:has(.router-link-exact-active) *,
 .admin-layout [data-sidebar="menu-button"]:has(.router-link-active) * {
-  color: var(--admin-gold) !important;
-  font-weight: 500;
+  color: var(--admin-accent) !important;
+  font-weight: 600;
 }
 
 /* Sidebar hover (non-active) */
@@ -240,75 +298,87 @@
   background: var(--admin-hover) !important;
 }
 
-/* Cards --------------------------------------------------------- */
+/* ── Cards — curved glass surface ─────────────────────────── */
 .admin-layout [data-slot="card"] {
-  border-color: var(--border) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px var(--border) !important;
-}
-.dark .admin-layout [data-slot="card"] {
-  box-shadow: 0 1px 4px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05) !important;
+  background: var(--lg-surface) !important;
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-border) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    var(--lg-specular),
+    var(--lg-floor) !important;
 }
 
-/* Popovers / dropdowns / selects -------------------------------- */
+/* ── Popovers / dropdowns / selects ───────────────────────── */
 .admin-layout [data-slot="popover-content"],
 .admin-layout [data-slot="dropdown-menu-content"],
 .admin-layout [data-slot="select-content"],
 .admin-layout [data-slot="command"],
 .admin-layout [data-slot="hover-card-content"] {
-  border-color: var(--border) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px var(--border) !important;
-}
-.dark .admin-layout [data-slot="popover-content"],
-.dark .admin-layout [data-slot="dropdown-menu-content"],
-.dark .admin-layout [data-slot="select-content"],
-.dark .admin-layout [data-slot="command"],
-.dark .admin-layout [data-slot="hover-card-content"] {
-  box-shadow: 0 8px 40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06) !important;
+  background: var(--lg-bg-strong) !important;
+  backdrop-filter: var(--lg-blur-strong);
+  -webkit-backdrop-filter: var(--lg-blur-strong);
+  border: 1px solid var(--lg-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--lg-specular) !important;
 }
 
-/* Dialogs and sheets -------------------------------------------- */
+/* ── Dialogs and sheets ───────────────────────────────────── */
 .admin-layout [data-slot="dialog-content"],
 .admin-layout [data-slot="sheet-content"] {
-  border-color: var(--border) !important;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 0 0 1px var(--border) !important;
+  background: var(--lg-bg-strong) !important;
+  backdrop-filter: var(--lg-blur-strong);
+  -webkit-backdrop-filter: var(--lg-blur-strong);
+  border: 1px solid var(--lg-border) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--lg-specular) !important;
 }
-.dark .admin-layout [data-slot="dialog-content"],
-.dark .admin-layout [data-slot="sheet-content"] {
-  box-shadow: 0 20px 60px rgba(0,0,0,0.90), 0 0 0 1px rgba(255,255,255,0.06) !important;
+/* Blur scrim — both modes: background content must not bleed through */
+.admin-layout [data-slot="dialog-overlay"],
+.admin-layout [data-slot="sheet-overlay"] {
+  background: rgba(10,25,60,0.22) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
 }
 .dark .admin-layout [data-slot="dialog-overlay"],
 .dark .admin-layout [data-slot="sheet-overlay"] {
-  background: rgba(0,1,8,0.90) !important;
+  background: rgba(0,1,8,0.55) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
 }
 
-/* Separators — override hard-coded bg-gray-200 / dark:bg-gray-700 */
+/* Separators */
 .admin-layout hr {
   background: var(--border) !important;
   border-color: transparent !important;
   height: 1px !important;
 }
 
-/* Table rows hover ---------------------------------------------- */
+/* Table rows hover */
 .admin-layout [data-slot="table-row"]:hover {
   background: var(--admin-hover) !important;
 }
 
-/* Sticky page header -------------------------------------------- */
+/* ── Page header — glass strip ────────────────────────────── */
 .admin-page-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   height: 54px;
   padding: 0 1.5rem;
-  background: var(--background);
-  border-bottom: 1px solid var(--border);
+  background: var(--lg-bg);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border-bottom: 1px solid var(--lg-border);
+  box-shadow: var(--lg-specular);
   position: sticky;
   top: 0;
   z-index: 20;
   flex-shrink: 0;
 }
 
-/* Sidebar brand ------------------------------------------------- */
+/* ── Sidebar brand ────────────────────────────────────────── */
 .admin-sidebar-brand {
   display: flex;
   align-items: center;
@@ -324,9 +394,16 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #FECC07 0%, #e8a800 100%);
-  box-shadow: 0 2px 8px rgba(254,204,7,0.25), 0 0 0 1px rgba(254,204,7,0.15);
+  border-radius: 10px;
+  /* Forest green → forest deep — branded gradient on curved glass */
+  background: linear-gradient(145deg,
+    rgba(80,168,66,0.98) 0%,
+    rgba(63,156,53,1.00) 50%,
+    rgba(26,57,49,0.95) 100%);
+  border: 1px solid rgba(255,255,255,0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(0,0,0,0.12);
   flex-shrink: 0;
 }
 
@@ -346,12 +423,12 @@
 .admin-brand-sub {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--admin-gold);
+  color: var(--admin-accent);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-/* Sidebar footer ------------------------------------------------ */
+/* ── Sidebar footer ───────────────────────────────────────── */
 .admin-sidebar-footer {
   border-top: 1px solid var(--sidebar-border);
   padding: 0.75rem;
@@ -366,13 +443,13 @@
   gap: 0.375rem;
 }
 
-/* Scrollbar ----------------------------------------------------- */
+/* ── Scrollbar ────────────────────────────────────────────── */
 .admin-layout ::-webkit-scrollbar { width: 5px; height: 5px; }
 .admin-layout ::-webkit-scrollbar-track { background: transparent; }
 .admin-layout ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .admin-layout ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 
-/* Card component refinements ------------------------------------ */
+/* ── Component refinements ────────────────────────────────── */
 .admin-layout [data-slot="card-title"] {
   font-size: 0.9375rem;
   font-weight: 700;
@@ -383,7 +460,6 @@
   padding-bottom: 0;
 }
 
-/* Table refinements --------------------------------------------- */
 .admin-layout [data-slot="table-head"] {
   font-size: 0.6875rem !important;
   font-weight: 600 !important;
@@ -395,20 +471,17 @@
   font-size: 0.875rem;
 }
 
-/* Progress bar -------------------------------------------------- */
 .admin-layout [data-slot="progress"] {
   height: 5px;
   border-radius: 99px;
 }
 
-/* Badge --------------------------------------------------------- */
 .admin-layout [data-slot="badge"] {
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-/* Tabs ---------------------------------------------------------- */
 .admin-layout [data-slot="tabs-list"] {
   border-radius: var(--radius);
 }
@@ -417,14 +490,719 @@
   font-weight: 500;
 }
 
-/* Input / textarea ---------------------------------------------- */
 .admin-layout [data-slot="input"],
 .admin-layout [data-slot="textarea"] {
   font-size: 0.875rem;
 }
 
-/* Button size tightening ---------------------------------------- */
 .admin-layout [data-slot="button"] {
   font-size: 0.8125rem;
   font-weight: 500;
+}
+
+/* ============================================================
+ * VueDatePicker — Liquid Glass overrides
+ * Global because the calendar menu teleports to <body>
+ * ============================================================ */
+
+/* ── Color system — light ─────────────────────────────────── */
+.dp__theme_light {
+  --dp-background-color:    rgba(238,247,255,0.82);
+  --dp-text-color:          #1a2535;
+  --dp-hover-color:         rgba(63,156,53,0.09);
+  --dp-hover-text-color:    #1a2535;
+  --dp-hover-icon-color:    #6b7a90;
+  --dp-primary-color:       #3f9c35;
+  --dp-primary-disabled-color: rgba(63,156,53,0.40);
+  --dp-primary-text-color:  #ffffff;
+  --dp-secondary-color:     rgba(0,0,0,0.13);
+  --dp-border-color:        rgba(0,0,0,0.09);
+  --dp-menu-border-color:   rgba(255,255,255,0.62);
+  --dp-border-color-hover:  rgba(0,0,0,0.17);
+  --dp-border-color-focus:  rgba(63,156,53,0.50);
+  --dp-disabled-color:      rgba(0,0,0,0.04);
+  --dp-disabled-color-text: #9eaabb;
+  --dp-scroll-bar-background: rgba(0,0,0,0.04);
+  --dp-scroll-bar-color:    rgba(0,0,0,0.18);
+  --dp-icon-color:          #6b7a90;
+  --dp-highlight-color:     rgba(63,156,53,0.10);
+  --dp-tooltip-color:       rgba(240,248,255,0.95);
+  --dp-border-radius:       12px;
+  --dp-cell-border-radius:  8px;
+  --dp-font-family:         system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --dp-font-size:           0.8125rem;
+}
+
+/* ── Color system — dark ──────────────────────────────────── */
+.dp__theme_dark {
+  --dp-background-color:    rgba(10,18,46,0.82);
+  --dp-text-color:          #dce6f5;
+  --dp-hover-color:         rgba(255,255,255,0.06);
+  --dp-hover-text-color:    #dce6f5;
+  --dp-hover-icon-color:    #7a90b3;
+  --dp-primary-color:       #3f9c35;
+  --dp-primary-disabled-color: rgba(63,156,53,0.35);
+  --dp-primary-text-color:  #ffffff;
+  --dp-secondary-color:     rgba(255,255,255,0.18);
+  --dp-border-color:        rgba(255,255,255,0.10);
+  --dp-menu-border-color:   rgba(255,255,255,0.10);
+  --dp-border-color-hover:  rgba(255,255,255,0.20);
+  --dp-border-color-focus:  rgba(63,156,53,0.55);
+  --dp-disabled-color:      rgba(255,255,255,0.04);
+  --dp-disabled-color-text: #586a88;
+  --dp-scroll-bar-background: rgba(255,255,255,0.03);
+  --dp-scroll-bar-color:    rgba(255,255,255,0.15);
+  --dp-icon-color:          #7a90b3;
+  --dp-highlight-color:     rgba(63,156,53,0.22);
+  --dp-tooltip-color:       rgba(10,18,46,0.95);
+  --dp-border-radius:       12px;
+  --dp-cell-border-radius:  8px;
+  --dp-font-family:         system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --dp-font-size:           0.8125rem;
+}
+
+/* ── Input trigger ────────────────────────────────────────── */
+.dp__input {
+  border-radius: 8px !important;
+  font-size: 0.875rem !important;
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.dp__theme_light .dp__input {
+  background: rgba(255,255,255,0.62) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: #1a2535 !important;
+}
+.dp__theme_light .dp__input::placeholder { color: #6b7a90 !important; }
+.dp__theme_light .dp__input_focus {
+  border-color: rgba(63,156,53,0.45) !important;
+  box-shadow: 0 0 0 3px rgba(63,156,53,0.12) !important;
+}
+
+.dp__theme_dark .dp__input {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #dce6f5 !important;
+}
+.dp__theme_dark .dp__input::placeholder { color: #7a90b3 !important; }
+.dp__theme_dark .dp__input_focus {
+  border-color: rgba(63,156,53,0.55) !important;
+  box-shadow: 0 0 0 3px rgba(63,156,53,0.20) !important;
+}
+
+/* ── Calendar popup — glass panel ──────────────────────────
+ * Wrapper is just a positioner. Each "leaf view" (.dp__menu for
+ * calendar/time, .dp__overlay for hour/minute/month/year picker)
+ * owns its own backdrop-filter. backdrop-filter on an ancestor
+ * swallows descendants' backdrop-filter, so we toggle the menu's
+ * blur off via :has(.dp__overlay) whenever the overlay is up —
+ * that lets the overlay's blur actually hit the page.
+ */
+.dp--menu-wrapper {
+  border-radius: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Menu = glass layer for calendar / time picker when no overlay is active */
+.dp__menu {
+  border-radius: 14px !important;
+}
+
+.dp__menu:not(:has(.dp__overlay)) {
+  backdrop-filter: blur(40px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(1.8) !important;
+}
+
+.dp__theme_light.dp__menu {
+  background: rgba(225,242,255,0.56) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.92) !important;
+}
+.dp__theme_dark.dp__menu {
+  background: rgba(10,18,46,0.62) !important;
+  border: 1px solid rgba(255,255,255,0.13) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14) !important;
+}
+
+/* When overlay is active, menu loses its tint so the overlay's frosted
+ * glass renders cleanly against the page (no faint underlay leaking). */
+.dp__menu:has(.dp__overlay) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Overlay = its own frosted glass layer; owns the blur when active.
+ * Tints are deliberately light — the blur does the visual work, the
+ * tint is just enough to keep cell text readable. */
+.dp__overlay {
+  border-radius: 14px !important;
+  backdrop-filter: blur(16px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+}
+
+.dp__theme_light .dp__overlay {
+  background: rgba(225,242,255,0.18) !important;
+  border: 1px solid rgba(255,255,255,0.55) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65) !important;
+}
+.dp__theme_dark .dp__overlay {
+  background: rgba(10,18,46,0.22) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10) !important;
+}
+
+/*
+ * Chromium quirk: an element with its own backdrop-filter is treated as a
+ * backdrop-root, and another backdrop-filter element above it cannot
+ * composite the root's painted content into its own blur input — so cards,
+ * sidebars, etc. that have backdrop-filter look "vanished" through the
+ * teleported date-picker overlay even though page-level pixels (mesh,
+ * gradients) come through fine.
+ *
+ * While the date picker menu is mounted at the body level, neutralise the
+ * backdrop-filter on the dashboard's glass surfaces so their painted
+ * contents (text, buttons) actually contribute to the overlay's blur.
+ * Cards keep their tint and border — only the filter is suspended.
+ */
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="card"],
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="popover-content"],
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="dropdown-menu-content"],
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="select-content"],
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="command"],
+body:has(.dp--menu-wrapper) .admin-layout [data-slot="hover-card-content"],
+body:has(.dp--menu-wrapper) .admin-layout [data-sidebar="sidebar"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Arrow pointer — match wrapper glass color per theme */
+.dp__theme_light .dp__arrow_top,
+.dp__theme_light .dp__arrow_bottom {
+  background: rgba(225,242,255,0.56) !important;
+  border-color: rgba(255,255,255,0.72) !important;
+}
+.dp__theme_dark .dp__arrow_top,
+.dp__theme_dark .dp__arrow_bottom {
+  background: rgba(10,18,46,0.62) !important;
+  border-color: rgba(255,255,255,0.13) !important;
+}
+
+/* ── Navigation + action buttons ─────────────────────────── */
+.dp__inner_nav,
+.dp__month_year_select,
+.dp__action_button {
+  border-radius: 8px !important;
+}
+
+.dp__action_button {
+  font-size: 0.8125rem !important;
+  font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+}
+
+/* ── Time picker view ─────────────────────────────────────
+ * Time view uses .dp__time_input as the flex row: hour col, separator,
+ * minute col, AM/PM. Default sizing leaves the AM/PM button squashed
+ * against the minute column and the big number displays unstyled. We
+ * give the displays a subtle glass card, breathe out the columns, and
+ * style the AM/PM toggle to match the design.
+ */
+.dp__time_input {
+  padding: 12px 8px !important;
+  gap: 4px !important;
+}
+
+.dp__time_col {
+  padding: 0 8px !important;
+}
+
+.dp__time_display {
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  padding: 4px 10px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.dp__theme_light .dp__time_display {
+  background: rgba(255,255,255,0.55) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+}
+.dp__theme_dark .dp__time_display {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+.dp__inc_dec_button {
+  border-radius: 8px !important;
+}
+
+.dp__pm_am_button {
+  border-radius: 8px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  margin-inline-start: 8px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Hour / minute / month / year selection grid inside the overlay */
+.dp__overlay_container {
+  padding: 4px !important;
+}
+
+.dp__overlay_cell,
+.dp__overlay_cell_active {
+  border-radius: 8px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.dp__overlay_cell_pad {
+  padding: 8px 0 !important;
+}
+
+/* "Select Time" / "Select Date" toggle button at the top of the overlay */
+.dp--time-overlay-btn {
+  border-radius: 10px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+}
+
+/* ============================================================
+ * Public Forms — Liquid Glass Design System
+ * Dark frosted glass on top of cinematic hiking imagery.
+ * Mirrors the admin .admin-layout pattern but tuned for a
+ * white-on-dark public context (vote / signup / waiver / sign-in).
+ * ============================================================ */
+
+.public-layout {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius: 0.875rem;
+
+  /* Override shadcn vars so Card / Input / Button / Popover descend correctly */
+  --foreground:        #f5f7fb;
+  --card:              rgba(10,18,38,0.42);
+  --card-foreground:   #f5f7fb;
+  --popover:           rgba(10,18,38,0.92);
+  --popover-foreground:#f5f7fb;
+  --primary:           #4f88d6;
+  --primary-foreground:#ffffff;
+  --secondary:         rgba(255,255,255,0.08);
+  --secondary-foreground:#f5f7fb;
+  --muted:             rgba(255,255,255,0.06);
+  --muted-foreground:  #c2cad9;
+  --accent:            rgba(255,255,255,0.10);
+  --accent-foreground: #f5f7fb;
+  --destructive:       #ff5a5a;
+  --destructive-foreground:#ffffff;
+  --border:            rgba(255,255,255,0.16);
+  --input:             rgba(255,255,255,0.20);
+  --ring:              rgba(80,140,220,0.55);
+
+  /* Brand accents — public dark glass */
+  --pg-accent:         #a8c5ec;        /* light navy for headings & links */
+  --pg-accent-strong:  #4f88d6;
+  --pg-forest:         #1a3931;        /* deep conifer — selected / pill bg */
+  --pg-forest-tint:    rgba(26,57,49,0.45);
+  --pg-forest-glow:    #76b9a4;        /* muted sage for forest-on-dark text */
+
+  /* Glass primitives */
+  --pg-blur:           blur(24px) saturate(1.5);
+  --pg-blur-strong:    blur(40px) saturate(1.6);
+  --pg-bg:             rgba(8,16,34,0.42);
+  --pg-bg-strong:      rgba(8,16,34,0.62);
+  --pg-border:         rgba(255,255,255,0.18);
+  --pg-specular:       inset 0 1px 0 rgba(255,255,255,0.32);
+  --pg-floor:          0 24px 60px -12px rgba(0,0,0,0.55);
+}
+
+/* Cinematic darken-and-vignette scrim sitting between the
+ * background photo and the glass cards, so text always reads. */
+.public-layout .pg-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 8%,  rgba(8,14,32,0.40) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 80% at 50% 100%, rgba(0,4,14,0.65) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(0,8,20,0.55) 0%, rgba(0,8,20,0.50) 50%, rgba(0,8,20,0.75) 100%);
+}
+
+/* ── Glass card (Card primitive) ──────────────────────────── */
+.public-layout [data-slot="card"] {
+  background: var(--pg-bg) !important;
+  backdrop-filter: var(--pg-blur);
+  -webkit-backdrop-filter: var(--pg-blur);
+  border: 1px solid var(--pg-border) !important;
+  border-radius: 22px !important;
+  color: var(--card-foreground) !important;
+  box-shadow:
+    var(--pg-specular),
+    var(--pg-floor) !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.public-layout [data-slot="input"],
+.public-layout input[type="text"]:not(.dp__input),
+.public-layout input[type="email"]:not(.dp__input),
+.public-layout input[type="tel"]:not(.dp__input),
+.public-layout input[type="number"]:not(.dp__input),
+.public-layout input[type="search"]:not(.dp__input),
+.public-layout input:not([type]):not(.dp__input) {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  color: #f5f7fb !important;
+  border-radius: 10px !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.public-layout [data-slot="input"]::placeholder,
+.public-layout input::placeholder {
+  color: rgba(245,247,251,0.45) !important;
+}
+.public-layout [data-slot="input"]:focus-visible,
+.public-layout input:focus-visible {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(80,140,220,0.65) !important;
+  box-shadow: 0 0 0 3px rgba(80,140,220,0.22) !important;
+  outline: none !important;
+}
+.public-layout [data-slot="input"]:disabled,
+.public-layout input:disabled {
+  background: rgba(255,255,255,0.04) !important;
+  color: rgba(245,247,251,0.55) !important;
+  cursor: not-allowed !important;
+}
+
+/* ── Labels ──────────────────────────────────────────────── */
+.public-layout [data-slot="label"] {
+  color: #e9eef7 !important;
+  font-weight: 500 !important;
+}
+
+/* ── Radio group ─────────────────────────────────────────── */
+.public-layout [data-slot="radio-group-item"] {
+  border: 1.5px solid rgba(255,255,255,0.45) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+.public-layout [data-slot="radio-group-item"][data-state="checked"] {
+  border-color: #4f88d6 !important;
+  background: rgba(80,140,220,0.16) !important;
+  color: #a8c5ec !important;
+}
+.public-layout [data-slot="radio-group-item"][data-state="checked"] svg {
+  fill: #a8c5ec !important;
+  color: #a8c5ec !important;
+}
+
+/* ── Checkbox ────────────────────────────────────────────── */
+.public-layout [data-slot="checkbox"] {
+  border: 1.5px solid rgba(255,255,255,0.45) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+.public-layout [data-slot="checkbox"][data-state="checked"] {
+  background: #4f88d6 !important;
+  border-color: #4f88d6 !important;
+  color: #ffffff !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.public-layout [data-slot="button"] {
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Primary CTA (uci-blue marked buttons in form code) */
+.public-layout button[class*="bg-uci-blue"] {
+  background: linear-gradient(180deg, rgba(70,128,210,0.95) 0%, rgba(37,87,153,0.96) 100%) !important;
+  border: 1px solid rgba(255,255,255,0.20) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    0 10px 28px -10px rgba(37,87,153,0.65) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+.public-layout button[class*="bg-uci-blue"]:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    0 14px 36px -10px rgba(37,87,153,0.75) !important;
+}
+.public-layout button[class*="bg-uci-blue"]:disabled {
+  filter: grayscale(0.4) brightness(0.65);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Outline / secondary buttons */
+.public-layout [data-slot="button"][class*="bg-background"],
+.public-glass-dialog [data-slot="button"][class*="bg-background"] {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.20) !important;
+  color: #f5f7fb !important;
+}
+.public-layout [data-slot="button"][class*="bg-background"]:hover,
+.public-glass-dialog [data-slot="button"][class*="bg-background"]:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  color: #f5f7fb !important;
+}
+
+/* Destructive */
+.public-layout [data-slot="button"][data-variant="destructive"] {
+  background: linear-gradient(180deg, rgba(255,108,108,0.96) 0%, rgba(220,60,60,0.96) 100%) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), 0 10px 28px -10px rgba(220,60,60,0.55) !important;
+}
+
+/* ── NumberField ─────────────────────────────────────────── */
+.public-layout [data-slot="number-field-input"],
+.public-layout [data-slot="number-field"] input {
+  background: rgba(255,255,255,0.06) !important;
+  color: #f5f7fb !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+.public-layout [data-slot="number-field-decrement"],
+.public-layout [data-slot="number-field-increment"] {
+  color: #f5f7fb !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+
+/* ── Popovers / dropdowns / dialogs ──────────────────────── */
+.public-layout [data-slot="popover-content"],
+.public-layout [data-slot="dropdown-menu-content"],
+.public-layout [data-slot="select-content"],
+.public-layout [data-slot="command"],
+.public-layout [data-slot="hover-card-content"],
+.public-layout [data-slot="tooltip-content"],
+[data-slot="dialog-content"]:has(.public-dialog),
+[data-slot="popover-content"][data-public="true"] {
+  background: var(--pg-bg-strong) !important;
+  backdrop-filter: var(--pg-blur-strong);
+  -webkit-backdrop-filter: var(--pg-blur-strong);
+  border: 1px solid var(--pg-border) !important;
+  border-radius: 14px !important;
+  color: #f5f7fb !important;
+  box-shadow: var(--pg-specular), 0 24px 60px -12px rgba(0,0,0,0.55) !important;
+}
+
+/* ── Skeleton ────────────────────────────────────────────── */
+.public-layout [data-slot="skeleton"] {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.10), rgba(255,255,255,0.04)) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ── Color overrides for common Tailwind utilities used in
+ *    public templates that would otherwise be unreadable. ─── */
+.public-layout .text-stone-500,
+.public-layout .text-stone-600,
+.public-layout .text-stone-700 {
+  color: #c8d0de !important;
+}
+.public-layout .text-midnight {
+  color: #f5f7fb !important;
+}
+.public-layout .text-uci-blue {
+  color: #a8c5ec !important;
+}
+.public-layout .bg-stone-50,
+.public-layout .bg-stone-100 {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.14) !important;
+}
+.public-layout .border-stone-200,
+.public-layout .border-stone-300,
+.public-layout .border-stone-400 {
+  border-color: rgba(255,255,255,0.16) !important;
+}
+
+/* Trail tile in VoteForm — let class="public-trail-card" carry the glass */
+.public-layout .public-trail-card {
+  background: rgba(8,16,34,0.50) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 12px 30px -12px rgba(0,0,0,0.55);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.public-layout .public-trail-card:hover {
+  border-color: rgba(255,255,255,0.30) !important;
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 18px 40px -12px rgba(0,0,0,0.65);
+}
+.public-layout .public-trail-card.is-selected {
+  border-color: rgba(118,185,164,0.70) !important;
+  background: linear-gradient(180deg, rgba(26,57,49,0.55) 0%, rgba(8,16,34,0.55) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.24),
+    0 0 0 1px rgba(118,185,164,0.40),
+    0 18px 40px -12px rgba(0,0,0,0.65);
+}
+
+/* "You voted for this" pill — forest deep glass with sage text */
+.public-layout .public-vote-pill {
+  background: linear-gradient(180deg, rgba(26,57,49,0.65) 0%, rgba(26,57,49,0.45) 100%) !important;
+  border: 1px solid rgba(118,185,164,0.55) !important;
+  color: #d3ecdf !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+/* Vote progress bar — navy → forest gradient */
+.public-layout .public-vote-bar {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+.public-layout .public-vote-bar-fill {
+  background: linear-gradient(90deg, #4f88d6 0%, #76b9a4 100%) !important;
+}
+
+/* Driver attestation block */
+.public-layout .public-attest-card {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 14px !important;
+}
+
+/* prose tweaks for waiver legal text */
+.public-layout .prose,
+.public-layout .prose * {
+  color: #e6ecf7 !important;
+}
+.public-layout .prose a {
+  color: #a8c5ec !important;
+}
+.public-layout .prose strong {
+  color: #ffffff !important;
+}
+.public-layout .prose hr {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+.public-layout .waiver-prose h2 {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #ffffff !important;
+}
+.public-layout .waiver-prose p {
+  margin-top: 0.6rem !important;
+  margin-bottom: 0 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+}
+/* center-aligned header block inside the legal text */
+.public-layout .waiver-prose [style*="text-align: center"],
+.public-layout .waiver-prose .text-center {
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+.public-layout .waiver-prose [style*="text-align: center"] p,
+.public-layout .waiver-prose .text-center p {
+  font-size: 0.75rem !important;
+  color: #b0bcd4 !important;
+  margin: 0.2rem 0 !important;
+}
+
+/* ── Teleported public surfaces (Dialogs, Popovers) ──────────
+ * Reka-UI teleports overlays to <body>, escaping .public-layout.
+ * Mark them with `class="public-glass-dialog"` (or rely on a
+ * matching popover trigger) so they pick up glass styling. */
+.public-glass-dialog,
+.public-glass-popover {
+  background: rgba(8,16,34,0.78) !important;
+  backdrop-filter: blur(40px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(1.6) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  color: #f5f7fb !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    0 30px 80px -20px rgba(0,0,0,0.65) !important;
+}
+
+.public-glass-dialog [data-slot="dialog-title"],
+.public-glass-popover [data-slot="dialog-title"] {
+  color: #ffffff !important;
+}
+.public-glass-dialog [data-slot="dialog-description"],
+.public-glass-popover [data-slot="dialog-description"] {
+  color: #c8d0de !important;
+}
+.public-glass-dialog [data-slot="label"],
+.public-glass-popover [data-slot="label"] {
+  color: #f5f7fb !important;
+}
+.public-glass-dialog [data-slot="checkbox"][data-state="checked"],
+.public-glass-popover [data-slot="checkbox"][data-state="checked"] {
+  background: #4f88d6 !important;
+  border-color: #4f88d6 !important;
+  color: #ffffff !important;
+}
+.public-glass-dialog [data-slot="checkbox"]:not([data-state="checked"]),
+.public-glass-popover [data-slot="checkbox"]:not([data-state="checked"]) {
+  border: 1.5px solid rgba(255,255,255,0.45) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+
+/* Dialog overlay (scrim) for public dialogs */
+[data-slot="dialog-overlay"]:has(~ * .public-glass-dialog),
+.public-layout [data-slot="dialog-overlay"] {
+  background: rgba(0,4,14,0.55) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Hoverable items inside teleported public popovers */
+.public-glass-popover [class*="hover:bg-accent"]:hover,
+.public-glass-popover .cursor-pointer:hover {
+  background: rgba(255,255,255,0.10) !important;
+  color: #a8c5ec !important;
+}
+.public-glass-popover .text-muted-foreground {
+  color: rgba(245,247,251,0.55) !important;
+}
+
+/* ============================================================
+ * Expand / collapse section transition
+ * Used by Vue <Transition name="expand-section"> wrappers to
+ * smoothly grow/shrink height + fade for show/hide blocks
+ * (driver section, new-vehicle form, etc.).
+ *
+ * Pattern: outer .expand-section is a single-row CSS grid; the
+ * row template animates between 0fr (collapsed) and 1fr
+ * (expanded). The inner .expand-section-inner clips with
+ * overflow:hidden + min-height:0 so it can shrink past content
+ * height. Also crossfades opacity for a softer feel.
+ * ============================================================ */
+.expand-section {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.expand-section > .expand-section-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.expand-section-enter-active,
+.expand-section-leave-active {
+  transition:
+    grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.22s ease;
+}
+.expand-section-enter-from,
+.expand-section-leave-to {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.expand-section-enter-to,
+.expand-section-leave-from {
+  grid-template-rows: 1fr;
+  opacity: 1;
 }

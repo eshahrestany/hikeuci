@@ -10,6 +10,7 @@ import backgroundImage from '@/assets/hiking_bg.jpg'
 import {Skeleton} from '@/components/ui/skeleton'
 import DifficultyBadge from "@/components/common/DifficultyBadge.vue";
 import ElevationChart from "@/components/common/ElevationChart.vue";
+import { Check } from 'lucide-vue-next'
 
 /** ---------- State (mirrors SignupForm.vue patterns) ---------- */
 const props = defineProps({
@@ -136,9 +137,9 @@ onMounted(async () => {
       class="relative bg-cover bg-center py-20 bg-fixed"
       :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
-    <div class="absolute inset-0"></div>
+    <div class="pg-scrim" aria-hidden="true"></div>
     <div class="relative mx-auto max-w-5xl px-4">
-      <Card class="bg-white border">
+      <Card>
         <CardHeader class="p-6">
           <div v-if="loading" class="space-y-4">
             <Skeleton class="h-9 w-2/3 mx-auto"/>
@@ -148,10 +149,10 @@ onMounted(async () => {
             </div>
           </div>
           <template v-else>
-            <h1 class="text-center text-3xl font-bold text-uci-blue tracking-tight sm:text-4xl font-montserrat">
+            <h1 class="text-center text-3xl font-bold tracking-tight sm:text-4xl font-montserrat" style="color:#f5f7fb">
               {{ pageTitle }}
             </h1>
-            <p v-if="hikeName || endsAt" class="text-center text-sm text-stone-600 mt-2">
+            <p v-if="hikeName || endsAt" class="text-center text-sm mt-2" style="color:#c8d0de">
               <span v-if="hikeName" class="font-medium">{{ hikeName }}</span>
               <span v-if="hikeName && endsAt"> • </span>
               <span v-if="endsAt">Voting ends: {{ new Date(endsAt).toLocaleString() }}</span>
@@ -176,16 +177,19 @@ onMounted(async () => {
           </div>
 
           <div v-else class="space-y-6">
-            <div
-                class="grid grid-cols-1 md:grid-cols-3 gap-6"
-            >
+            <!-- On desktop the grid becomes a subgrid: each card spans 6 explicit rows so
+                 every section (image / title / stats / elev-gain / chart / vote) aligns
+                 across all three columns regardless of content height. -->
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-x-6 md:gap-y-0">
               <div
                   v-for="t in trails"
                   :key="t.id"
-                  class="group relative overflow-hidden rounded-2xl border border-stone-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col"
-                  :class="{'bg-white': alreadyVoted && userVoteTrailId !== t.id, 'bg-blue-200': alreadyVoted && userVoteTrailId === t.id}"
+                  class="public-trail-card group relative overflow-hidden rounded-2xl
+                         md:row-span-6 md:grid md:grid-rows-subgrid"
+                  :class="{'is-selected': alreadyVoted && userVoteTrailId === t.id}"
               >
-                <div class="aspect-[16/10] w-full overflow-hidden bg-stone-100 hover:scale-[1.05]">
+                <!-- Row 1: Image -->
+                <div class="aspect-[16/10] w-full overflow-hidden bg-black/30">
                   <img
                       :src="imageUrl(t.id)"
                       :alt="t.name"
@@ -194,76 +198,86 @@ onMounted(async () => {
                   />
                 </div>
 
-                <div class="p-4 flex flex-col flex-1">
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 class="text-lg font-bold text-midnight">{{ t.name }}</h3>
-                      <p class="text-sm text-stone-600">{{ t.location }}</p>
-                    </div>
-                    <DifficultyBadge class="float-right text-md" :difficulty="t.difficulty"></DifficultyBadge>
+                <!-- Row 2: Name + location + difficulty badge -->
+                <div class="px-4 pt-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="text-lg font-bold" style="color:#f5f7fb">{{ t.name }}</h3>
+                    <p class="text-sm" style="color:#c8d0de">{{ t.location }}</p>
                   </div>
+                  <DifficultyBadge class="shrink-0" :difficulty="t.difficulty" />
+                </div>
 
-                  <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-                    <div class="rounded-lg bg-stone-50 px-3 py-2 border border-stone-200">
-                      <p class="text-xs uppercase tracking-wide text-stone-500">Length</p>
-                      <p class="font-medium text-midnight">
+                <!-- Row 3: Stats (Length + Est. time) — always 2 cols -->
+                <div class="px-4 pt-3">
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="rounded-lg px-3 py-2 border" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12);">
+                      <p class="text-xs uppercase tracking-wide" style="color:#9aa6bb">Length</p>
+                      <p class="font-semibold" style="color:#f5f7fb">
                         {{ t.length_mi != null ? `${Number(t.length_mi).toFixed(1)} mi` : '—' }}
                       </p>
                     </div>
-                    <div class="rounded-lg bg-stone-50 px-3 py-2 border border-stone-200">
-                      <p class="text-xs uppercase tracking-wide text-stone-500">Est. time</p>
-                      <p class="font-medium text-midnight">
-                        <template v-if="t.estimated_time_hr != null">
-                          <template v-if="t.estimated_time_hr == 1">
-                            1 hour
-                          </template>
-                          <template v-else>
-                            {{ t.estimated_time_hr }} hours
-                          </template>
-                        </template>
+                    <div class="rounded-lg px-3 py-2 border" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12);">
+                      <p class="text-xs uppercase tracking-wide" style="color:#9aa6bb">Est. time</p>
+                      <p class="font-semibold" style="color:#f5f7fb">
+                        <template v-if="t.estimated_time_hr != null">{{ t.estimated_time_hr }} hr</template>
                         <template v-else>—</template>
                       </p>
                     </div>
                   </div>
+                </div>
 
-                  <ElevationChart v-if="t.elevation_data" :elevationData="t.elevation_data" class="mt-3" />
+                <!-- Row 4: Elevation gain — its own row; empty div when absent so the
+                     subgrid row still participates in cross-card height alignment. -->
+                <div v-if="t.elevation_gain_ft != null" class="px-4 pt-2">
+                  <div class="rounded-lg px-3 py-2 border" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12);">
+                    <p class="text-xs uppercase tracking-wide" style="color:#9aa6bb">Elev. gain</p>
+                    <p class="font-semibold" style="color:#f5f7fb">{{ t.elevation_gain_ft.toLocaleString() }} ft</p>
+                  </div>
+                </div>
+                <div v-else></div>
 
-                  <div class="mt-auto pt-4">
-                    <!-- Results display when already voted -->
-                    <div v-if="alreadyVoted" class="mb-4">
-                      <div class="flex items-center justify-between text-xs text-stone-600 mb-1">
-                        <span>Votes: {{ countFor(t.id) }} / {{ totalVotes }}</span>
-                        <span class="font-semibold text-midnight">{{ percentFor(t.id) }}%</span>
-                      </div>
-                      <div class="w-full h-3 rounded-full bg-stone-100 border border-stone-200 overflow-hidden">
-                        <div
-                            class="h-full bg-uci-blue transition-all duration-500"
-                            :style="{ width: percentFor(t.id) + '%' }"
-                        />
-                      </div>
-                    </div>
+                <!-- Row 5: Elevation chart — empty div when absent -->
+                <div v-if="t.elevation_data" class="px-4 pt-3">
+                  <ElevationChart :elevationData="t.elevation_data" />
+                </div>
+                <div v-else></div>
 
-                    <div v-if="userVoteTrailId !== t.id" class="flex">
-                      <Button
-                          type="button"
-                          class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm bg-uci-blue text-white hover:bg-uci-blue/90 font-semibold transition focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                          @click="submitVote(t.id)"
-                      >
-                        <span>
-                          <template v-if="!alreadyVoted">Vote</template>
-                          <template v-else>Change vote to this</template>
-                        </span>
-                      </Button>
+                <!-- Row 6: Vote section — pinned to the bottom of its row -->
+                <div class="p-4 pt-4 flex flex-col justify-end">
+                  <div v-if="alreadyVoted" class="mb-4">
+                    <div class="flex items-center justify-between text-xs mb-1.5" style="color:#c8d0de">
+                      <span>Votes: {{ countFor(t.id) }} / {{ totalVotes }}</span>
+                      <span class="font-semibold" style="color:#f5f7fb">{{ percentFor(t.id) }}%</span>
                     </div>
-                    <div v-else class="inline-flex items-center justify-center gap-2 rounded-xl border bg-uci-gold/50 px-4 py-2 text-sm font-semibold">
-                      You voted for this
+                    <div class="public-vote-bar w-full h-2.5 rounded-full border overflow-hidden">
+                      <div
+                          class="public-vote-bar-fill h-full transition-all duration-500"
+                          :style="{ width: percentFor(t.id) + '%' }"
+                      />
                     </div>
+                  </div>
+
+                  <div v-if="userVoteTrailId !== t.id" class="flex">
+                    <Button
+                        type="button"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm bg-uci-blue text-white font-semibold transition focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                        @click="submitVote(t.id)"
+                    >
+                      <span>
+                        <template v-if="!alreadyVoted">Vote</template>
+                        <template v-else>Change vote to this</template>
+                      </span>
+                    </Button>
+                  </div>
+                  <div v-else class="public-vote-pill inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold">
+                    <Check class="h-4 w-4" />
+                    You voted for this
                   </div>
                 </div>
               </div>
             </div>
-            <div v-if="voteSaved" class="text-lg font-bold text-center text-emerald-600">Vote saved</div>
-            <div class="pt-2 text-center text-sm text-stone-600">
+            <div v-if="voteSaved" class="text-lg font-bold text-center" style="color:#7be3a3">Vote saved</div>
+            <div class="pt-2 text-center text-sm" style="color:#c8d0de">
               You can change your vote anytime before voting closes.
             </div>
           </div>

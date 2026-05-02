@@ -1,16 +1,27 @@
 <template>
-  <NavBar :overlayNavbar="true"/>
-  <section class="relative min-h-screen flex items-center justify-center text-stone overflow-hidden px-4">
-    <div class="absolute inset-0 bg-cover bg-center" :style="{ backgroundImage: `url(${background})` }" aria-hidden="true"></div>
-    <div class="absolute inset-0 bg-black/50 pointer-events-none" aria-hidden="true"></div>
-    <div class="relative z-10 w-full max-w-md bg-black/30 backdrop-blur p-8 rounded-lg shadow-lg border border-stone/30">
-      <h1 class="text-3xl font-bold font-montserrat text-uci-gold mb-2 text-center">Officer Sign-In</h1>
-      <h1 class="text-md font-montserrat text-white mb-3 text-center">For hiking club officers only.</h1>
-      <div id="g_id_signin" class="flex justify-center"></div>
-      <p v-if="error" class="mt-4 text-red-400 text-center">{{ error }}</p>
-    </div>
-  </section>
-  <Footer />
+  <div class="public-layout">
+    <NavBar :overlayNavbar="true"/>
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden px-4">
+      <div class="absolute inset-0 bg-cover bg-center" :style="{ backgroundImage: `url(${background})` }" aria-hidden="true"></div>
+      <div class="pg-scrim" aria-hidden="true"></div>
+      <div
+        class="relative z-10 w-full max-w-md p-8 rounded-3xl border"
+        style="
+          background: rgba(8,16,34,0.45);
+          backdrop-filter: blur(28px) saturate(1.5);
+          -webkit-backdrop-filter: blur(28px) saturate(1.5);
+          border-color: rgba(255,255,255,0.18);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), 0 30px 70px -20px rgba(0,0,0,0.65);
+        "
+      >
+        <h1 class="text-3xl font-bold font-montserrat mb-2 text-center" style="color:#f5f7fb">Officer Sign-In</h1>
+        <p class="text-sm font-montserrat mb-6 text-center" style="color:#c8d0de">For hiking club officers only.</p>
+        <div id="g_id_signin" class="flex justify-center"></div>
+        <p v-if="error" class="mt-4 text-red-400 text-center text-sm">{{ error }}</p>
+      </div>
+    </section>
+    <Footer />
+  </div>
 </template>
 
 <script setup>

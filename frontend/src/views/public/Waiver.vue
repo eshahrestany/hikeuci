@@ -5,7 +5,7 @@ import Footer from '../../components/public/Footer.vue'
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen">
+  <div class="public-layout flex flex-col min-h-screen">
     <NavBar :overlay-navbar="false" />
     <WaiverForm class="flex-grow place-content-center"/>
     <Footer/>

@@ -285,6 +285,7 @@ watch(mode, () => {
             :is-24="false"
             :dark="dark"
             :flow="dateTimeFlow"
+            teleport="body"
             auto-apply
             :minutes-increment="minuteStep"
             placeholder="Pick date & time"
@@ -299,6 +300,7 @@ watch(mode, () => {
             :is-24="false"
             :dark="dark"
             :flow="dateTimeFlow"
+            teleport="body"
             auto-apply
             :minutes-increment="minuteStep"
             placeholder="Pick date & time"
@@ -313,6 +315,7 @@ watch(mode, () => {
             :is-24="false"
             :dark="dark"
             :flow="dateTimeFlow"
+            teleport="body"
             auto-apply
             :minutes-increment="minuteStep"
             placeholder="Pick date & time"

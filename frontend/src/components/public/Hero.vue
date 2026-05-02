@@ -11,7 +11,7 @@
     <div
       class="relative z-10 flex flex-col items-center justify-center px-6 py-24 gap-6"
     >
-      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-uci-gold drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold font-montserrat text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
         Mountains > Midterms
       </h1>
 

@@ -140,7 +140,7 @@ const columns = [
       const t = row.original.transport_type
       const label = t === 'driver' ? 'Driver' : t === 'self' ? 'Self' : 'Passenger'
       const cls = t === 'driver'
-        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
         : t === 'self'
           ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
           : ''

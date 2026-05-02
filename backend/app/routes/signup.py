@@ -33,12 +33,20 @@ def signup() -> tuple[Response, int]:
         if hike.phase != "signup" and not is_late:
             return jsonify({"error": "Hike not in signup phase"}), 400
 
+        trail = Trail.query.get(hike.trail_id)
+
         # check if already signed up
         existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
         if existing_signup:
-            return jsonify({"status": "signed"}), 200
-
-        trail = Trail.query.get(hike.trail_id)
+            trail_data = {
+                "length_mi": trail.length_mi,
+                "estimated_time_hr": trail.estimated_time_hr,
+                "required_water_liters": trail.required_water_liters,
+                "difficulty": trail.difficulty,
+                "elevation_gain_ft": trail.elevation_gain_ft,
+                "elevation_data": trail.elevation_data,
+            } if trail else None
+            return jsonify({"status": "signed", "trail": trail_data, "hike": {"title": trail.name if trail else "Upcoming Hike"}}), 200
 
         vehicles = Vehicle.query.filter_by(member_id=member.id, deleted=False).all()
         vehicles_data = [{
@@ -49,6 +57,15 @@ def signup() -> tuple[Response, int]:
             "passenger_seats": v.passenger_seats
         } for v in vehicles]
 
+        trail_data = {
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
+
         return jsonify({
             "status": "ready",
             "formData": {
@@ -57,8 +74,9 @@ def signup() -> tuple[Response, int]:
                 "tel": member.tel,
             },
             "hike": {
-                "title": trail.name,
+                "title": trail.name if trail else "Upcoming Hike",
             },
+            "trail": trail_data,
             "vehicles": vehicles_data
         }), 200
 

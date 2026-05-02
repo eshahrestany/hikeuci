@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { h, shallowRef, ref } from 'vue'
+import { h, shallowRef, ref, watch } from 'vue'
 import { useVueTable, getCoreRowModel, FlexRender } from '@tanstack/vue-table'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,7 @@ import ModifyUserModal from '@/components/admin/ModifyUserModal.vue'
 
 const props = defineProps({ waitlistData: { type: Object, required: true } })
 const data = shallowRef([...props.waitlistData])
+watch(() => props.waitlistData, (d) => { data.value = [...d] })
 const editUser = ref(null)
 
 function modifyRow(user) {

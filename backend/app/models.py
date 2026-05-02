@@ -29,6 +29,7 @@ class Trail(db.Model):
     trailhead_amaps_url = db.Column(db.String(300), nullable=True)
     description              = db.Column(db.Text, nullable=True)
     elevation_data           = db.Column(db.JSON, nullable=True)
+    elevation_gain_ft        = db.Column(db.Float, nullable=True)
     driving_distance_mi      = db.Column(db.Float, nullable=True)
 
 

@@ -37,12 +37,31 @@ def hike_waiver_page():
 
     existing_waiver = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if existing_waiver:
-        return jsonify({"status": "signed"}), 200
+        trail_data = {
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
+        return jsonify({"status": "signed", "trail": trail_data}), 200
 
     if request.method == "GET":
+        hike_date_display = hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y")
         content = render_template("waiver_content.html.j2", event_description=trail.name,
-                                  event_date=hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y"))
-        return jsonify({"status": "ready", "content": content}), 200
+                                  event_date=hike_date_display)
+        trail_data = {
+            "name": trail.name,
+            "location": trail.location,
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
+        return jsonify({"status": "ready", "content": content, "trail": trail_data, "hike_date": hike_date_display}), 200
     elif request.method == "POST":
         form_data = request.json
         name = form_data.get("name")

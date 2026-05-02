@@ -159,7 +159,7 @@ const stats = computed(() => activeCampaign.value?.counts || { total: 0, pending
           <Badge
             v-if="isCurrent"
             variant="outline"
-            class="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30"
+            class="bg-green-600/10 text-green-700 dark:text-green-400 border-green-600/30"
           >
             Current
           </Badge>

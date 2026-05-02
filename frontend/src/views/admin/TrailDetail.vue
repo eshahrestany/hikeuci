@@ -65,6 +65,46 @@ const form = reactive({
 const selectedPhotoFile = ref(null)
 const selectedElevationFile = ref(null)
 const elevationData = ref(null)
+const savedState = ref(null)
+
+function snapshotForm() {
+  return {
+    name: form.name,
+    location: form.location,
+    difficulty: form.difficulty,
+    length_mi: form.length_mi,
+    estimated_time_hr: form.estimated_time_hr,
+    required_water_liters: form.required_water_liters,
+    driving_distance_mi: form.driving_distance_mi,
+    alltrails_url: form.alltrails_url,
+    trailhead_gmaps_url: form.trailhead_gmaps_url,
+    trailhead_amaps_url: form.trailhead_amaps_url,
+    description: form.description,
+  }
+}
+
+// null/undefined treated identically so optional fields don't false-positive
+const n = v => v ?? null
+
+const isDirty = computed(() => {
+  if (!savedState.value) return false
+  if (selectedPhotoFile.value !== null) return true
+  if (selectedElevationFile.value !== null) return true
+  const s = savedState.value
+  return (
+    form.name !== s.name ||
+    form.location !== s.location ||
+    form.difficulty !== s.difficulty ||
+    form.length_mi !== s.length_mi ||
+    form.estimated_time_hr !== s.estimated_time_hr ||
+    form.required_water_liters !== s.required_water_liters ||
+    n(form.driving_distance_mi) !== n(s.driving_distance_mi) ||
+    n(form.alltrails_url) !== n(s.alltrails_url) ||
+    n(form.trailhead_gmaps_url) !== n(s.trailhead_gmaps_url) ||
+    n(form.trailhead_amaps_url) !== n(s.trailhead_amaps_url) ||
+    n(form.description) !== n(s.description)
+  )
+})
 
 async function load() {
   loading.value = true
@@ -73,6 +113,7 @@ async function load() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     trail.value = await res.json()
     Object.assign(form, trail.value)
+    savedState.value = snapshotForm()
 
     if (trail.value.has_elevation_data) {
       const elRes = await fetchWithAuth(`/api/admin/trails/${props.trailId}/elevation`)
@@ -98,6 +139,8 @@ async function save() {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     trail.value = await res.json()
+    Object.assign(form, trail.value)
+    savedState.value = snapshotForm()
 
     if (selectedPhotoFile.value) {
       const fd = new FormData()
@@ -108,6 +151,7 @@ async function save() {
         body: fd,
       })
       selectedPhotoFile.value = null
+      imageKey.value = Date.now()
     }
 
     if (selectedElevationFile.value) {
@@ -119,6 +163,8 @@ async function save() {
         body: fd,
       })
       if (elRes.ok) {
+        const uploadResult = await elRes.json()
+        trail.value = { ...trail.value, elevation_gain_ft: uploadResult.elevation_gain_ft, has_elevation_data: true }
         const elData = await fetchWithAuth(`/api/admin/trails/${props.trailId}/elevation`)
         if (elData.ok) elevationData.value = (await elData.json()).elevation_data
       }
@@ -148,7 +194,8 @@ async function confirmDelete() {
   }
 }
 
-const imageUrl = computed(() => `/api/images/uploads/${props.trailId}?t=${Date.now()}`)
+const imageKey = ref(Date.now())
+const imageUrl = computed(() => `/api/images/uploads/${props.trailId}?t=${imageKey.value}`)
 
 onMounted(load)
 </script>
@@ -167,7 +214,7 @@ onMounted(load)
     <template v-else-if="trail">
       <!-- Page header -->
       <div class="flex items-center gap-3">
-        <Button variant="ghost" size="icon" class="shrink-0" @click="router.push({ name: 'Dashboard Trails' })">
+        <Button variant="ghost" size="icon" class="shrink-0" @click="router.back()">
           <ArrowLeft class="h-4 w-4" />
         </Button>
         <div class="flex-1 min-w-0">
@@ -338,6 +385,10 @@ onMounted(load)
                 <BarChart2 class="h-5 w-5 opacity-40" />
                 No elevation data
               </div>
+              <div v-if="trail.elevation_gain_ft != null" class="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+                <span class="text-xs text-muted-foreground">Elevation Gain</span>
+                <span class="font-semibold tabular-nums">{{ trail.elevation_gain_ft.toLocaleString() }} ft</span>
+              </div>
               <label class="flex items-center gap-2 cursor-pointer rounded-lg border px-3 py-2 text-xs hover:bg-muted/50 transition-colors">
                 <BarChart2 class="h-3.5 w-3.5 text-muted-foreground" />
                 <span class="text-muted-foreground">{{ selectedElevationFile ? selectedElevationFile.name : (trail.has_elevation_data ? 'Replace elevation .json' : 'Upload elevation .json') }}</span>
@@ -347,7 +398,7 @@ onMounted(load)
           </Card>
 
           <!-- Save -->
-          <Button class="w-full" :disabled="saving" @click="save">
+          <Button class="w-full" :disabled="saving || !isDirty" @click="save">
             <Save class="h-4 w-4" />
             {{ saving ? 'Saving…' : 'Save Changes' }}
           </Button>

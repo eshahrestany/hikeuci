@@ -23,7 +23,8 @@ import {parsePhoneNumberFromString} from 'libphonenumber-js'
 import {SPhoneInput} from "@/components/ui/phone-input";
 import {PlusCircle, X, ChevronDown, Check} from "lucide-vue-next";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip/index.js";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover/index.js"
+import HikeStatsBar from '@/components/common/HikeStatsBar.vue';
 
 const props = defineProps({
   title: {
@@ -33,6 +34,7 @@ const props = defineProps({
 })
 
 const hikeTitle = ref(props.title)
+const trailStats = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const signupSuccess = ref(false)
@@ -113,6 +115,12 @@ function cancelAddVehicle() {
   addingNewVehicle.value = false
 }
 
+function pickExistingVehicle(id) {
+  selectedVehicleId.value = id
+  addingNewVehicle.value = false
+  vehicleDropdownOpen.value = false
+}
+
 const deletingVehicleId = ref(null)
 
 async function deleteVehicle(vehicleId) {
@@ -161,6 +169,8 @@ onMounted(async () => {
 
     if (jsonResponse.status === "signed") {
       alreadySigned.value = true
+      trailStats.value = jsonResponse.trail || null
+      if (jsonResponse.hike?.title) hikeTitle.value = jsonResponse.hike.title
     } else if (jsonResponse.status === "ready") {
       const data = jsonResponse.formData
       name.value = data.name
@@ -171,6 +181,7 @@ onMounted(async () => {
 
       vehicles.value = jsonResponse.vehicles || []
       hikeTitle.value = jsonResponse.hike.title
+      trailStats.value = jsonResponse.trail || null
     }
   } catch (e) {
     error.value = e.message
@@ -280,9 +291,9 @@ async function submitCancelRequest() {
       class="relative bg-cover bg-center py-20 bg-fixed"
       :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
-    <div class="absolute inset-0"/>
+    <div class="pg-scrim" aria-hidden="true"/>
     <div class="relative mx-auto max-w-2xl px-4">
-      <Card class="bg-white border">
+      <Card>
         <CardHeader class="p-6">
           <div v-if="loading" class="space-y-4">
             <Skeleton class="h-9 w-3/4 mx-auto"/>
@@ -293,9 +304,10 @@ async function submitCancelRequest() {
             </div>
           </div>
           <template v-else>
-            <h1 class="text-center text-3xl font-bold text-uci-blue tracking-tight sm:text-4xl font-montserrat">
+            <h1 class="text-center text-3xl font-bold tracking-tight sm:text-4xl font-montserrat" style="color:#f5f7fb">
               {{ hikeTitle }}
             </h1>
+            <HikeStatsBar :trail="trailStats" class="mt-4" />
           </template>
         </CardHeader>
         <CardContent class="p-6 pt-0">
@@ -312,18 +324,18 @@ async function submitCancelRequest() {
             />
             {{ error }}
           </div>
-          <div v-else-if="signupSuccess" class="text-center text-stone-700">
-            <p class="text-lg font-medium">You have succesfully signed up for this hike.</p>
-            <p class="text-sm text-stone-600 mt-2">You can return to this link before the signup deadline to cancel if
+          <div v-else-if="signupSuccess" class="text-center">
+            <p class="text-lg font-medium" style="color:#f5f7fb">You have succesfully signed up for this hike.</p>
+            <p class="text-sm mt-2" style="color:#c8d0de">You can return to this link before the signup deadline to cancel if
               needed.</p>
           </div>
-          <div v-else-if="alreadySigned" class="text-center text-stone-700">
-            <p v-if="cancelSuccess">Successfully canceled.</p>
-            <p v-else class="text-lg font-medium">
+          <div v-else-if="alreadySigned" class="text-center">
+            <p v-if="cancelSuccess" style="color:#f5f7fb">Successfully canceled.</p>
+            <p v-else class="text-lg font-medium" style="color:#f5f7fb">
               You have already signed up for this event. If you need to cancel your signup, please click the button
               below.
             </p>
-            <p class="text-sm text-stone-600 mt-2">You can still re-sign up for the hike before the signup submission deadline.</p>
+            <p class="text-sm mt-2" style="color:#c8d0de">You can still re-sign up for the hike before the signup submission deadline.</p>
             <div v-if="!cancelSuccess" class="mt-6">
               <Button type="button" variant="destructive" @click="submitCancelRequest">Cancel My Signup</Button>
             </div>
@@ -389,121 +401,131 @@ async function submitCancelRequest() {
             </div>
 
             <!-- Dynamic Driver Section -->
-            <div v-if="isDriver" class="border-t border-stone-200 pt-6 space-y-6">
-              <!-- Vehicle Input (dynamic) -->
-              <div class="space-y-4">
-                <!-- Existing vehicles: choose one -->
-                <div v-if="hasVehicles" class="grid grid-cols-2">
-                  <div class="space-y-2">
-                    <Label for="vehicleSelect" class="font-semibold text-midnight">Choose your vehicle</Label>
-                    <Popover v-model:open="vehicleDropdownOpen">
-                      <PopoverTrigger as-child>
-                        <button
-                          id="vehicleSelect"
-                          type="button"
-                          :disabled="addingNewVehicle"
-                          class="border-input flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 h-9"
-                        >
-                          <span :class="!selectedVehicle ? 'text-muted-foreground' : ''">
-                            {{ selectedVehicle
-                              ? `${selectedVehicle.description || `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`} (${selectedVehicle.passenger_seats} passengers)`
-                              : 'Select Vehicle…' }}
-                          </span>
-                          <ChevronDown class="size-4 opacity-50 flex-shrink-0" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        align="start"
-                        :side-offset="4"
-                        class="p-1 w-[var(--reka-popover-trigger-width,16rem)] min-w-[8rem]"
-                      >
-                        <div
-                          v-for="v in vehicles"
-                          :key="v.id"
-                          class="flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm cursor-pointer select-none hover:bg-accent hover:text-accent-foreground transition-colors"
-                          @click="selectedVehicleId = v.id; vehicleDropdownOpen = false"
-                        >
-                          <Check v-if="selectedVehicleId === v.id" class="h-4 w-4 flex-shrink-0" />
-                          <span v-else class="h-4 w-4 flex-shrink-0" />
-                          <span class="flex-1 min-w-0 truncate">
-                            {{ v.description || `${v.year} ${v.make} ${v.model}` }}
-                            ({{ v.passenger_seats }} passengers)
-                          </span>
+            <Transition name="expand-section">
+              <div v-if="isDriver" class="expand-section">
+                <div class="expand-section-inner border-t pt-6 space-y-6" style="border-color: rgba(255,255,255,0.14)">
+                  <!-- Vehicle Input (dynamic) -->
+                  <div class="space-y-4">
+                    <!-- Existing vehicles: choose one. "Add new vehicle" is the
+                         final option inside the dropdown when vehicles exist. -->
+                    <div v-if="hasVehicles" class="space-y-2">
+                      <Label for="vehicleSelect" class="font-semibold text-midnight">Choose your vehicle</Label>
+                      <Popover v-model:open="vehicleDropdownOpen">
+                        <PopoverTrigger as-child>
                           <button
+                            id="vehicleSelect"
                             type="button"
-                            class="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-40"
-                            :disabled="deletingVehicleId === v.id"
-                            @click.stop="deleteVehicle(v.id)"
-                            :aria-label="`Remove ${v.description || v.model}`"
+                            class="border-input flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 h-9"
                           >
-                            <X class="h-3.5 w-3.5" />
+                            <span :class="!selectedVehicle && !addingNewVehicle ? 'text-muted-foreground' : ''">
+                              <template v-if="addingNewVehicle">Adding a new vehicle…</template>
+                              <template v-else-if="selectedVehicle">
+                                {{ selectedVehicle.description || `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` }}
+                                ({{ selectedVehicle.passenger_seats }} passengers)
+                              </template>
+                              <template v-else>Select Vehicle…</template>
+                            </span>
+                            <ChevronDown class="size-4 opacity-50 flex-shrink-0" />
                           </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div class="space-y-2">
-                    <Label class="font-semibold text-midnight">Or add a new one</Label>
-                    <Button class="items-center" type="button" variant="outline" @click="startAddVehicle">
-                      <PlusCircle/>
-                      Add new vehicle
-                    </Button>
-                  </div>
-                </div>
-
-                <!-- New vehicle form -->
-                <div v-if="!hasVehicles || addingNewVehicle" class="space-y-2">
-                  <p v-if="!hasVehicles" class="text-sm text-stone-600">
-                    We don’t have a vehicle on file for you yet. Add one below:
-                  </p>
-
-                  <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleYear" class="font-semibold text-midnight">Year</Label>
-                    <Input id="vehicleYear" v-model="newVehicle.year" placeholder="2021"/>
-                  </div>
-                  <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleMake" class="font-semibold text-midnight">Make</Label>
-                    <Input id="vehicleMake" v-model="newVehicle.make" placeholder="Toyota"/>
-                  </div>
-                  <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="vehicleModel" class="font-semibold text-midnight">Model</Label>
-                    <Input id="vehicleModel" v-model="newVehicle.model" placeholder="Corolla"/>
-                  </div>
-                  <div class="grid grid-cols-2 items-center gap-4">
-                    <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
-                    <div class="max-w-[80px]">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger as-child>
-                            <NumberField
-                                id="passengers"
-                                v-model="newVehicle.passenger_seats"
-                                :min="1"
-                                :max="7"
-                                :default-value="1">
-                              <NumberFieldContent>
-                                <NumberFieldDecrement/>
-                                <NumberFieldInput/>
-                                <NumberFieldIncrement/>
-                              </NumberFieldContent>
-                            </NumberField>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p class="text-sm">This number represents the number of passengers you can carry, not
-                              including yourself.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align="start"
+                          :side-offset="4"
+                          class="public-glass-popover p-1 w-[var(--reka-popover-trigger-width,16rem)] min-w-[8rem]"
+                        >
+                          <div
+                            v-for="v in vehicles"
+                            :key="v.id"
+                            class="flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm cursor-pointer select-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                            @click="pickExistingVehicle(v.id)"
+                          >
+                            <Check v-if="selectedVehicleId === v.id && !addingNewVehicle" class="h-4 w-4 flex-shrink-0" />
+                            <span v-else class="h-4 w-4 flex-shrink-0" />
+                            <span class="flex-1 min-w-0 truncate">
+                              {{ v.description || `${v.year} ${v.make} ${v.model}` }}
+                              ({{ v.passenger_seats }} passengers)
+                            </span>
+                            <button
+                              type="button"
+                              class="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-40"
+                              :disabled="deletingVehicleId === v.id"
+                              @click.stop="deleteVehicle(v.id)"
+                              :aria-label="`Remove ${v.description || v.model}`"
+                            >
+                              <X class="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div class="my-1 h-px" style="background: rgba(255,255,255,0.12);" />
+                          <div
+                            class="flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm cursor-pointer select-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                            :class="{ 'text-accent-foreground': addingNewVehicle }"
+                            @click="startAddVehicle(); vehicleDropdownOpen = false"
+                          >
+                            <Check v-if="addingNewVehicle" class="h-4 w-4 flex-shrink-0" />
+                            <PlusCircle v-else class="h-4 w-4 flex-shrink-0" />
+                            <span class="flex-1 min-w-0 truncate font-medium">Add new vehicle</span>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
-                  </div>
-                </div>
-                <div class="flex gap-2" v-if="hasVehicles && addingNewVehicle">
-                  <Button type="button" variant="secondary" @click="cancelAddVehicle">Cancel</Button>
-                </div>
-              </div>
 
-              <div class="space-y-3 text-sm text-stone-700 p-4 bg-stone-100 rounded-lg">
-                <p class="font-semibold text-midnight">As a member who is willing and able to carpool other members for
+                    <!-- New vehicle form (animated open/close) -->
+                    <Transition name="expand-section">
+                      <div v-if="!hasVehicles || addingNewVehicle" class="expand-section">
+                        <div class="expand-section-inner space-y-2 pt-1">
+                          <p v-if="!hasVehicles" class="text-sm" style="color:#c8d0de">
+                            We don't have a vehicle on file for you yet. Add one below:
+                          </p>
+
+                          <div class="grid grid-cols-2 items-center gap-4">
+                            <Label for="vehicleYear" class="font-semibold text-midnight">Year</Label>
+                            <Input id="vehicleYear" v-model="newVehicle.year" placeholder="2021"/>
+                          </div>
+                          <div class="grid grid-cols-2 items-center gap-4">
+                            <Label for="vehicleMake" class="font-semibold text-midnight">Make</Label>
+                            <Input id="vehicleMake" v-model="newVehicle.make" placeholder="Toyota"/>
+                          </div>
+                          <div class="grid grid-cols-2 items-center gap-4">
+                            <Label for="vehicleModel" class="font-semibold text-midnight">Model</Label>
+                            <Input id="vehicleModel" v-model="newVehicle.model" placeholder="Corolla"/>
+                          </div>
+                          <div class="grid grid-cols-2 items-center gap-4">
+                            <Label for="passengers" class="font-semibold text-midnight">Passenger Capacity</Label>
+                            <div class="max-w-[80px]">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger as-child>
+                                    <NumberField
+                                        id="passengers"
+                                        v-model="newVehicle.passenger_seats"
+                                        :min="1"
+                                        :max="7"
+                                        :default-value="1">
+                                      <NumberFieldContent>
+                                        <NumberFieldDecrement/>
+                                        <NumberFieldInput/>
+                                        <NumberFieldIncrement/>
+                                      </NumberFieldContent>
+                                    </NumberField>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p class="text-sm">This number represents the number of passengers you can carry, not
+                                      including yourself.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                          <div v-if="hasVehicles" class="flex gap-2 pt-1">
+                            <Button type="button" variant="outline" size="sm" @click="cancelAddVehicle">Cancel</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Transition>
+                  </div>
+
+                  <div class="public-attest-card space-y-3 text-sm p-4" style="color:#dde4f0">
+                <p class="font-semibold" style="color:#a8c5ec">As a member who is willing and able to carpool other members for
                   this hike, you attest that:</p>
                 <ul class="list-disc list-inside space-y-1">
                   <li>You have a valid driver's license.</li>
@@ -513,13 +535,15 @@ async function submitCancelRequest() {
                 <p>Additionally, if you have to cancel for whatever reason as a driver, you promise to return to this
                   link and cancel your signup.</p>
               </div>
-              <div class="space-y-2">
-                <Label for="confirm-name" class="font-semibold text-midnight">Print your name below to confirm that you
-                  understand.</Label>
-                <Input id="confirm-name" type="text" v-model="driverConfirmationName"
-                       :placeholder="`Type '${name}' to confirm`"/>
+                  <div class="space-y-2">
+                    <Label for="confirm-name" class="font-semibold text-midnight">Print your name below to confirm that you
+                      understand.</Label>
+                    <Input id="confirm-name" type="text" v-model="driverConfirmationName"
+                           :placeholder="`Type '${name}' to confirm`"/>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Transition>
           </div>
         </CardContent>
         <CardFooter v-if="!loading && !signupSuccess && !alreadySigned && !error" class="p-6 pt-0">

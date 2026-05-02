@@ -4,10 +4,10 @@
       <div
         v-for="trail in votingData.trails"
         :key="trail.trail_id"
-        class="group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+        class="group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md flex flex-col"
       >
         <!-- Trail image -->
-        <div class="relative h-36 overflow-hidden bg-muted">
+        <div class="relative h-36 shrink-0 overflow-hidden bg-muted">
           <img
             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             :src="`/api/images/uploads/${trail.trail_id}`"
@@ -20,13 +20,17 @@
         </div>
 
         <!-- Card body -->
-        <div class="p-4 space-y-3">
-          <h3 class="font-semibold text-sm leading-tight">
-            <Link :to="trail.trail_alltrails_url" :text="trail.trail_name" :new-tab="true"/>
-          </h3>
+        <div class="p-4 flex flex-col flex-1 gap-3">
+          <div>
+            <h3 class="font-semibold text-sm leading-tight">{{ trail.trail_name }}</h3>
+            <div class="flex items-center gap-3 mt-1 flex-wrap">
+              <Link v-if="trail.trail_alltrails_url" :to="trail.trail_alltrails_url" text="AllTrails" :new-tab="true" :size="12"/>
+              <RouterLink :to="{ name: 'Trail Detail', params: { trailId: String(trail.trail_id) } }" class="text-xs text-blue-400 hover:underline">Trail info</RouterLink>
+            </div>
+          </div>
 
           <!-- Progress -->
-          <div class="space-y-1.5">
+          <div class="mt-auto space-y-1.5">
             <div class="flex items-center justify-between text-xs text-muted-foreground">
               <span>Vote share</span>
               <span class="font-medium tabular-nums">{{ votePercentage(trail) }}%</span>
@@ -48,7 +52,7 @@
 
           <ul
             v-if="showVoters[trail.trail_id]"
-            class="space-y-1 border-t pt-2 mt-1"
+            class="space-y-1 border-t pt-2"
           >
             <li
               v-for="(name, idx) in trail.trail_voters"

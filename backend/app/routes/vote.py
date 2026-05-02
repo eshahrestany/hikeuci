@@ -39,8 +39,10 @@ def hike_vote_page():
                 "location": trail.location,
                 "length_mi": trail.length_mi,
                 "estimated_time_hr": trail.estimated_time_hr,
+                "required_water_liters": trail.required_water_liters,
                 "difficulty": trail.difficulty,
                 "elevation_data": trail.elevation_data,
+                "elevation_gain_ft": trail.elevation_gain_ft,
             })
 
         payload = {

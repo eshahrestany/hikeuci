@@ -1,6 +1,7 @@
 <script setup>
 import SignupStats from "@/components/admin/SignupStats.vue"
 import SignupTable from "@/components/admin/SignupTable.vue"
+import FoodInterestCard from "@/components/admin/FoodInterestCard.vue"
 import Link from "@/components/common/Link.vue"
 
 const props = defineProps({
@@ -23,14 +24,12 @@ const emit = defineEmits(['refresh'])
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div class="absolute bottom-3 left-3 right-3">
-            <Link
-              size="16"
-              class="text-white font-semibold text-base hover:underline"
-              :to="signupData.trail_alltrails_url"
-              :text="signupData.trail_name"
-              :new-tab="true"
-            />
+            <p class="text-white font-semibold text-base leading-tight">{{ signupData.trail_name }}</p>
           </div>
+        </div>
+        <div class="px-3 py-2 border-t flex items-center gap-4">
+          <Link v-if="signupData.trail_alltrails_url" :to="signupData.trail_alltrails_url" text="AllTrails" :new-tab="true" :size="12"/>
+          <RouterLink :to="{ name: 'Trail Detail', params: { trailId: String(signupData.trail_id) } }" class="text-xs text-blue-400 hover:underline">Trail info</RouterLink>
         </div>
       </div>
 
@@ -41,6 +40,9 @@ const emit = defineEmits(['refresh'])
         :hike-date="signupData.timeline?.hike_date"
       />
     </div>
+
+    <!-- Food interest -->
+    <FoodInterestCard :users="signupData.users" />
 
     <!-- Hikers table -->
     <SignupTable

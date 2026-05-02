@@ -25,7 +25,7 @@ const hasIdentity = computed(() => !!(name.value || email.value))
     class="flex items-center gap-2.5 rounded-lg border border-sidebar-border bg-sidebar-accent/30 px-2.5 py-2"
   >
     <div
-      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-uci-gold to-amber-500 text-[10px] font-bold text-midnight shadow-sm ring-1 ring-black/10"
+      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-forest to-forest-deep text-[10px] font-bold text-white shadow-sm ring-1 ring-white/15"
       aria-hidden="true"
     >
       {{ initials }}

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
 
 const TYPE_ORDER = ['voting', 'signup', 'waiver', 'waitlist', 'manual']
 const TYPE_LABEL = { voting: 'Voting', signup: 'Signup', waiver: 'Waiver', waitlist: 'Waitlist', manual: 'Manual' }
@@ -19,22 +20,18 @@ const ordered = computed(() => {
 </script>
 
 <template>
-  <Tabs
-    :model-value="modelValue"
-    @update:model-value="(v) => emit('update:modelValue', v)"
-  >
-    <TabsList>
-      <TabsTrigger v-for="c in ordered" :key="c.type" :value="c.type">
-        <span>{{ TYPE_LABEL[c.type] }}</span>
-        <Badge variant="secondary" class="ml-2">{{ c.counts.total }}</Badge>
-        <Badge
-          v-if="c.in_progress"
-          variant="outline"
-          class="ml-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-        >
-          In progress
-        </Badge>
-      </TabsTrigger>
-    </TabsList>
-  </Tabs>
+  <div class="space-y-1.5">
+    <Label class="text-sm text-muted-foreground">Email type</Label>
+    <Tabs
+      :model-value="modelValue"
+      @update:model-value="(v) => emit('update:modelValue', v)"
+    >
+      <TabsList>
+        <TabsTrigger v-for="c in ordered" :key="c.type" :value="c.type">
+          <span>{{ TYPE_LABEL[c.type] }}</span>
+          <Badge variant="secondary" class="ml-2">{{ c.counts.total }}</Badge>
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  </div>
 </template>

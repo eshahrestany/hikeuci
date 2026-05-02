@@ -46,7 +46,7 @@ const navItems = computed(() => [
     <!-- Brand header -->
     <div class="admin-sidebar-brand">
       <div class="admin-brand-icon">
-        <Mountain class="h-[18px] w-[18px] text-midnight" />
+        <Mountain class="h-[18px] w-[18px] text-white" />
       </div>
       <div class="admin-brand-text">
         <span class="admin-brand-name">HikeUCI</span>

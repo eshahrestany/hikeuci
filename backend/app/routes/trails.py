@@ -20,6 +20,20 @@ def is_blank(v):
     return v is None or (isinstance(v, str) and v.strip() == "")
 
 
+METERS_TO_FEET = 3.28084
+ELEVATION_NOISE_THRESHOLD_M = 1.0
+
+
+def _calc_elevation_gain_ft(points: list[dict]) -> float:
+    """Sum all upward ele deltas exceeding the noise threshold, returned in feet."""
+    gain_m = 0.0
+    for i in range(1, len(points)):
+        delta = points[i]["ele"] - points[i - 1]["ele"]
+        if delta > ELEVATION_NOISE_THRESHOLD_M:
+            gain_m += delta
+    return round(gain_m * METERS_TO_FEET, 1)
+
+
 def _serialize_trail(t):
     return {
         "id": t.id,
@@ -34,6 +48,7 @@ def _serialize_trail(t):
         "trailhead_amaps_url": t.trailhead_amaps_url,
         "description": t.description,
         "has_elevation_data": t.elevation_data is not None,
+        "elevation_gain_ft": t.elevation_gain_ft,
         "driving_distance_mi": t.driving_distance_mi,
     }
 
@@ -208,6 +223,11 @@ def upload_elevation(trail_id):
         return jsonify({"error": str(e)}), 400
 
     trail.elevation_data = points
+    trail.elevation_gain_ft = _calc_elevation_gain_ft(points)
     db.session.commit()
 
-    return jsonify({"message": "Elevation data uploaded", "point_count": len(points)}), 200
+    return jsonify({
+        "message": "Elevation data uploaded",
+        "point_count": len(points),
+        "elevation_gain_ft": trail.elevation_gain_ft,
+    }), 200

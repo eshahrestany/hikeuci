@@ -99,6 +99,7 @@ def get_active_hike_info():
                 Member,
                 Signup.status,
                 Signup.transport_type,
+                Signup.food_interest,
                 Signup.is_checked_in,
                 Signup.vehicle_id,
                 Waiver.id.label("waiver_id"),
@@ -114,11 +115,12 @@ def get_active_hike_info():
 
         users = []
         total_capacity = 0
-        for member, signup_status, transport_type, is_checked_in, vehicle_id, waiver_id in rows:
+        for member, signup_status, transport_type, food_interest, is_checked_in, vehicle_id, waiver_id in rows:
             user_obj = {
                 "member_id": member.id,
                 "name": member.name,
                 "transport_type": transport_type,
+                "food_interest": food_interest,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in,
             }
@@ -144,6 +146,27 @@ def get_active_hike_info():
 
     # Any other phase → just return the phase for now
     return jsonify(return_data), 200
+
+
+@dashboard.route('/vote-counts', methods=['GET'])
+@admin_required
+def get_vote_counts():
+    hike = current_active_hike()
+    if not hike or hike.phase != 'voting':
+        return jsonify(error="No active voting phase"), 404
+
+    candidates = Trail.query.filter_by(is_active_vote_candidate=True).all()
+    results = []
+    for row in candidates:
+        voter_rows = (
+            db.session.query(Member.name)
+            .join(Vote, Member.id == Vote.member_id)
+            .filter(and_(Vote.hike_id == hike.id, Vote.trail_id == row.id))
+            .all()
+        )
+        names = [r.name for r in voter_rows]
+        results.append({"trail_id": row.id, "trail_num_votes": len(names), "trail_voters": names})
+    return jsonify({"trails": results}), 200
 
 
 @dashboard.route('/hike/vote-trail', methods=['PUT'])

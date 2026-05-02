@@ -19,7 +19,7 @@
             </Badge>
             <Badge
               v-else-if="response.status === 'signup'" variant="default"
-              class="bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30 border">
+              class="bg-green-600/15 text-green-700 dark:text-green-400 border-green-600/30 border">
               Signup
             </Badge>
             <Badge
@@ -137,11 +137,29 @@ function patchWaiver(data) {
   if (user) user.has_waiver = true
 }
 
+async function patchVotes() {
+  try {
+    const res = await fetchWithAuth('/api/admin/vote-counts')
+    if (!res.ok) { loadUpcoming(); return }
+    const data = await res.json()
+    if (!data?.trails || !response.value?.trails) { loadUpcoming(); return }
+    for (const patch of data.trails) {
+      const trail = response.value.trails.find(t => t.trail_id === patch.trail_id)
+      if (trail) {
+        trail.trail_num_votes = patch.trail_num_votes
+        trail.trail_voters = patch.trail_voters
+      }
+    }
+  } catch {
+    loadUpcoming()
+  }
+}
+
 const topics = computed(() => response.value?.hike_id ? [`hike:${response.value.hike_id}`] : [])
 useRealtime(topics, {
   phase_changed:   () => loadUpcoming(),
   roster_updated:  () => silentRefresh(),
-  vote_updated:    () => loadUpcoming(),
+  vote_updated:    () => patchVotes(),
   checkin_updated: (data) => patchCheckin(data),
   waiver_updated:  (data) => patchWaiver(data),
 })
