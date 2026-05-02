@@ -26,7 +26,7 @@
         :users="waiverData.users"
         :passenger-capacity="waiverData.passenger_capacity"
         :over-capacity-passengers="waiverData.over_capacity_passengers"
-        :hike-date="waiverData.timeline?.hike_date"
+        show-checkin
       />
     </div>
 

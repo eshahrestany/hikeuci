@@ -37,7 +37,6 @@ const emit = defineEmits(['refresh'])
       <SignupStats
         :users="signupData.users"
         :passenger-capacity="signupData.passenger_capacity"
-        :hike-date="signupData.timeline?.hike_date"
       />
     </div>
 
