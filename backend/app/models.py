@@ -153,6 +153,10 @@ class EmailCampaign(db.Model):
     date_created   = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     date_completed = db.Column(db.DateTime, nullable=True)
 
+    __table_args__ = (
+        db.UniqueConstraint('hike_id', 'type', name='uq_email_campaigns_hike_id_type'),
+    )
+
 
 class EmailTask(db.Model):
     __tablename__ = 'email_tasks'

@@ -284,6 +284,7 @@ onMounted(async () => {
       trailStats.value = jsonResponse.trail || null
       trailName.value = jsonResponse.trail?.name || null
       trailLocation.value = jsonResponse.trail?.location || null
+      hikeDate.value = jsonResponse.hike_date || null
     }
   } catch (e) {
     error.value = e.message
@@ -426,7 +427,11 @@ watch(cancelDialogOpen, (isOpen) => {
           <div v-else-if="alreadySigned" class="text-center">
             <div v-if="trailName" class="mb-4 text-left">
               <h2 class="text-xl font-bold" style="color:#f5f7fb">{{ trailName }}</h2>
-              <p v-if="trailLocation" class="text-sm mt-0.5" style="color:#9aa6bb">{{ trailLocation }}</p>
+              <p v-if="trailLocation || hikeDate" class="text-sm mt-0.5" style="color:#9aa6bb">
+                <span v-if="trailLocation">{{ trailLocation }}</span>
+                <span v-if="trailLocation && hikeDate" class="mx-1.5 opacity-40">·</span>
+                <span v-if="hikeDate">{{ hikeDate }}</span>
+              </p>
             </div>
             <HikeStatsBar :trail="trailStats" class="mb-4 text-left" />
             <p v-if="cancelSuccess" style="color:#f5f7fb">Successfully canceled.</p>

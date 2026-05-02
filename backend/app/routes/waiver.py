@@ -35,9 +35,13 @@ def hike_waiver_page():
     if not signup:
         return jsonify({"error": "Member is not signed up for this hike"}), 404
 
+    hike_date_display = hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y")
+
     existing_waiver = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if existing_waiver:
         trail_data = {
+            "name": trail.name,
+            "location": trail.location,
             "length_mi": trail.length_mi,
             "estimated_time_hr": trail.estimated_time_hr,
             "required_water_liters": trail.required_water_liters,
@@ -45,10 +49,9 @@ def hike_waiver_page():
             "elevation_gain_ft": trail.elevation_gain_ft,
             "elevation_data": trail.elevation_data,
         } if trail else None
-        return jsonify({"status": "signed", "trail": trail_data}), 200
+        return jsonify({"status": "signed", "trail": trail_data, "hike_date": hike_date_display}), 200
 
     if request.method == "GET":
-        hike_date_display = hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y")
         content = render_template("waiver_content.html.j2", event_description=trail.name,
                                   event_date=hike_date_display)
         trail_data = {

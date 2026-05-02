@@ -84,13 +84,11 @@ async function load({ background = false } = {}) {
     const body = await res.json()
     if (background && initialLoaded.value) {
       // Merge in-place so unchanged rows aren't recreated in the DOM.
-      const newById = new Map(body.items.map(i => [i.id, i]))
-      items.value = items.value
-        .map(item => newById.has(item.id) ? { ...item, ...newById.get(item.id) } : item)
-        .filter(item => newById.has(item.id))
-      for (const newItem of body.items) {
-        if (!items.value.some(i => i.id === newItem.id)) items.value.push(newItem)
-      }
+      const oldById = new Map(items.value.map(i => [i.id, i]))
+      items.value = body.items.map(newItem => ({
+        ...(oldById.get(newItem.id) || {}),
+        ...newItem,
+      }))
     } else {
       items.value = body.items
     }

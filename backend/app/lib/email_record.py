@@ -9,6 +9,8 @@ row so the send appears in the Emails dashboard and member email history.
 
 from datetime import datetime, timezone
 
+from sqlalchemy.exc import IntegrityError
+
 from .. import db
 from ..models import EmailCampaign, EmailTask
 
@@ -22,7 +24,11 @@ def create_manual_task(hike_id: int, member_id: int, email_type: str) -> EmailTa
             date_created=datetime.now(timezone.utc),
         )
         db.session.add(campaign)
-        db.session.flush()
+        try:
+            db.session.flush()
+        except IntegrityError:
+            db.session.rollback()
+            campaign = EmailCampaign.query.filter_by(hike_id=hike_id, type="manual").first()
 
     task = EmailTask(
         campaign_id=campaign.id,

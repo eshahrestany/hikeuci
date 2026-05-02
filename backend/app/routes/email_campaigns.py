@@ -152,7 +152,6 @@ def list_campaign_tasks(campaign_id: int):
 @email_campaigns.route("/members/<int:member_id>", methods=["GET"])
 @admin_required
 def member_email_history(member_id: int):
-    from sqlalchemy import nullslast
     rows = (
         db.session.query(EmailTask, EmailCampaign, Hike, Trail)
         .join(EmailCampaign, EmailTask.campaign_id == EmailCampaign.id)

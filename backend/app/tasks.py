@@ -248,17 +248,16 @@ def send_email(email_type: str, member_id: int, hike_id, files=None, task_id=Non
 
         conn = EmailConnection()
 
-        with conn.connect() as server:
-            to_email = getattr(member, "email", None)
-            res = conn.send(to_email, subj, text_body, html_body, files=files)
-            if not res:
-                current_app.logger.exception(
-                    f"{email_type} email send failed for member_id=%s (attempt 1/1)",
-                    member.id
-                )
+        to_email = getattr(member, "email", None)
+        res = conn.send(to_email, subj, text_body, html_body, files=files)
+        if not res:
+            current_app.logger.exception(
+                f"{email_type} email send failed for member_id=%s (attempt 1/1)",
+                member.id
+            )
 
         if task_id:
-            task = EmailTask.query.get(task_id)
+            task = db.session.get(EmailTask, task_id)
             if task:
                 task.attempts += 1
                 task.status = "sent" if res else "failed"
@@ -268,7 +267,7 @@ def send_email(email_type: str, member_id: int, hike_id, files=None, task_id=Non
 
     except Exception:
         if task_id:
-            task = EmailTask.query.get(task_id)
+            task = db.session.get(EmailTask, task_id)
             if task:
                 task.attempts += 1
                 task.status = "failed"
