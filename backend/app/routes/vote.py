@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from .. import db
+from ..lib.realtime import publish_event
 from ..models import Member, Hike, Trail, MagicLink, Vote
 
 hike_vote: Blueprint = Blueprint("hike-vote", __name__)
@@ -38,8 +39,10 @@ def hike_vote_page():
                 "location": trail.location,
                 "length_mi": trail.length_mi,
                 "estimated_time_hr": trail.estimated_time_hr,
+                "required_water_liters": trail.required_water_liters,
                 "difficulty": trail.difficulty,
                 "elevation_data": trail.elevation_data,
+                "elevation_gain_ft": trail.elevation_gain_ft,
             })
 
         payload = {
@@ -61,6 +64,7 @@ def hike_vote_page():
         if existing_vote:
             existing_vote.trail_id = vote_trail_id
             db.session.commit()
+            publish_event(f"hike:{hike.id}", "vote_updated", {"member_id": member.id})
             return jsonify({"success": True}), 200
 
         vote = Vote(
@@ -70,4 +74,5 @@ def hike_vote_page():
         )
         db.session.add(vote)
         db.session.commit()
+        publish_event(f"hike:{hike.id}", "vote_updated", {"member_id": member.id})
         return jsonify({"success": True}), 200

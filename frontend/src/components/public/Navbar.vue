@@ -1,8 +1,8 @@
 <template>
-  <nav :class="['w-full text-stone shadow-md font-montserrat bg-midnight']">
+  <nav :class="['w-full text-stone shadow-md font-montserrat bg-midnight', props.sticky ? 'sticky top-0 z-50' : '']">
     <div class="max-w-4xl mx-auto px-4">
       <div class="flex justify-between h-16 items-center">
-        <router-link to="/" class="text-uci-gold font-semibold text-xl tracking-wide hover:text-uci-blue transition-colors">
+        <router-link to="/" class="text-forest font-semibold text-xl tracking-wide hover:text-white transition-colors">
           Hiking Club @ UCI
         </router-link>
 
@@ -11,7 +11,7 @@
           :aria-expanded="open"
           aria-label="Toggle navigation"
           aria-controls="mobile-nav"
-          class="md:hidden focus:outline-none focus:ring-2 focus:ring-uci-gold rounded-lg p-2"
+          class="md:hidden focus:outline-none focus:ring-2 focus:ring-uci-blue rounded-lg p-2"
         >
           <svg v-if="!open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="12" x2="21" y2="12" />
@@ -67,6 +67,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  sticky: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const items = [
@@ -89,17 +93,17 @@ function isActive(item: NavItem) {
 
 function navLinkClasses(item: NavItem) {
   const base = 'font-medium transition-colors duration-200'
-  // Active: gold text with underline to indicate current page
-  const active = 'text-uci-gold underline underline-offset-4'
-  const inactive = 'hover:text-uci-gold'
+  // Active: white text with underline to indicate current page
+  const active = 'text-white underline underline-offset-4 decoration-uci-blue/70 decoration-2'
+  const inactive = 'hover:text-white'
   return [base, isActive(item) ? active : inactive].join(' ')
 }
 
 function mobileNavLinkClasses(item: NavItem) {
   const base = 'block w-full py-2 px-4 rounded-lg transition-colors duration-200'
-  // Active: gold text with subtle background highlight
-  const active = 'text-uci-gold bg-uci-blue/10'
-  const inactive = 'hover:bg-uci-blue/20 hover:text-uci-gold'
+  // Active: white text on a navy tint
+  const active = 'text-white bg-uci-blue/25'
+  const inactive = 'hover:bg-uci-blue/15 hover:text-white'
   return [base, isActive(item) ? active : inactive].join(' ')
 }
 </script>

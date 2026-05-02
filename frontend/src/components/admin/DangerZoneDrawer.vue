@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { TriangleAlert, ArrowLeftRight, Ban } from 'lucide-vue-next'
+import { TriangleAlert, ArrowLeftRight, Ban, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -26,7 +26,7 @@ import { toast } from 'vue-sonner'
 const props = defineProps({
   currentTrailId: { type: Number, default: null },
   phase: { type: String, required: true }, // 'voting' | 'signup' | 'waiver'
-  candidates: { type: Array, default: () => [] }, // voting phase only: array of candidate trail objects
+  candidates: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['switched', 'swapped', 'cancelled'])
 
@@ -61,65 +61,94 @@ async function confirmCancel() {
 <template>
   <Drawer v-model:open="drawerOpen" direction="right" :should-scale-background="false">
     <DrawerTrigger as-child>
-      <Button variant="destructive">
+      <Button variant="destructive" size="sm">
         <TriangleAlert class="h-4 w-4" />
         Danger Zone
       </Button>
     </DrawerTrigger>
 
-    <DrawerContent class="p-0 flex flex-col">
-      <DrawerHeader class="border-b px-6 py-4">
-        <DrawerTitle class="flex items-center gap-2 text-destructive">
-          <TriangleAlert class="h-4 w-4" />
-          Danger Zone
-        </DrawerTitle>
-        <DrawerDescription>
-          These actions affect the active hike and are very hard to manually reverse from the database.
-        </DrawerDescription>
+    <DrawerContent class="p-0 flex flex-col max-w-sm ml-auto">
+      <!-- Header -->
+      <DrawerHeader class="border-b px-5 py-4 bg-destructive/5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 shrink-0">
+              <TriangleAlert class="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <DrawerTitle class="text-base text-destructive">Danger Zone</DrawerTitle>
+              <DrawerDescription class="text-xs mt-0.5">
+                Actions here are difficult to reverse.
+              </DrawerDescription>
+            </div>
+          </div>
+        </div>
       </DrawerHeader>
 
-      <div class="flex flex-col gap-3 p-6">
+      <!-- Actions -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-3">
+
         <!-- Swap Vote Trail (voting phase only) -->
-        <div v-if="phase === 'voting'" class="flex items-center justify-between gap-4 rounded-md border p-4">
-          <div class="min-w-0">
-            <p class="font-medium text-sm">Swap Vote Trail</p>
-            <p class="text-sm text-muted-foreground">Replace one of the voting candidate trails. Existing votes will be transferred.</p>
+        <div v-if="phase === 'voting'" class="rounded-xl border bg-card p-4 space-y-3">
+          <div class="flex items-start gap-3">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-muted shrink-0 mt-0.5">
+              <ArrowLeftRight class="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium leading-snug">Swap Vote Trail</p>
+              <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Replace one of the voting candidate trails. Existing votes for the removed trail will be transferred to the new one.
+              </p>
+            </div>
           </div>
-          <Button variant="outline" size="sm" class="shrink-0" @click="showSwapVoteModal = true">
-            <ArrowLeftRight class="h-4 w-4" />
+          <Button variant="outline" size="sm" class="w-full" @click="showSwapVoteModal = true">
+            <ArrowLeftRight class="h-3.5 w-3.5" />
             Swap Trail
           </Button>
         </div>
 
         <!-- Switch Trail (signup/waiver only) -->
-        <div v-if="phase !== 'voting'" class="flex items-center justify-between gap-4 rounded-md border p-4">
-          <div class="min-w-0">
-            <p class="font-medium text-sm">Switch Trail</p>
-            <p class="text-sm text-muted-foreground">Replace the trail for this hike.</p>
+        <div v-if="phase !== 'voting'" class="rounded-xl border bg-card p-4 space-y-3">
+          <div class="flex items-start gap-3">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-muted shrink-0 mt-0.5">
+              <ArrowLeftRight class="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium leading-snug">Switch Trail</p>
+              <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Replace the trail for this hike with a different trail from the catalog.
+              </p>
+            </div>
           </div>
-          <Button variant="outline" size="sm" class="shrink-0" @click="showSwitchModal = true">
-            <ArrowLeftRight class="h-4 w-4" />
+          <Button variant="outline" size="sm" class="w-full" @click="showSwitchModal = true">
+            <ArrowLeftRight class="h-3.5 w-3.5" />
             Switch Trail
           </Button>
         </div>
 
         <!-- Cancel Hike -->
-        <div class="flex items-center justify-between gap-4 rounded-md border border-destructive/40 bg-destructive/5 p-4">
-          <div class="min-w-0">
-            <p class="font-medium text-sm text-destructive">Cancel Hike</p>
-            <p class="text-sm text-muted-foreground">
-              Permanently cancel this hike. All magic links will be invalidated immediately.
-            </p>
+        <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <div class="flex items-start gap-3">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-destructive/10 shrink-0 mt-0.5">
+              <Ban class="h-3.5 w-3.5 text-destructive" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-destructive leading-snug">Cancel Hike</p>
+              <p class="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Permanently cancel this hike. All magic links will be invalidated and the hike removed from the schedule.
+              </p>
+            </div>
           </div>
-          <Button variant="destructive" size="sm" class="shrink-0" @click="showCancelConfirm = true">
-            <Ban class="h-4 w-4" />
+          <Button variant="destructive" size="sm" class="w-full" @click="showCancelConfirm = true">
+            <Ban class="h-3.5 w-3.5" />
             Cancel Hike
           </Button>
         </div>
+
       </div>
     </DrawerContent>
 
-    <!-- These use portals so they render into <body> regardless of placement here -->
+    <!-- Modals render via portal into <body> -->
     <SwitchTrailModal
       v-if="showSwitchModal"
       :current-trail-id="currentTrailId"
@@ -135,18 +164,28 @@ async function confirmCancel() {
       @close="showSwapVoteModal = false"
     />
 
+    <!-- Cancel confirm dialog -->
     <Dialog v-model:open="showCancelConfirm">
-      <DialogContent>
+      <DialogContent class="max-w-md">
         <DialogHeader>
-          <DialogTitle>Cancel this hike?</DialogTitle>
-          <DialogDescription>
-            This will permanently cancel the hike. All outstanding voting, signup, and waiver links
-            will be immediately invalidated. This cannot be undone.
+          <div class="flex items-center gap-3 mb-1">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 shrink-0">
+              <Ban class="h-5 w-5 text-destructive" />
+            </div>
+            <DialogTitle class="text-lg">Cancel this hike?</DialogTitle>
+          </div>
+          <DialogDescription class="text-sm leading-relaxed">
+            This will <strong class="text-foreground">permanently cancel</strong> the active hike.
+            All outstanding voting, signup, and waiver links will be immediately invalidated.
+            <span class="block mt-1.5 text-destructive font-medium">This action cannot be undone.</span>
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" @click="showCancelConfirm = false">Go Back</Button>
-          <Button variant="destructive" :disabled="cancelling" @click="confirmCancel">
+        <DialogFooter class="gap-2 mt-2">
+          <Button variant="outline" class="flex-1" @click="showCancelConfirm = false">
+            Go Back
+          </Button>
+          <Button variant="destructive" class="flex-1" :disabled="cancelling" @click="confirmCancel">
+            <Ban class="h-4 w-4" />
             {{ cancelling ? 'Cancelling…' : 'Yes, Cancel Hike' }}
           </Button>
         </DialogFooter>

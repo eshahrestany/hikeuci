@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, current_app, Response, request
 
 from ..lib.model_utils import update_waitlist
+from ..lib.realtime import publish_event
+from ..lib.email_record import create_manual_task
 from ..models import Hike, Member, MagicLink, Trail, Vehicle, Signup
 from .. import db
 
@@ -31,14 +33,22 @@ def signup() -> tuple[Response, int]:
         if hike.phase != "signup" and not is_late:
             return jsonify({"error": "Hike not in signup phase"}), 400
 
+        trail = Trail.query.get(hike.trail_id)
+
         # check if already signed up
         existing_signup = Signup.query.filter_by(hike_id=hike.id, member_id=member.id).first()
         if existing_signup:
-            return jsonify({"status": "signed"}), 200
+            trail_data = {
+                "length_mi": trail.length_mi,
+                "estimated_time_hr": trail.estimated_time_hr,
+                "required_water_liters": trail.required_water_liters,
+                "difficulty": trail.difficulty,
+                "elevation_gain_ft": trail.elevation_gain_ft,
+                "elevation_data": trail.elevation_data,
+            } if trail else None
+            return jsonify({"status": "signed", "trail": trail_data, "hike": {"title": trail.name if trail else "Upcoming Hike"}}), 200
 
-        trail = Trail.query.get(hike.trail_id)
-
-        vehicles = Vehicle.query.filter_by(member_id=member.id).all()
+        vehicles = Vehicle.query.filter_by(member_id=member.id, deleted=False).all()
         vehicles_data = [{
             "id": v.id,
             "make": v.make,
@@ -46,6 +56,15 @@ def signup() -> tuple[Response, int]:
             "year": v.year,
             "passenger_seats": v.passenger_seats
         } for v in vehicles]
+
+        trail_data = {
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
 
         return jsonify({
             "status": "ready",
@@ -55,8 +74,9 @@ def signup() -> tuple[Response, int]:
                 "tel": member.tel,
             },
             "hike": {
-                "title": trail.name,
+                "title": trail.name if trail else "Upcoming Hike",
             },
+            "trail": trail_data,
             "vehicles": vehicles_data
         }), 200
 
@@ -138,7 +158,13 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a passenger", "success": True}), 200
 
         elif transport_type == "is_self-transport":
@@ -154,7 +180,13 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a self-transport", "success": True}), 200
 
         elif transport_type == "is_driver":
@@ -208,8 +240,39 @@ def signup() -> tuple[Response, int]:
                 update_waitlist(hike.id)
                 db.session.delete(ml)
                 db.session.commit()
-                current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+                t = create_manual_task(hike.id, member.id, "waiver")
+                current_app.extensions["celery"].send_task(
+                    "app.tasks.send_email",
+                    args=["waiver", member.id, hike.id],
+                    kwargs={"task_id": t.id},
+                )
+            publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
             return jsonify({"message": "Successfully signed up as a driver", "success": True}), 200
+
+
+@hike_signup.route("/vehicle/<int:vehicle_id>", methods=["DELETE"])
+def delete_vehicle(vehicle_id):
+    token = request.args.get("token")
+    if not token:
+        return jsonify({"error": "Token is missing"}), 400
+
+    mlm = current_app.extensions.get("magic_link_manager")
+    result = mlm.validate(token)
+    if result["status"] != "valid":
+        return jsonify({"error": "Token is invalid"}), 400
+
+    member_id = result["magic_link"].member_id
+    vehicle = Vehicle.query.filter_by(id=vehicle_id, member_id=member_id, deleted=False).first()
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    has_references = Signup.query.filter_by(vehicle_id=vehicle_id).first() is not None
+    if has_references:
+        vehicle.deleted = True
+    else:
+        db.session.delete(vehicle)
+    db.session.commit()
+    return jsonify({"success": True}), 200
 
 
 @hike_signup.route("/cancel", methods=["GET", "POST"])
@@ -243,5 +306,6 @@ def cancel_signup():
 
     db.session.delete(existing_signup)
     db.session.commit()
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
 
     return jsonify({"success": True}, 200)

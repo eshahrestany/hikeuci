@@ -1,11 +1,11 @@
 <template>
   <section
-    class="relative text-midnight py-8"
+    class="relative text-white py-8"
     id="leadership"
     ref="sectionRef"
   >
     <div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-12">
-      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-uci-gold font-montserrat drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+      <h2 class="text-center text-3xl sm:text-4xl lg:text-5xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] font-montserrat">
         Meet Our Leadership
       </h2>
 
@@ -29,7 +29,7 @@
               <img
                 :src="officer.photo"
                 :alt="`Photo of ${officer.name}`"
-                class="w-full max-w-40 sm:max-w-[256px] object-cover rounded-full border-4 border-uci-gold shadow-md mb-4"
+                class="w-full max-w-40 sm:max-w-[256px] object-cover rounded-full border-4 border-uci-blue shadow-md mb-4"
                 loading="eager"
               />
               <div class="text-xl sm:text-3xl font-bold text-midnight font-montserrat text-center">

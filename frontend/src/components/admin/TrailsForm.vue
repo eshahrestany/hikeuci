@@ -311,7 +311,7 @@ const handleClose = (openState) => {
             </div>
             <div v-if="isEditing">
               <p class="text-sm text-gray-400">This trail has an existing image, view it with the link below or upload a new one to replace it.</p>
-              <a class="text-blue-300 hover:underline text-sm" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
+              <a class="text-green-400 hover:underline text-sm" target="_blank" :href="`/api/images/uploads/` + formData.id">/api/images/uploads/{{ formData.id }}</a>
             </div>
           </div>
 

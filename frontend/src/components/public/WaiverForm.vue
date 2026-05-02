@@ -23,11 +23,16 @@ import {
 } from "@/components/ui/dialog/index.js";
 import {Checkbox} from "@/components/ui/checkbox/index.js";
 import {Label} from "@/components/ui/label/index.js";
+import HikeStatsBar from '@/components/common/HikeStatsBar.vue'
 
 const loading = ref(true)
 const error = ref(null)
 const tokenRef = ref(null)
 const waiverContent = ref(null)
+const trailStats = ref(null)
+const trailName = ref(null)
+const trailLocation = ref(null)
+const hikeDate = ref(null)
 
 const sig1HasInk = ref(false)
 const sig2HasInk = ref(false)
@@ -66,8 +71,11 @@ function mountESignSlots() {
         return {handleClear}
       },
       render() {
-        return h('div', {class: 'space-y-1'}, [
-          h('div', {class: 'relative w-[240px] h-[80px] border border-stone-400'}, [
+        return h('div', {class: 'space-y-1 pt-4'}, [
+          h('div', {
+            class: 'relative w-[240px] h-[80px] rounded-lg overflow-hidden',
+            style: 'background: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.30); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px -6px rgba(0,0,0,0.4);'
+          }, [
             h(VueSignaturePad, {
               ref: targetRef,
               maxWidth: 1,
@@ -80,16 +88,18 @@ function mountESignSlots() {
             }),
             h('button', {
               type: 'button',
-              class: 'absolute top-1 right-1 px-2 py-1 text-xs bg-white border border-stone-300 rounded-md shadow-sm hover:bg-stone-50',
+              class: 'absolute top-1 right-1 px-2 py-1 text-xs rounded-md',
+              style: 'background: rgba(15,25,45,0.85); color: #f5f7fb; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);',
               onClick: this.handleClear
             }, 'Clear')
           ]),
-          h('p', {class: 'text-xs text-stone-600'},
+          h('p', {class: 'text-xs', style: 'color:#c8d0de'},
               ['Signature of User or Parent/Guardian if Minor',
                       // Required Indicator
                       h('span', {
                         'aria-hidden': 'true',
-                        class: 'ml-2 text-xs font-medium text-rose-600'
+                        class: 'ml-2 text-xs font-medium',
+                        style: 'color: #ef4444 !important'
                       }, '* Required')]),
         ])
       }
@@ -136,21 +146,22 @@ function mountESignSlots() {
         return {isMinor, age, toggle, onUpdate}
       },
       render() {
-        return h('div', {class: 'flex items-center gap-4'}, [
+        return h('div', {class: 'flex items-center gap-4 mb-4'}, [
           // Checkbox: v-model="isMinor"
-          h('label', {class: 'flex items-center gap-2 text-sm text-midnight'}, [
+          h('label', {class: 'flex items-center gap-2 text-sm', style: 'color:#f5f7fb'}, [
             h('input', {
               type: 'checkbox',
               checked: this.isMinor,
               onChange: this.toggle,
-              class: 'h-4 w-4 rounded border-stone-300'
+              class: 'h-4 w-4 rounded',
+              style: 'accent-color: #4f88d6;'
             }),
             h('span', 'Participant is Minor (under 18)')
           ]),
           // NumberField shown only if isMinor === true
           this.isMinor
               ? h('div', {class: 'flex items-center gap-2'}, [
-                h('span', {class: 'text-sm text-stone-600'}, 'Age'),
+                h('span', {class: 'text-sm', style: 'color:#c8d0de'}, 'Age'),
                 h(
                     NumberField,
                     {
@@ -198,25 +209,27 @@ function mountESignSlots() {
       render() {
         return h('div', { class: 'flex items-center gap-4' }, [
           // Checkbox: v-model="agreePolicy" (required)
-          h('label', { class: 'flex items-center gap-2 text-sm text-midnight' }, [
+          h('label', { class: 'flex items-center gap-2 text-sm', style: 'color:#f5f7fb' }, [
             h('input', {
               id: 'agree-policy',
               type: 'checkbox',
               checked: this.agreePolicy,
               onChange: this.toggle,
-              class: 'h-4 w-4 rounded border-stone-300',
+              class: 'h-4 w-4 rounded',
+              style: 'accent-color: #4f88d6;',
               required: true,
             }),
             h('span', { class: 'gap-1' }, [
               "I have read and agree to the Hiking Club at UCI ",
-              h("a", { href: "/privacy-policy", target: "_blank" }, "Privacy Policy"),
+              h("a", { href: "/privacy-policy", target: "_blank", style: 'color:#a8c5ec; text-decoration: underline;' }, "Privacy Policy"),
               " and ",
-              h("a", { href: "/esign-policy", target: "_blank" }, "Electronic Records and Signatures Policy."),
+              h("a", { href: "/esign-policy", target: "_blank", style: 'color:#a8c5ec; text-decoration: underline;' }, "Electronic Records and Signatures Policy."),
               // Screen-reader hint
               h('span', { id: 'agree-policy-required', class: 'sr-only' }),
               h('div', {
               'aria-hidden': 'true',
-              class: 'block text-xs font-medium text-rose-600'
+              class: 'block text-xs font-medium',
+              style: 'color: #ef4444 !important'
             }, '* Required')
             ])
           ])
@@ -262,8 +275,16 @@ onMounted(async () => {
 
     if (jsonResponse.status === 'ready') {
       waiverContent.value = jsonResponse.content
+      trailStats.value = jsonResponse.trail || null
+      trailName.value = jsonResponse.trail?.name || null
+      trailLocation.value = jsonResponse.trail?.location || null
+      hikeDate.value = jsonResponse.hike_date || null
     } else if (jsonResponse.status === 'signed') {
       alreadySigned.value = true
+      trailStats.value = jsonResponse.trail || null
+      trailName.value = jsonResponse.trail?.name || null
+      trailLocation.value = jsonResponse.trail?.location || null
+      hikeDate.value = jsonResponse.hike_date || null
     }
   } catch (e) {
     error.value = e.message
@@ -369,20 +390,21 @@ watch(cancelDialogOpen, (isOpen) => {
       class="relative bg-cover bg-center py-20 bg-fixed flex-grow place-content-center"
       :style="{ backgroundImage: `url(${backgroundImage})` }"
   >
-    <div class="absolute inset-0"/>
-    <div class="relative mx-auto w-fit px-2">
-      <Card class="relative bg-white border">
+    <div class="pg-scrim" aria-hidden="true"/>
+    <div class="relative mx-auto w-full max-w-[860px] px-2">
+      <Card class="relative">
         <Button
           v-if="waiverContent && !loading && !error && !submitSuccess && !cancelSuccess"
           size="sm"
           variant="outline"
-          class="absolute top-3 right-3 z-10 shadow-md border-red-500 text-red-600 hover:bg-red-50"
+          class="absolute top-3 right-3 z-10"
+          style="background: rgba(255,90,90,0.12); border-color: rgba(255,120,120,0.55); color: #ffb4b4;"
           aria-label="Changed your mind? Open cancellation dialog"
           @click="cancelDialogOpen = true"
         >
           Changed your mind?
         </Button>
-        <CardContent class="px-6 py-2">
+        <CardContent class="px-6 py-5">
           <div v-if="loading" class="space-y-4">
             <Skeleton class="h-4 w-full"/>
             <Skeleton class="h-4 w-full"/>
@@ -396,24 +418,42 @@ watch(cancelDialogOpen, (isOpen) => {
             />
             {{ error }}
           </div>
-          <div v-else-if="submitSuccess" class="text-center">
+          <div v-else-if="submitSuccess" class="text-center text-lg font-medium" style="color:#7be3a3">
             Your waiver has been submitted successfully. See you there!
           </div>
-          <div v-else-if="cancelSuccess" class="text-center">
+          <div v-else-if="cancelSuccess" class="text-center" style="color:#f5f7fb">
             Successfully canceled.
           </div>
-          <div v-else-if="alreadySigned" class="text-center text-stone-700">
-            <p v-if="cancelSuccess">Successfully canceled.</p>
-            <p v-else class="text-lg font-medium">
+          <div v-else-if="alreadySigned" class="text-center">
+            <div v-if="trailName" class="mb-4 text-left">
+              <h2 class="text-xl font-bold" style="color:#f5f7fb">{{ trailName }}</h2>
+              <p v-if="trailLocation || hikeDate" class="text-sm mt-0.5" style="color:#9aa6bb">
+                <span v-if="trailLocation">{{ trailLocation }}</span>
+                <span v-if="trailLocation && hikeDate" class="mx-1.5 opacity-40">·</span>
+                <span v-if="hikeDate">{{ hikeDate }}</span>
+              </p>
+            </div>
+            <HikeStatsBar :trail="trailStats" class="mb-4 text-left" />
+            <p v-if="cancelSuccess" style="color:#f5f7fb">Successfully canceled.</p>
+            <p v-else class="text-lg font-medium" style="color:#f5f7fb">
               You have already submitted your waiver. If you need to cancel, please click the button below.
             </p>
-            <p class="text-sm text-red-500 mt-2">By cancelling you will be forfeiting your spot and won't be able to sign back up!</p>
+            <p class="text-sm mt-2" style="color:#ff9b9b">By cancelling you will be forfeiting your spot and won't be able to sign back up!</p>
             <div v-if="!cancelSuccess" class="mt-6">
               <Button type="button" variant="destructive" @click="cancelDialogOpen = true">Cancel My Signup</Button>
             </div>
           </div>
-          <div v-else class="space-y-6">
-            <div v-html="waiverContent" class="prose max-w-none"></div>
+          <div v-else class="space-y-4">
+            <div v-if="trailName">
+              <h2 class="text-xl font-bold" style="color:#f5f7fb">{{ trailName }}</h2>
+              <p class="text-sm mt-0.5" style="color:#9aa6bb">
+                <span v-if="trailLocation">{{ trailLocation }}</span>
+                <span v-if="trailLocation && hikeDate" class="mx-1.5 opacity-40">·</span>
+                <span v-if="hikeDate">{{ hikeDate }}</span>
+              </p>
+            </div>
+            <HikeStatsBar :trail="trailStats" />
+            <div v-html="waiverContent" class="prose max-w-none waiver-prose"></div>
             <div class="text-center">
               <Button class="w-full bg-uci-blue text-lg font-semibold text-white hover:bg-uci-blue/90"
                       :disabled="!allowSubmit"
@@ -428,7 +468,7 @@ watch(cancelDialogOpen, (isOpen) => {
   </section>
 
   <Dialog v-model:open="cancelDialogOpen">
-    <DialogContent>
+    <DialogContent class="public-glass-dialog">
       <DialogHeader>
         <DialogTitle>Cancel Signup?</DialogTitle>
         <DialogDescription>

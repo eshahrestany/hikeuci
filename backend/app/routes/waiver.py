@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, current_app, render_template
 
 from ..lib.model_utils import update_waitlist
+from ..lib.realtime import publish_event
 from ..models import Member, Hike, Trail, MagicLink, Waiver, Signup
 from .. import db
 
@@ -34,14 +35,36 @@ def hike_waiver_page():
     if not signup:
         return jsonify({"error": "Member is not signed up for this hike"}), 404
 
+    hike_date_display = hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y")
+
     existing_waiver = Waiver.query.filter_by(hike_id=hike.id, member_id=member.id).first()
     if existing_waiver:
-        return jsonify({"status": "signed"}), 200
+        trail_data = {
+            "name": trail.name,
+            "location": trail.location,
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
+        return jsonify({"status": "signed", "trail": trail_data, "hike_date": hike_date_display}), 200
 
     if request.method == "GET":
         content = render_template("waiver_content.html.j2", event_description=trail.name,
-                                  event_date=hike.get_localized_time("hike_date").strftime("%A, %B %d, %Y"))
-        return jsonify({"status": "ready", "content": content}), 200
+                                  event_date=hike_date_display)
+        trail_data = {
+            "name": trail.name,
+            "location": trail.location,
+            "length_mi": trail.length_mi,
+            "estimated_time_hr": trail.estimated_time_hr,
+            "required_water_liters": trail.required_water_liters,
+            "difficulty": trail.difficulty,
+            "elevation_gain_ft": trail.elevation_gain_ft,
+            "elevation_data": trail.elevation_data,
+        } if trail else None
+        return jsonify({"status": "ready", "content": content, "trail": trail_data, "hike_date": hike_date_display}), 200
     elif request.method == "POST":
         form_data = request.json
         name = form_data.get("name")
@@ -80,6 +103,11 @@ def hike_waiver_page():
         )
         db.session.add(waiver)
         db.session.commit()
+        publish_event(
+            f"hike:{hike.id}",
+            "waiver_updated",
+            {"signup_id": signup.id, "member_id": member.id},
+        )
 
         current_app.extensions["celery"].send_task("app.tasks.generate_waiver_pdf", args=[waiver.id])
 
@@ -117,5 +145,6 @@ def cancel():
     db.session.commit()
 
     update_waitlist(hike.id)
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member.id})
 
     return jsonify({"status": "Cancelled successfully", "success": True}), 200

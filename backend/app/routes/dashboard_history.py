@@ -447,10 +447,14 @@ def get_attendance_frequency():
     repeat_members = sum(row["num_members"] for row in distribution if row["hikes_attended"] > 1)
     repeat_rate = round(repeat_members / total_members, 2) if total_members > 0 else 0
 
+    total_club_members = db.session.query(func.count(Member.id)).scalar()
+    zero_count = max(0, total_club_members - total_members)
+
     return jsonify({
         "distribution": distribution,
         "total_members": total_members,
         "repeat_rate": repeat_rate,
+        "zero_count": zero_count,
     })
 
 
@@ -459,7 +463,7 @@ def get_attendance_frequency():
 def get_attendance_frequency_members():
     ay = request.args.get("ay")
     count = request.args.get("count", type=int)
-    if not ay or count is None or count < 1:
+    if not ay or count is None or count < 0:
         return jsonify({"error": "Missing or invalid 'ay'/'count' parameters"}), 400
 
     try:
@@ -467,30 +471,50 @@ def get_attendance_frequency_members():
     except (ValueError, IndexError):
         return jsonify({"error": "Invalid academic year format"}), 400
 
-    # Subquery: member_id -> hikes_attended count
-    member_counts = (
-        db.session.query(
-            Signup.member_id,
-            func.count(Signup.id).label("hikes_attended"),
+    if count == 0:
+        # Members who did not check into any hike in this academic year
+        attended_ids = (
+            db.session.query(Signup.member_id)
+            .join(Hike, Signup.hike_id == Hike.id)
+            .filter(
+                Hike.status == "past",
+                Hike.hike_date >= ay_start,
+                Hike.hike_date < ay_end,
+                Signup.is_checked_in.is_(True),
+            )
+            .distinct()
+            .subquery()
         )
-        .join(Hike, Signup.hike_id == Hike.id)
-        .filter(
-            Hike.status == "past",
-            Hike.hike_date >= ay_start,
-            Hike.hike_date < ay_end,
-            Signup.is_checked_in.is_(True),
+        members = (
+            db.session.query(Member.id, Member.name, Member.email)
+            .filter(~Member.id.in_(db.session.query(attended_ids.c.member_id)))
+            .order_by(Member.name)
+            .all()
         )
-        .group_by(Signup.member_id)
-        .having(func.count(Signup.id) == count)
-        .subquery()
-    )
-
-    members = (
-        db.session.query(Member.id, Member.name, Member.email)
-        .join(member_counts, Member.id == member_counts.c.member_id)
-        .order_by(Member.name)
-        .all()
-    )
+    else:
+        # Members who checked into exactly `count` hikes
+        member_counts = (
+            db.session.query(
+                Signup.member_id,
+                func.count(Signup.id).label("hikes_attended"),
+            )
+            .join(Hike, Signup.hike_id == Hike.id)
+            .filter(
+                Hike.status == "past",
+                Hike.hike_date >= ay_start,
+                Hike.hike_date < ay_end,
+                Signup.is_checked_in.is_(True),
+            )
+            .group_by(Signup.member_id)
+            .having(func.count(Signup.id) == count)
+            .subquery()
+        )
+        members = (
+            db.session.query(Member.id, Member.name, Member.email)
+            .join(member_counts, Member.id == member_counts.c.member_id)
+            .order_by(Member.name)
+            .all()
+        )
 
     return jsonify({
         "count": count,

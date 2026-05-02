@@ -29,6 +29,7 @@ class Trail(db.Model):
     trailhead_amaps_url = db.Column(db.String(300), nullable=True)
     description              = db.Column(db.Text, nullable=True)
     elevation_data           = db.Column(db.JSON, nullable=True)
+    elevation_gain_ft        = db.Column(db.Float, nullable=True)
     driving_distance_mi      = db.Column(db.Float, nullable=True)
 
 
@@ -99,6 +100,7 @@ class Vehicle(db.Model):
     make            = db.Column(db.String(50), nullable=False)
     model           = db.Column(db.String(50), nullable=False)
     passenger_seats = db.Column(db.Integer, nullable=False)
+    deleted         = db.Column(db.Boolean, nullable=False, default=False, server_default='false')
 
 
 class AdminUser(db.Model):
@@ -151,6 +153,10 @@ class EmailCampaign(db.Model):
     date_created   = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     date_completed = db.Column(db.DateTime, nullable=True)
 
+    __table_args__ = (
+        db.UniqueConstraint('hike_id', 'type', name='uq_email_campaigns_hike_id_type'),
+    )
+
 
 class EmailTask(db.Model):
     __tablename__ = 'email_tasks'
@@ -160,6 +166,8 @@ class EmailTask(db.Model):
     status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed'
     attempts          = db.Column(db.Integer, nullable=False, default=0)
     sent_at           = db.Column(db.DateTime, nullable=True)
+    # Only set for manual-campaign tasks; bulk campaign type is implied by EmailCampaign.type
+    email_type        = db.Column(db.String(50), nullable=True)
 
     def __repr__(self):
         return f'<MagicLink {self.token}>'

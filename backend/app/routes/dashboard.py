@@ -10,6 +10,8 @@ from ..decorators import admin_required, waiver_phase_required
 from ..models import Trail, Vote, Member, Signup, Vehicle, Waiver, MagicLink, Hike
 from ..lib.model_utils import current_active_hike, get_current_ay_start, update_waitlist
 from ..lib import phases
+from ..lib.realtime import publish_event
+from ..lib.email_record import create_manual_task
 
 dashboard: Blueprint = Blueprint("dashboard", __name__)
 
@@ -22,7 +24,7 @@ def get_active_hike_info():
     if hike is None:
         return jsonify(status=None), 200
 
-    return_data = {}
+    return_data = {"hike_id": hike.id}
     phase = (hike.phase or "").lower()
     if not phase:
         return_data["status"] = 'awaiting_vote_start'
@@ -97,6 +99,7 @@ def get_active_hike_info():
                 Member,
                 Signup.status,
                 Signup.transport_type,
+                Signup.food_interest,
                 Signup.is_checked_in,
                 Signup.vehicle_id,
                 Waiver.id.label("waiver_id"),
@@ -112,11 +115,12 @@ def get_active_hike_info():
 
         users = []
         total_capacity = 0
-        for member, signup_status, transport_type, is_checked_in, vehicle_id, waiver_id in rows:
+        for member, signup_status, transport_type, food_interest, is_checked_in, vehicle_id, waiver_id in rows:
             user_obj = {
                 "member_id": member.id,
                 "name": member.name,
                 "transport_type": transport_type,
+                "food_interest": food_interest,
                 "has_waiver": waiver_id is not None,
                 "is_checked_in": is_checked_in,
             }
@@ -142,6 +146,27 @@ def get_active_hike_info():
 
     # Any other phase → just return the phase for now
     return jsonify(return_data), 200
+
+
+@dashboard.route('/vote-counts', methods=['GET'])
+@admin_required
+def get_vote_counts():
+    hike = current_active_hike()
+    if not hike or hike.phase != 'voting':
+        return jsonify(error="No active voting phase"), 404
+
+    candidates = Trail.query.filter_by(is_active_vote_candidate=True).all()
+    results = []
+    for row in candidates:
+        voter_rows = (
+            db.session.query(Member.name)
+            .join(Vote, Member.id == Vote.member_id)
+            .filter(and_(Vote.hike_id == hike.id, Vote.trail_id == row.id))
+            .all()
+        )
+        names = [r.name for r in voter_rows]
+        results.append({"trail_id": row.id, "trail_num_votes": len(names), "trail_voters": names})
+    return jsonify({"trails": results}), 200
 
 
 @dashboard.route('/hike/vote-trail', methods=['PUT'])
@@ -185,6 +210,7 @@ def swap_vote_trail():
     )
 
     db.session.commit()
+    publish_event(f"hike:{hike.id}", "vote_updated", {})
 
     return jsonify(
         old_trail_id=old_trail.id,
@@ -215,6 +241,7 @@ def switch_hike_trail():
 
     hike.trail_id = trail_id
     db.session.commit()
+    publish_event(f"hike:{hike.id}", "roster_updated", {"trail_id": trail.id})
 
     return jsonify(
         trail_id=trail.id,
@@ -430,6 +457,11 @@ def check_in():
 
         signup.is_checked_in = True
         db.session.commit()
+        publish_event(
+            f"hike:{hike.id}",
+            "checkin_updated",
+            {"signup_id": signup.id, "member_id": user_id, "is_checked_in": True},
+        )
         return jsonify(success=True), 200
 
     elif request.method == 'DELETE':
@@ -439,6 +471,11 @@ def check_in():
 
         signup.is_checked_in = False
         db.session.commit()
+        publish_event(
+            f"hike:{hike.id}",
+            "checkin_updated",
+            {"signup_id": signup.id, "member_id": user_id, "is_checked_in": False},
+        )
         return jsonify(success=True), 200
 
     return jsonify(error="Invalid request method"), 400
@@ -490,10 +527,16 @@ def modify_user():
     if signup.status == "waitlisted":
         signup.status = "confirmed"
         signup.waitlist_pos = None
-        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member.id, hike.id])
+        task = create_manual_task(hike.id, member.id, "waiver")
+        current_app.extensions["celery"].send_task(
+            "app.tasks.send_email",
+            args=["waiver", member.id, hike.id],
+            kwargs={"task_id": task.id},
+        )
 
     db.session.commit()
     update_waitlist(hike.id)
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": user_id})
 
     return jsonify(success=True), 200
 
@@ -513,6 +556,7 @@ def remove_user():
     MagicLink.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
     Signup.query.filter_by(member_id=user_id, hike_id=hike.id).delete()
     db.session.commit()
+    publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": user_id})
 
     return jsonify(success=True), 200
 
@@ -534,7 +578,12 @@ def add_user():
 
     if hike.phase == "signup":
         # new signup, simply dispatch signup email task.
-        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["signup", member_id, hike.id])
+        task = create_manual_task(hike.id, member_id, "signup")
+        current_app.extensions["celery"].send_task(
+            "app.tasks.send_email",
+            args=["signup", member_id, hike.id],
+            kwargs={"task_id": task.id},
+        )
         return jsonify(success=True), 201
 
 
@@ -545,7 +594,12 @@ def add_user():
             return jsonify(error="signup_mode missing or invalid"), 400
 
         if signup_mode == "userlink":
-            current_app.extensions["celery"].send_task("app.tasks.send_email", args=["late_signup", member_id, hike.id])
+            task = create_manual_task(hike.id, member_id, "late_signup")
+            current_app.extensions["celery"].send_task(
+                "app.tasks.send_email",
+                args=["late_signup", member_id, hike.id],
+                kwargs={"task_id": task.id},
+            )
             return jsonify(success=True), 201
 
         # otherwise signup is manual
@@ -577,8 +631,14 @@ def add_user():
         db.session.commit()
 
         update_waitlist(hike.id)
+        publish_event(f"hike:{hike.id}", "roster_updated", {"member_id": member_id})
 
-        current_app.extensions["celery"].send_task("app.tasks.send_email", args=["waiver", member_id, hike.id])
+        task = create_manual_task(hike.id, member_id, "waiver")
+        current_app.extensions["celery"].send_task(
+            "app.tasks.send_email",
+            args=["waiver", member_id, hike.id],
+            kwargs={"task_id": task.id},
+        )
 
         m = Member.query.get(member_id)
         user_obj = {

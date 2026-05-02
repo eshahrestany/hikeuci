@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { CheckIcon, ChevronsUpDownIcon, Calculator, Download, Loader2 } from 'lucide-vue-next'
+import { CheckIcon, ChevronsUpDownIcon, Calculator, Download, Loader2, History } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -195,21 +195,24 @@ onMounted(loadAcademicYears)
 </script>
 
 <template>
-  <section class="p-6">
-    <Card class="mx-auto space-y-6">
-      <CardHeader>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle class="text-2xl">Hike History</CardTitle>
+  <section class="p-4 md:p-6 min-w-0 overflow-x-hidden">
+    <Card class="mx-auto">
+      <CardHeader class="pb-3">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-3 flex-1">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <History class="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle class="text-xl">Hike History</CardTitle>
+              <p class="text-xs text-muted-foreground mt-0.5">Past hike records and analytics</p>
+            </div>
+          </div>
           <div v-if="!loading" class="flex items-center gap-2">
             <Label class="text-sm text-muted-foreground whitespace-nowrap">Academic Year</Label>
             <Popover v-model:open="open">
               <PopoverTrigger as-child>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  :aria-expanded="open"
-                  class="w-[180px] justify-between"
-                >
+                <Button variant="outline" role="combobox" :aria-expanded="open" class="w-[180px] justify-between">
                   {{ selectedLabel }}
                   <ChevronsUpDownIcon class="opacity-50" />
                 </Button>
@@ -227,12 +230,7 @@ onMounted(loadAcademicYears)
                         @select="(ev) => selectAY(ev.detail.value)"
                       >
                         {{ ay }}
-                        <CheckIcon
-                          :class="cn(
-                            'ml-auto',
-                            selectedAY === ay ? 'opacity-100' : 'opacity-0',
-                          )"
-                        />
+                        <CheckIcon :class="cn('ml-auto', selectedAY === ay ? 'opacity-100' : 'opacity-0')" />
                       </CommandItem>
                     </CommandGroup>
                   </CommandList>
@@ -242,7 +240,7 @@ onMounted(loadAcademicYears)
           </div>
           <Skeleton v-else class="h-9 w-[180px]" />
         </div>
-        <hr class="h-px bg-gray-200 border-0 dark:bg-gray-700" />
+        <hr class="h-px mx-0 mt-3 bg-border border-0" />
       </CardHeader>
       <CardContent>
         <Skeleton v-if="hikesLoading" class="h-64 w-full" />
@@ -311,31 +309,31 @@ onMounted(loadAcademicYears)
         </DialogHeader>
         <template v-if="reimbursementResults">
           <div v-if="reimbursementResults.reimbursements.length" class="space-y-4">
-            <div class="border rounded-sm">
+            <div class="rounded-lg border overflow-hidden">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead class="text-right">Hikes</TableHead>
-                    <TableHead class="text-right">Miles</TableHead>
-                    <TableHead class="text-right">Amount</TableHead>
+                <TableHeader class="bg-muted/50">
+                  <TableRow class="border-b">
+                    <TableHead class="px-3 py-2 text-xs font-semibold">Name</TableHead>
+                    <TableHead class="px-3 py-2 text-xs font-semibold">Email</TableHead>
+                    <TableHead class="px-3 py-2 text-xs font-semibold">Phone</TableHead>
+                    <TableHead class="px-3 py-2 text-xs font-semibold text-right">Hikes</TableHead>
+                    <TableHead class="px-3 py-2 text-xs font-semibold text-right">Miles</TableHead>
+                    <TableHead class="px-3 py-2 text-xs font-semibold text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow v-for="r in reimbursementResults.reimbursements" :key="r.email">
-                    <TableCell>{{ r.name }}</TableCell>
-                    <TableCell>{{ r.email }}</TableCell>
-                    <TableCell>{{ r.phone || '—' }}</TableCell>
-                    <TableCell class="text-right">{{ r.hikes_driven }}</TableCell>
-                    <TableCell class="text-right">{{ r.total_miles }}</TableCell>
-                    <TableCell class="text-right font-medium">${{ r.reimbursement.toFixed(2) }}</TableCell>
+                  <TableRow v-for="r in reimbursementResults.reimbursements" :key="r.email" class="odd:bg-muted/20">
+                    <TableCell class="px-3 py-2 text-sm font-medium">{{ r.name }}</TableCell>
+                    <TableCell class="px-3 py-2 text-xs text-muted-foreground">{{ r.email }}</TableCell>
+                    <TableCell class="px-3 py-2 text-xs text-muted-foreground">{{ r.phone || '—' }}</TableCell>
+                    <TableCell class="px-3 py-2 text-sm text-right tabular-nums">{{ r.hikes_driven }}</TableCell>
+                    <TableCell class="px-3 py-2 text-sm text-right tabular-nums">{{ r.total_miles }}</TableCell>
+                    <TableCell class="px-3 py-2 text-sm text-right font-semibold tabular-nums">${{ r.reimbursement.toFixed(2) }}</TableCell>
                   </TableRow>
-                  <TableRow class="font-bold">
-                    <TableCell colspan="4">Total</TableCell>
-                    <TableCell class="text-right">{{ reimbursementResults.total_miles }}</TableCell>
-                    <TableCell class="text-right">${{ reimbursementResults.total_reimbursement.toFixed(2) }}</TableCell>
+                  <TableRow class="border-t bg-muted/40 font-semibold">
+                    <TableCell class="px-3 py-2 text-sm" colspan="4">Total</TableCell>
+                    <TableCell class="px-3 py-2 text-sm text-right tabular-nums">{{ reimbursementResults.total_miles }}</TableCell>
+                    <TableCell class="px-3 py-2 text-sm text-right tabular-nums">${{ reimbursementResults.total_reimbursement.toFixed(2) }}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -372,23 +370,23 @@ onMounted(loadAcademicYears)
         <div v-if="frequencyDialogLoading" class="flex justify-center py-8">
           <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-        <div v-else-if="frequencyDialogMembers.length" class="border rounded-sm">
+        <div v-else-if="frequencyDialogMembers.length" class="rounded-lg border overflow-hidden">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+            <TableHeader class="bg-muted/50">
+              <TableRow class="border-b">
+                <TableHead class="px-3 py-2 text-xs font-semibold">Name</TableHead>
+                <TableHead class="px-3 py-2 text-xs font-semibold">Email</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow
                 v-for="m in frequencyDialogMembers"
                 :key="m.id"
-                class="cursor-pointer hover:bg-muted/50"
+                class="cursor-pointer odd:bg-muted/20 hover:bg-muted/50 transition-colors"
                 @click="frequencyDialogOpen = false; router.push({ name: 'Member History', params: { memberId: m.id } })"
               >
-                <TableCell>{{ m.name }}</TableCell>
-                <TableCell>{{ m.email }}</TableCell>
+                <TableCell class="px-3 py-2 text-sm font-medium">{{ m.name }}</TableCell>
+                <TableCell class="px-3 py-2 text-xs text-muted-foreground">{{ m.email }}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

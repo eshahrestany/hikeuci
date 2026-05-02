@@ -33,7 +33,7 @@ async function get_and_copy(){
 </script>
 
 <template>
-  <Button @click="get_and_copy">
+  <Button size="sm" @click="get_and_copy">
     <Copy class="w-4 h-4"/>
     Copy Emails
   </Button>

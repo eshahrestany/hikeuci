@@ -107,58 +107,63 @@ const selectionLabel = computed(() =>
       <div class="flex items-center justify-between gap-3">
         <Input
           v-model="search"
-          class="max-w-md"
+          class="h-8 max-w-md text-sm"
           placeholder="Search name, location, difficulty…"
         />
         <p class="text-xs text-muted-foreground shrink-0">{{ selectionLabel }}</p>
       </div>
 
-      <Table class="table-fixed">
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-10">Select</TableHead>
-            <TableHead class="w-2/5">Name</TableHead>
-            <TableHead class="w-2/5">Location</TableHead>
-            <TableHead class="w-28">Difficulty</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow
-            v-for="t in filteredTrails"
-            :key="t.id"
-            class="cursor-pointer"
-            @click="toggle(t)"
-          >
-            <TableCell>
-              <input
-                v-if="mode === 'multi'"
-                type="checkbox"
-                :checked="isSelected(t.id)"
-                :disabled="!isSelected(t.id) && selectedIds.length >= maxSelect"
-                @click.stop
-                @change="toggle(t)"
-              />
-              <input
-                v-else
-                type="radio"
-                name="trail-picker"
-                :checked="isSelected(t.id)"
-                @click.stop
-                @change="toggle(t)"
-              />
-            </TableCell>
-            <TableCell class="font-medium whitespace-normal break-words">{{ t.name }}</TableCell>
-            <TableCell class="whitespace-normal break-words">{{ t.location || '—' }}</TableCell>
-            <TableCell><DifficultyBadge :difficulty="t.difficulty" /></TableCell>
-          </TableRow>
+      <div class="rounded-lg border overflow-hidden">
+        <Table class="table-fixed">
+          <TableHeader class="bg-muted/50">
+            <TableRow class="border-b">
+              <TableHead class="w-10 px-3 py-2 text-xs font-semibold"></TableHead>
+              <TableHead class="w-2/5 px-3 py-2 text-xs font-semibold">Name</TableHead>
+              <TableHead class="w-2/5 px-3 py-2 text-xs font-semibold">Location</TableHead>
+              <TableHead class="w-28 px-3 py-2 text-xs font-semibold">Difficulty</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="t in filteredTrails"
+              :key="t.id"
+              class="cursor-pointer transition-colors"
+              :class="isSelected(t.id) ? 'bg-primary/8 hover:bg-primary/10' : 'odd:bg-muted/20 hover:bg-muted/40'"
+              @click="toggle(t)"
+            >
+              <TableCell class="px-3 py-2.5">
+                <input
+                  v-if="mode === 'multi'"
+                  type="checkbox"
+                  class="accent-primary"
+                  :checked="isSelected(t.id)"
+                  :disabled="!isSelected(t.id) && selectedIds.length >= maxSelect"
+                  @click.stop
+                  @change="toggle(t)"
+                />
+                <input
+                  v-else
+                  type="radio"
+                  name="trail-picker"
+                  class="accent-primary"
+                  :checked="isSelected(t.id)"
+                  @click.stop
+                  @change="toggle(t)"
+                />
+              </TableCell>
+              <TableCell class="px-3 py-2.5 text-sm font-medium whitespace-normal break-words">{{ t.name }}</TableCell>
+              <TableCell class="px-3 py-2.5 text-sm text-muted-foreground whitespace-normal break-words">{{ t.location || '—' }}</TableCell>
+              <TableCell class="px-3 py-2.5"><DifficultyBadge :difficulty="t.difficulty" /></TableCell>
+            </TableRow>
 
-          <TableRow v-if="!filteredTrails.length">
-            <TableCell colspan="4" class="text-center text-sm text-muted-foreground py-6">
-              No trails match your search.
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            <TableRow v-if="!filteredTrails.length">
+              <TableCell colspan="4" class="text-center text-sm text-muted-foreground py-6">
+                No trails match your search.
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </template>
   </div>
 </template>

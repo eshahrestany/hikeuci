@@ -2,6 +2,7 @@ from flask import Blueprint, request, current_app, jsonify
 from ..decorators import admin_required
 from ..models import Member
 from ..lib.model_utils import current_active_hike
+from ..lib.email_record import create_manual_task
 
 mail = Blueprint('mail', __name__)
 
@@ -22,6 +23,11 @@ def resend_email():
 
     hike_id = current_active_hike().id
 
-    current_app.extensions["celery"].send_task("app.tasks.send_email", args=[email_type, member_id, hike_id])
+    task = create_manual_task(hike_id, member_id, email_type)
+    current_app.extensions["celery"].send_task(
+        "app.tasks.send_email",
+        args=[email_type, member_id, hike_id],
+        kwargs={"task_id": task.id},
+    )
 
     return jsonify({"message": "Email task queued successfully"})
