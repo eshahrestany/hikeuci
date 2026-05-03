@@ -325,27 +325,32 @@
 }
 
 /* ── Dialogs and sheets ───────────────────────────────────── */
+/* Lower alpha than --lg-bg-strong so the panel's localised backdrop-filter
+ * is clearly visible — without the full-screen overlay blur, the panel
+ * needs more transparency to read as glass rather than a solid surface. */
 .admin-layout [data-slot="dialog-content"],
 .admin-layout [data-slot="sheet-content"] {
-  background: var(--lg-bg-strong) !important;
+  background: rgba(255,255,255,0.55) !important;
   backdrop-filter: var(--lg-blur-strong);
   -webkit-backdrop-filter: var(--lg-blur-strong);
   border: 1px solid var(--lg-border) !important;
   border-radius: 22px !important;
   box-shadow: var(--lg-specular) !important;
 }
-/* Blur scrim — both modes: background content must not bleed through */
+.dark .admin-layout [data-slot="dialog-content"],
+.dark .admin-layout [data-slot="sheet-content"] {
+  background: rgba(10,18,46,0.55) !important;
+}
+/* Dim scrim — flat tint only; the dialog/sheet content panel owns its own
+ * backdrop-filter so the blur stays localised to the panel rather than
+ * smearing the entire viewport. */
 .admin-layout [data-slot="dialog-overlay"],
 .admin-layout [data-slot="sheet-overlay"] {
   background: rgba(10,25,60,0.22) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
 }
 .dark .admin-layout [data-slot="dialog-overlay"],
 .dark .admin-layout [data-slot="sheet-overlay"] {
   background: rgba(0,1,8,0.55) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
 }
 
 /* Separators */
@@ -1151,12 +1156,11 @@ body:has(.dp--menu-wrapper) .admin-layout [data-sidebar="sidebar"] {
   background: rgba(255,255,255,0.04) !important;
 }
 
-/* Dialog overlay (scrim) for public dialogs */
+/* Dialog overlay (scrim) for public dialogs — flat tint only; the dialog
+ * panel owns its own backdrop-filter so blur stays localised. */
 [data-slot="dialog-overlay"]:has(~ * .public-glass-dialog),
 .public-layout [data-slot="dialog-overlay"] {
   background: rgba(0,4,14,0.55) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Hoverable items inside teleported public popovers */

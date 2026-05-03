@@ -35,7 +35,7 @@
               <span>Vote share</span>
               <span class="font-medium tabular-nums">{{ votePercentage(trail) }}%</span>
             </div>
-            <Progress v-model="votePercents[trail.trail_id].value" class="h-2" />
+            <Progress :model-value="Number(votePercentage(trail))" class="h-2" />
           </div>
 
           <!-- Voter list toggle -->
@@ -83,11 +83,6 @@ const showVoters = reactive({})
 const totalVotes = computed(() =>
   props.votingData.trails.reduce((sum, c) => sum + c.trail_num_votes, 0)
 )
-
-const votePercents = {}
-props.votingData.trails.forEach((trail) => {
-  votePercents[trail.trail_id] = computed(() => Number(votePercentage(trail)))
-})
 
 function votePercentage(trail) {
   if (totalVotes.value === 0) return 0

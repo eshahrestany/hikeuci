@@ -5,6 +5,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useVueTable
 } from "@tanstack/vue-table";
 import {Button} from "@/components/ui/button/index.js";
@@ -12,7 +13,7 @@ import {ref, h, computed, onMounted, watch} from "vue";
 import {useAuth} from "@/lib/auth.js";
 import MembersForm from "@/components/admin/MembersForm.vue";
 import MembersBatchForm from "@/components/admin/MembersBatchForm.vue";
-import {PlusCircle, ListPlus, History, Pencil, FileDown, Loader2} from "lucide-vue-next"
+import {PlusCircle, ListPlus, History, Pencil, FileDown, Loader2, ArrowUpDown, ArrowUp, ArrowDown} from "lucide-vue-next"
 import { toast } from 'vue-sonner'
 import { useRouter } from "vue-router"
 import {Input} from "@/components/ui/input/index.js";
@@ -28,6 +29,7 @@ const formIsOpen = ref(false);
 const batchFormOpen = ref(false);
 const editMemberData = ref({});
 const search = ref('')
+const sorting = ref([])
 const exportingMembers = ref(new Set())
 
 async function exportWaivers(memberId) {
@@ -144,7 +146,13 @@ const columns = [
     accessorFn: row => `${row.tel}`,
     cell: info => info.getValue() !== 'null' ? info.getValue() : h(Badge, {variant: 'secondary'}, 'Not Provided'),
     filterFn: (row, colId, filter) =>
-        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase())
+        String(row.getValue(colId)).toLowerCase().includes(filter.toLowerCase()),
+    sortingFn: (a, b, colId) => {
+      const av = a.getValue(colId), bv = b.getValue(colId)
+      if (av === 'null') return 1
+      if (bv === 'null') return -1
+      return av.localeCompare(bv)
+    },
   },
   {
     id: 'is_officer',
@@ -167,6 +175,7 @@ const columns = [
   {
     id: 'edit',
     header: '',
+    enableSorting: false,
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(Button, {
@@ -200,6 +209,13 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  state: {
+    get sorting() { return sorting.value },
+  },
+  onSortingChange: updater => {
+    sorting.value = typeof updater === 'function' ? updater(sorting.value) : updater
+  },
   initialState: {
     pagination: {
       pageIndex: 0,
@@ -235,8 +251,21 @@ onMounted(loadMembers)
     <Table>
       <TableHeader class="bg-muted/50">
         <TableRow v-for="hg in table.getHeaderGroups()" :key="hg.id" class="border-b">
-          <TableHead v-for="h in hg.headers" :key="h.id" class="px-3 py-2 text-xs font-semibold">
-            <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+          <TableHead
+            v-for="h in hg.headers"
+            :key="h.id"
+            class="px-3 py-2 text-xs font-semibold"
+            :class="h.column.getCanSort() ? 'cursor-pointer select-none' : ''"
+            @click="h.column.getCanSort() && h.column.toggleSorting()"
+          >
+            <div class="flex items-center gap-1">
+              <FlexRender v-if="!h.isPlaceholder" :render="h.column.columnDef.header" :props="h.getContext()" />
+              <template v-if="h.column.getCanSort()">
+                <ArrowUp v-if="h.column.getIsSorted() === 'asc'" class="h-3 w-3 shrink-0" />
+                <ArrowDown v-else-if="h.column.getIsSorted() === 'desc'" class="h-3 w-3 shrink-0" />
+                <ArrowUpDown v-else class="h-3 w-3 shrink-0 text-muted-foreground/40" />
+              </template>
+            </div>
           </TableHead>
         </TableRow>
       </TableHeader>
