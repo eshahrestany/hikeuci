@@ -120,9 +120,9 @@ const topics = computed(() => {
   return t
 })
 useRealtime(topics, {
-  campaign_started:   () => loadCampaigns(),
+  campaign_started:   () => loadCampaigns({ background: true }),
   campaign_progress:  () => loadCampaigns({ background: true }),
-  campaign_completed: () => { loadCampaigns(); refreshTick.value += 1 },
+  campaign_completed: () => { loadCampaigns({ background: true }); refreshTick.value += 1 },
   tasks_updated:      { debounceMs: 0, fn: () => { loadCampaigns({ background: true }); refreshTick.value += 1 } },
 })
 

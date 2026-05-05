@@ -11,9 +11,10 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth.js'
 import { toast } from 'vue-sonner'
-import {PlusCircle, Save, MailCheck, MailX} from "lucide-vue-next"
+import { PlusCircle, Save } from 'lucide-vue-next'
 
 const props = defineProps({
   isOpen: {
@@ -28,91 +29,80 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen', 'submitted'])
 
-const {fetchWithAuth} = useAuth()
+const { fetchWithAuth } = useAuth()
 
-const defaultMemberState = {
+const defaultFormState = () => ({
   name: '',
   email: '',
   tel: '',
-}
+  subscribed_to_mailing_list: true,
+})
 
-
-const formData = reactive({ ...defaultMemberState })
-const localMeta = ref({ subscribed_to_mailing_list: true, can_delete: true })
+const formData = reactive(defaultFormState())
+const original = ref(defaultFormState())
+const canDelete = ref(true)
 
 watch(() => props.memberData, (newMember) => {
   if (newMember) {
-    Object.assign(formData, newMember)
-    localMeta.value = {
+    Object.assign(formData, {
+      name: newMember.name,
+      email: newMember.email,
+      tel: newMember.tel,
       subscribed_to_mailing_list: newMember.subscribed_to_mailing_list,
-      can_delete: newMember.can_delete,
-    }
+    })
+    original.value = { ...formData }
+    canDelete.value = newMember.can_delete
   } else {
-    Object.assign(formData, defaultMemberState)
+    Object.assign(formData, defaultFormState())
+    original.value = defaultFormState()
   }
 }, { immediate: true })
-
 
 const isEditing = computed(() => !!props.memberData)
 const dialogTitle = computed(() => isEditing.value ? 'Edit Member' : 'Add new Member')
 const submitButtonText = computed(() => isEditing.value ? 'Save Changes' : 'Add Member')
 
+const isDirty = computed(() => {
+  if (!isEditing.value) return true
+  return (
+    formData.name !== original.value.name ||
+    formData.email !== original.value.email ||
+    formData.tel !== original.value.tel ||
+    formData.subscribed_to_mailing_list !== original.value.subscribed_to_mailing_list
+  )
+})
 
 const handleSubmit = async () => {
   try {
     const endpoint = isEditing.value ? `/api/admin/members/${props.memberData.id}` : '/api/admin/members'
     const method = isEditing.value ? 'PUT' : 'POST'
 
-    const response = await fetchWithAuth(endpoint,{method: method, body: JSON.stringify(formData)})
+    const response = await fetchWithAuth(endpoint, { method, body: JSON.stringify(formData) })
     if (!response.ok) {
       throw Error(response.status)
     }
 
-    toast.success(`Member successfully ${isEditing.value ? 'updated' : 'created'}! 🎉`)
+    toast.success(`Member successfully ${isEditing.value ? 'updated' : 'created'}!`)
     emit('submitted')
     emit('update:isOpen', false)
-    Object.assign(formData, defaultMemberState)
+    Object.assign(formData, defaultFormState())
   } catch (error) {
-    console.error("Failed to submit member form:", error)
+    console.error('Failed to submit member form:', error)
     toast.error('Submission Failed', { description: error.message })
   }
 }
 
 const deleteMember = async () => {
-    try {
-        const endpoint = `/api/admin/members/${props.memberData.id}`
-        const method = "DELETE"
-
-        const response = await fetchWithAuth(endpoint, {method: method})
-        if (!response.ok) {
-          throw new Error(response.status)
-        }
-        toast.success(`Member successfully Deleted`)
-
-        emit('submitted')
-        emit('update:isOpen', false)
-    } catch (error) {
-        toast.error('Submission Failed', { description: error.message })
-    }
-}
-
-const toggleMailingList = async () => {
   try {
-    const subscribed = !localMeta.value.subscribed_to_mailing_list
-    const response = await fetchWithAuth(`/api/admin/members/${props.memberData.id}/mailing-list`, {
-      method: 'PATCH',
-      body: JSON.stringify({ subscribed }),
-    })
-    if (!response.ok) throw new Error(response.status)
-    const updated = await response.json()
-    localMeta.value = {
-      subscribed_to_mailing_list: updated.subscribed_to_mailing_list,
-      can_delete: updated.can_delete,
+    const response = await fetchWithAuth(`/api/admin/members/${props.memberData.id}`, { method: 'DELETE' })
+    if (!response.ok) {
+      throw new Error(response.status)
     }
-    toast.success(subscribed ? 'Added to mailing list' : 'Removed from mailing list')
+    toast.success('Member successfully deleted')
     emit('submitted')
+    emit('update:isOpen', false)
   } catch (error) {
-    toast.error('Failed to update mailing list', { description: error.message })
+    toast.error('Submission Failed', { description: error.message })
   }
 }
 
@@ -143,37 +133,40 @@ const handleClose = (openState) => {
             <Input id="email" type="email" v-model="formData.email" placeholder="peteranteater@uci.edu" required />
           </div>
 
-         <div class="space-y-2">
+          <div class="space-y-2">
             <Label for="tel">Member Phone #</Label>
             <Input id="tel" type="tel" v-model="formData.tel" placeholder="123 867 5309" />
-         </div>
+          </div>
 
+          <div class="flex items-center gap-3 pt-1">
+            <Switch
+              id="mailing-list"
+              v-model="formData.subscribed_to_mailing_list"
+            />
+            <Label for="mailing-list" class="cursor-pointer">Mailing list</Label>
+          </div>
         </div>
       </form>
 
       <DialogFooter class="w-full flex justify-between items-center gap-4">
-        <Button class="items-center text-center" type="submit" variant="default" form="member-form">
+        <Button
+          class="items-center text-center"
+          type="submit"
+          variant="default"
+          form="member-form"
+          :disabled="!isDirty"
+        >
           {{ submitButtonText }}
-          <Save v-if="isEditing"/>
-          <PlusCircle v-else/>
+          <Save v-if="isEditing" />
+          <PlusCircle v-else />
         </Button>
         <Button type="button" variant="outline" @click="handleClose(false)">Cancel</Button>
         <Button
           v-if="isEditing"
           type="button"
-          :variant="localMeta.subscribed_to_mailing_list ? 'outline' : 'secondary'"
-          @click="toggleMailingList()"
-        >
-          <MailX v-if="localMeta.subscribed_to_mailing_list" class="h-3.5 w-3.5 mr-1" />
-          <MailCheck v-else class="h-3.5 w-3.5 mr-1" />
-          {{ localMeta.subscribed_to_mailing_list ? 'Remove from Mailing List' : 'Add to Mailing List' }}
-        </Button>
-        <Button
-          v-if="isEditing"
-          type="button"
           variant="destructive"
-          :disabled="!localMeta.can_delete"
-          :title="!localMeta.can_delete ? 'Cannot delete: member has existing records (signups, waivers, etc.)' : ''"
+          :disabled="!canDelete"
+          :title="!canDelete ? 'Cannot delete: member has existing records (signups, waivers, etc.)' : ''"
           @click="deleteMember()"
         >Delete</Button>
       </DialogFooter>

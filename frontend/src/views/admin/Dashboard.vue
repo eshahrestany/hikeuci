@@ -58,7 +58,7 @@
           Could not fetch hike data from the server
         </div>
 
-        <div v-else-if="response.status === null"><SetHikePanel/></div>
+        <div v-else-if="response.status === null"><SetHikePanel @hike-scheduled="loadUpcoming"/></div>
         <VotingPhase v-else-if="response.status === 'voting'" :voting-data="response"/>
         <SignupPhase v-else-if="response.status === 'signup'" :signup-data="response" @refresh="silentRefresh"/>
         <WaiverPhase v-else-if="response.status === 'waiver'" :waiver-data="response" @refresh="silentRefresh"/>
@@ -125,14 +125,16 @@ async function silentRefresh() {
 
 // Surgical patch handlers — mutate only the affected user in place so
 // SignupTable rows and SignupStats update reactively without a full reload.
+// Null data (backfill on reconnect / tab-regain) falls back to silentRefresh
+// so the page does not flash a skeleton.
 function patchCheckin(data) {
-  if (!data) { loadUpcoming(); return }
+  if (!data) { silentRefresh(); return }
   const user = response.value?.users?.find(u => u.member_id === data.member_id)
   if (user) user.is_checked_in = data.is_checked_in
 }
 
 function patchWaiver(data) {
-  if (!data) { loadUpcoming(); return }
+  if (!data) { silentRefresh(); return }
   const user = response.value?.users?.find(u => u.member_id === data.member_id)
   if (user) user.has_waiver = true
 }
@@ -140,9 +142,9 @@ function patchWaiver(data) {
 async function patchVotes() {
   try {
     const res = await fetchWithAuth('/api/admin/vote-counts')
-    if (!res.ok) { loadUpcoming(); return }
+    if (!res.ok) { silentRefresh(); return }
     const data = await res.json()
-    if (!data?.trails || !response.value?.trails) { loadUpcoming(); return }
+    if (!data?.trails || !response.value?.trails) { silentRefresh(); return }
     for (const patch of data.trails) {
       const trail = response.value.trails.find(t => t.trail_id === patch.trail_id)
       if (trail) {
@@ -151,13 +153,13 @@ async function patchVotes() {
       }
     }
   } catch {
-    loadUpcoming()
+    silentRefresh()
   }
 }
 
 const topics = computed(() => response.value?.hike_id ? [`hike:${response.value.hike_id}`] : [])
 useRealtime(topics, {
-  phase_changed:   () => loadUpcoming(),
+  phase_changed:   () => silentRefresh(),
   roster_updated:  () => silentRefresh(),
   vote_updated:    () => patchVotes(),
   checkin_updated: (data) => patchCheckin(data),

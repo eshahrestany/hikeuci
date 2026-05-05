@@ -161,7 +161,7 @@ onMounted(async () => {
         </CardHeader>
 
         <CardContent class="p-6 pt-0">
-          <div v-if="loading" class="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div v-if="loading" class="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <Skeleton class="h-64 w-full"/>
             <Skeleton class="h-64 w-full"/>
             <Skeleton class="h-64 w-full"/>
@@ -179,13 +179,16 @@ onMounted(async () => {
           <div v-else class="space-y-6">
             <!-- On desktop the grid becomes a subgrid: each card spans 6 explicit rows so
                  every section (image / title / stats / elev-gain / chart / vote) aligns
-                 across all three columns regardless of content height. -->
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-x-6 md:gap-y-0">
+                 across all three columns regardless of content height. The desktop
+                 layout only kicks in at lg (≥1024px) — below that the 3-column grid
+                 squishes content and produces visual bugs, so we stay on the
+                 single-column mobile layout. -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-0">
               <div
                   v-for="t in trails"
                   :key="t.id"
-                  class="public-trail-card group relative overflow-hidden rounded-2xl
-                         md:row-span-6 md:grid md:grid-rows-subgrid"
+                  class="public-trail-card group relative overflow-hidden rounded-2xl min-w-0
+                         lg:row-span-6 lg:grid lg:grid-cols-1 lg:grid-rows-subgrid"
                   :class="{'is-selected': alreadyVoted && userVoteTrailId === t.id}"
               >
                 <!-- Row 1: Image -->
@@ -230,14 +233,14 @@ onMounted(async () => {
                      subgrid row still participates in cross-card height alignment. -->
                 <div v-if="t.elevation_gain_ft != null" class="px-4 pt-2">
                   <div class="rounded-lg px-3 py-2 border" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12);">
-                    <p class="text-xs uppercase tracking-wide" style="color:#9aa6bb">Elev. gain</p>
+                    <p class="text-xs uppercase tracking-wide" style="color:#9aa6bb">Elevation Gain</p>
                     <p class="font-semibold" style="color:#f5f7fb">{{ t.elevation_gain_ft.toLocaleString() }} ft</p>
                   </div>
                 </div>
                 <div v-else></div>
 
                 <!-- Row 5: Elevation chart — empty div when absent -->
-                <div v-if="t.elevation_data" class="px-4 pt-3">
+                <div v-if="t.elevation_data" class="px-4 pt-3 min-w-0 overflow-hidden">
                   <ElevationChart :elevationData="t.elevation_data" />
                 </div>
                 <div v-else></div>

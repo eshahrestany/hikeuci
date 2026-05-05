@@ -94,6 +94,8 @@ def update_member(member_id):
     member.tel = data.get('tel', member.tel)
     if member.tel == "":
         member.tel = None
+    if 'subscribed_to_mailing_list' in data:
+        member.subscribed_to_mailing_list = bool(data['subscribed_to_mailing_list'])
 
     admin = AdminUser.query.filter_by(member_id=member.id).first()
     if admin is not None and email_changed:
@@ -121,20 +123,6 @@ def delete(member_id):
         return jsonify(error="Cannot delete member with existing records (signups, waivers, vehicles, etc.)."), 409
     return "Deleted Successfully", 200
 
-
-@members.route("/<int:member_id>/mailing-list", methods=["PATCH"])
-@admin_required
-def toggle_mailing_list(member_id):
-    member = Member.query.get_or_404(member_id)
-    data = request.get_json(silent=True) or {}
-    subscribed = data.get("subscribed")
-    if not isinstance(subscribed, bool):
-        return jsonify(error="'subscribed' must be a boolean."), 400
-    member.subscribed_to_mailing_list = subscribed
-    db.session.commit()
-    officer_ids = _officer_member_ids()
-    referenced_ids = _referenced_member_ids()
-    return jsonify(_serialize_member(member, member.id in officer_ids, member.id not in referenced_ids))
 
 
 @members.route("/batch", methods=["POST"])

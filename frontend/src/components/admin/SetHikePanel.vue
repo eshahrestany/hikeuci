@@ -13,6 +13,8 @@ import { CalendarPlus, Info } from 'lucide-vue-next'
 
 const { postWithAuth } = useAuth()
 
+const emit = defineEmits(['hikeScheduled'])
+
 const colorMode = useColorMode()
 const dark = computed(() => colorMode.value === 'dark')
 
@@ -146,7 +148,7 @@ async function submit() {
   try {
     const res = await postWithAuth('/api/admin/set-hike', payload)
     if (res.ok) {
-      window.location.reload()
+      emit('hikeScheduled')
     } else {
       throw res.error
     }
@@ -324,6 +326,18 @@ watch(mode, () => {
       </div>
     </div>
 
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 pt-2 border-t">
+      <p v-if="!isFormValid" class="text-xs text-destructive mr-auto">
+        {{ validation.messages[0] }}
+      </p>
+      <Button variant="ghost" @click="resetAndClose">Cancel</Button>
+      <Button :disabled="!isFormValid" @click="submit">
+        <CalendarPlus class="h-4 w-4" />
+        Schedule Hike
+      </Button>
+    </div>
+
     <!-- Trail picker -->
     <div class="space-y-3">
       <Label class="text-sm font-semibold">
@@ -335,18 +349,6 @@ watch(mode, () => {
         :model-value="mode === 'vote' ? selectedTrails : selectedTrail"
         @update:model-value="onTrailSelect"
       />
-    </div>
-
-    <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 pt-2 border-t">
-      <p v-if="!isFormValid" class="text-xs text-destructive mr-auto">
-        {{ validation.messages[0] }}
-      </p>
-      <Button variant="ghost" @click="resetAndClose">Cancel</Button>
-      <Button :disabled="!isFormValid" @click="submit">
-        <CalendarPlus class="h-4 w-4" />
-        Schedule Hike
-      </Button>
     </div>
   </div>
 </template>
