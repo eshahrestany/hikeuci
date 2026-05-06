@@ -82,7 +82,7 @@ const driverInfoValid = computed(() => {
   return validNewVehicle.value
 })
 
-const isPhoneValid = computed(() => !!phone.value)
+const isPhoneValid = computed(() => phoneNumberAlreadySet.value || !!phone.value)
 const phone = computed(() => {
   const input = phoneNumber.value
   if (!input) return null
