@@ -23,9 +23,11 @@ import {
   LogOut,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/lib/auth.js'
 
 const { state, signOut } = useAuth()
+const route = useRoute()
 
 const props = defineProps()
 
@@ -60,7 +62,7 @@ const navItems = computed(() => [
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in navItems" :key="item.title">
-              <SidebarMenuButton as-child size="default">
+              <SidebarMenuButton as-child size="default" :is-active="route.name === item.route.name">
                 <router-link :to="item.route" class="flex items-center gap-2.5 w-full">
                   <component :is="item.icon" class="h-4 w-4 shrink-0 opacity-70" />
                   <span class="text-sm">{{ item.title }}</span>

@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Link from "@/components/common/Link.vue"
 import { ArrowUpDown, ArrowUp, ArrowDown, ExternalLink } from "lucide-vue-next"
 import { ref, h, computed, watch } from "vue"
-import { useRouter } from "vue-router"
+import { useRouter, RouterLink } from "vue-router"
 
 const router = useRouter()
 
@@ -102,13 +102,11 @@ const columns = [
     accessorFn: row => row.trail_name,
     cell: ({ row }) => {
       const parts = []
-      if (row.original.trail_alltrails_url) {
-        parts.push(h(Link, {
-          to: row.original.trail_alltrails_url,
-          text: row.original.trail_name,
-          newTab: true,
-          size: 14,
-        }))
+      if (row.original.trail_id) {
+        parts.push(h(RouterLink, {
+          to: `/admin/trails/${row.original.trail_id}`,
+          class: 'text-blue-400 hover:underline text-sm',
+        }, () => row.original.trail_name))
       } else {
         parts.push(row.original.trail_name)
       }
