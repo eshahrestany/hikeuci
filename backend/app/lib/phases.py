@@ -1,7 +1,7 @@
 """ Scripts that run at the turn of a phase """
 
 import random
-from ..models import Hike, Trail, Vote, Signup, MagicLink
+from ..models import Hike, Trail, Vote, Signup, MagicLink, EmailCampaign, EmailTask
 from .. import db
 from . import selection_algorithm
 from .realtime import publish_event
@@ -81,6 +81,16 @@ def cancel_hike(hike_id: int):
     Trail.query.filter_by(is_active_vote_candidate=True).update(
         {Trail.is_active_vote_candidate: False}
     )
+
+    # cancel any pending email tasks so in-flight batch_send_emails jobs stop processing
+    campaign_ids = [
+        c.id for c in EmailCampaign.query.filter_by(hike_id=ah.id).all()
+    ]
+    if campaign_ids:
+        EmailTask.query.filter(
+            EmailTask.campaign_id.in_(campaign_ids),
+            EmailTask.status == "pending",
+        ).update({EmailTask.status: "cancelled"}, synchronize_session="fetch")
 
     ah.status = "cancelled"
     ah.phase = None

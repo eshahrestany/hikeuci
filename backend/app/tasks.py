@@ -148,6 +148,11 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     conn = EmailConnection()
 
     while True:
+        # abort if hike was cancelled between batches
+        hike = Hike.query.get(hike_id)
+        if hike.status != "active":
+            return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total, "aborted": True}
+
         batch: List[EmailTask] = (
             EmailTask.query
             .filter_by(campaign_id=campaign_id, status="pending")

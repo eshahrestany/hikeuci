@@ -163,7 +163,7 @@ class EmailTask(db.Model):
     id                = db.Column(db.Integer, primary_key=True)
     campaign_id       = db.Column(db.Integer, db.ForeignKey('email_campaigns.id'), nullable=False)
     member_id         = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed'
+    status            = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'sent', 'failed', 'cancelled'
     attempts          = db.Column(db.Integer, nullable=False, default=0)
     sent_at           = db.Column(db.DateTime, nullable=True)
     # Only set for manual-campaign tasks; bulk campaign type is implied by EmailCampaign.type

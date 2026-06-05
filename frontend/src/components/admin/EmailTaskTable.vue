@@ -16,9 +16,10 @@ import { ArrowUp, ArrowDown, ArrowUpDown, Search } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const STATUS_CLASS = {
-  sent:    'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30',
-  pending: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30',
-  failed:  'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30',
+  sent:      'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30',
+  pending:   'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30',
+  failed:    'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30',
+  cancelled: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/30',
 }
 
 const props = defineProps({
@@ -34,7 +35,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Initialize from URL so deep-links restore state
-const VALID_STATUSES = ['pending', 'sent', 'failed']
+const VALID_STATUSES = ['pending', 'sent', 'failed', 'cancelled']
 const status = ref(VALID_STATUSES.includes(route.query.status) ? route.query.status : 'all')
 const q = ref(route.query.q || '')
 const sort = ref(['sent_at', 'status', 'attempts'].includes(route.query.sort) ? route.query.sort : 'sent_at')
@@ -209,6 +210,7 @@ onUnmounted(() => {
           <SelectItem value="pending">Pending</SelectItem>
           <SelectItem value="sent">Sent</SelectItem>
           <SelectItem value="failed">Failed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
       <div class="relative flex-1 min-w-[220px] max-w-md">

@@ -59,11 +59,11 @@ def list_campaigns_for_hike(hike_id: int):
     )
     counts_by_campaign: dict[int, dict[str, int]] = {}
     for cid, status, n in count_rows:
-        counts_by_campaign.setdefault(cid, {"pending": 0, "sent": 0, "failed": 0})[status] = n
+        counts_by_campaign.setdefault(cid, {"pending": 0, "sent": 0, "failed": 0, "cancelled": 0})[status] = n
 
     def _counts(cid: int) -> dict:
-        c = counts_by_campaign.get(cid, {"pending": 0, "sent": 0, "failed": 0})
-        return {**c, "total": c["pending"] + c["sent"] + c["failed"]}
+        c = counts_by_campaign.get(cid, {"pending": 0, "sent": 0, "failed": 0, "cancelled": 0})
+        return {**c, "total": c["pending"] + c["sent"] + c["failed"] + c["cancelled"]}
 
     return jsonify([
         {
@@ -90,8 +90,8 @@ def list_campaign_tasks(campaign_id: int):
         return jsonify({"error": "page must be >= 1"}), 400
 
     status = request.args.get("status")
-    if status is not None and status not in ("pending", "sent", "failed"):
-        return jsonify({"error": "status must be one of pending|sent|failed"}), 400
+    if status is not None and status not in ("pending", "sent", "failed", "cancelled"):
+        return jsonify({"error": "status must be one of pending|sent|failed|cancelled"}), 400
 
     q_str = (request.args.get("q") or "").strip()
     sort = request.args.get("sort", "sent_at")
