@@ -105,8 +105,7 @@ const columns = [
       if (row.original.trail_id) {
         parts.push(h(RouterLink, {
           to: `/admin/trails/${row.original.trail_id}`,
-          class: 'text-blue-400 hover:underline',
-          style: 'font-size: 14px',
+          class: 'text-blue-400 hover:underline text-sm',
         }, () => row.original.trail_name))
       } else {
         parts.push(row.original.trail_name)

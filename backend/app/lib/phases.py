@@ -83,14 +83,11 @@ def cancel_hike(hike_id: int):
     )
 
     # cancel any pending email tasks so in-flight batch_send_emails jobs stop processing
-    campaign_ids = [
-        c.id for c in EmailCampaign.query.filter_by(hike_id=ah.id).all()
-    ]
-    if campaign_ids:
-        EmailTask.query.filter(
-            EmailTask.campaign_id.in_(campaign_ids),
-            EmailTask.status == "pending",
-        ).update({EmailTask.status: "cancelled"}, synchronize_session="fetch")
+    campaign_subq = db.session.query(EmailCampaign.id).filter_by(hike_id=ah.id)
+    EmailTask.query.filter(
+        EmailTask.campaign_id.in_(campaign_subq),
+        EmailTask.status == "pending",
+    ).update({EmailTask.status: "cancelled"}, synchronize_session="fetch")
 
     ah.status = "cancelled"
     ah.phase = None

@@ -138,8 +138,12 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
     batch_pause_sec = float(cfg.get("MAIL_BATCH_PAUSE_SEC", 0.0))
 
     camp = EmailCampaign.query.get(campaign_id)
+    if not camp:
+        return {"campaign_id": campaign_id, "sent": 0, "failed": 0, "aborted": True}
     email_type = camp.type
     hike = Hike.query.get(hike_id)
+    if not hike:
+        return {"campaign_id": campaign_id, "sent": 0, "failed": 0, "aborted": True}
 
     # modularize email template w/ static batch data
     subj, text_body_mod, html_body_mod, batch_text = render_email_batch(email_type, hike)
@@ -149,8 +153,8 @@ def batch_send_emails(*, campaign_id: int, hike_id: int) -> dict:
 
     while True:
         # abort if hike was cancelled between batches
-        hike = Hike.query.get(hike_id)
-        if hike.status != "active":
+        db.session.refresh(hike)
+        if hike.status == "cancelled":
             return {"campaign_id": campaign_id, "sent": sent_total, "failed": failed_total, "aborted": True}
 
         batch: List[EmailTask] = (
