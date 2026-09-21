@@ -50,14 +50,14 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useIntervalFn, useResizeObserver, useIntersectionObserver } from '@vueuse/core';
 
-import sophia  from '@/assets/officers/sophia.png'
-import eric    from '@/assets/officers/eric.png'
-import zoe     from '@/assets/officers/zoe.png'
 import advaith from '@/assets/officers/advaith.png'
+import aislin from '@/assets/officers/aislin.png'
+import emily from '@/assets/officers/emily.png'
+import eric from '@/assets/officers/eric.png'
+import maddie from '@/assets/officers/maddie.png'
+import minhtet from '@/assets/officers/minhtet.png'
+import olivia from '@/assets/officers/olivia.png'
 import shirley from '@/assets/officers/shirley.png'
-import evan    from '@/assets/officers/evan.png'
-import maddie  from '@/assets/officers/maddie.png'
-import jeremy  from '@/assets/officers/jeremy.png'
 
 /* -------------------------------------------------------------
  * Types
@@ -75,14 +75,14 @@ const props = defineProps({
   officers: {
     type: Array as () => Officer[],
     default: () => [
-      { name: 'Sophia Shao', title: 'Co-President', photo: sophia },
+      { name: 'Maddie Nistl', title: 'Co-President', photo: maddie},
       { name: 'Eric Miao', title: 'Co-President', photo: eric },
-      { name: 'Zoe Glenn', title: 'Hike Leader', photo: zoe},
-      { name: 'Advaith Srinivas', title: 'Hike Leader', photo: advaith},
+      { name: 'Advaith Srinivas', title: 'Treasurer', photo: advaith},
+      { name: 'Olivia Barkehanai', title: 'Hike Leader', photo: olivia},
+      { name: 'Emily McMillen', title: 'Hike Leader', photo: emily},
       { name: 'Shirley Wu', title: 'Social Coordinator', photo: shirley},
-      { name: 'Evan Shahrestany', title: 'Tech Lead', photo: evan},
-      { name: 'Maddie Nistl', title: 'Treasurer', photo: maddie},
-      { name: 'Jeremy Oliver', title: 'Photographer', photo: jeremy},
+      { name: 'Minhtet Htoon', title: 'Tech Lead', photo: minhtet},
+      { name: 'Aislin Henry', title: 'Photographer', photo: aislin},
     ],
   },
   intervalMs: {

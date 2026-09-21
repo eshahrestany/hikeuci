@@ -79,7 +79,7 @@
           >
             <p class="text-lg font-extrabold uppercase tracking-wide font-montserrat text-midnight">Don't have Venmo?</p>
             <p class="mt-3 text-base leading-relaxed text-midnight">
-              DM <span class="font-extrabold">@soap.p.suds</span> on Discord for
+              DM <span class="font-extrabold">@mad_n14</span> on Discord for
               Zelle or PayPal.
             </p>
           </div>
